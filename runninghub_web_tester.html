@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RunningHub 图片+音频 生成视频测试</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 880px;
+      margin: 24px auto;
+      padding: 0 16px;
+      line-height: 1.5;
+    }
+    .card {
+      border: 1px solid #8884;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    label { display: block; margin: 10px 0 6px; font-weight: 600; }
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #8886;
+      box-sizing: border-box;
+    }
+    input[type="file"] { display: block; margin-top: 4px; }
+    button {
+      margin-top: 14px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #1f6feb;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #8884;
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 300px;
+      overflow: auto;
+    }
+    .muted { opacity: .8; font-size: 13px; }
+    .ok { color: #0a7f2e; }
+    .err { color: #c62828; }
+  </style>
+</head>
+<body>
+  <h2>RunningHub 工作流生成视频（新版接口）</h2>
+  <p class="muted">
+    该页面按工作流 API 方式调用：上传 <code>/task/openapi/upload</code>，提交 <code>/task/openapi/create</code>，查询 <code>/task/openapi/outputs</code>。
+  </p>
+
+  <div class="card">
+    <label for="apiKey">API Key</label>
+    <input id="apiKey" type="text" value="6b0b6ac3b887416992eed10fe8b77d65" />
+
+    <label for="workflowId">Workflow ID</label>
+    <input id="workflowId" type="text" value="2044669894783934465" />
+
+    <label for="baseUrl">Base URL</label>
+    <input id="baseUrl" type="url" value="https://www.runninghub.cn" />
+
+    <label for="createPath">创建任务接口 Path</label>
+    <input id="createPath" type="text" value="/task/openapi/create" />
+
+    <label for="outputsPath">查询结果接口 Path</label>
+    <input id="outputsPath" type="text" value="/task/openapi/outputs" />
+
+    <label for="imageNodeId">图片节点 ID</label>
+    <input id="imageNodeId" type="text" value="133" />
+
+    <label for="imageFieldName">图片字段名</label>
+    <input id="imageFieldName" type="text" value="image" />
+
+    <label for="audioNodeId">音频节点 ID（可选）</label>
+    <input id="audioNodeId" type="text" value="125" />
+
+    <label for="audioFieldName">音频字段名（可选）</label>
+    <input id="audioFieldName" type="text" value="audio" />
+
+    <label for="imageFile">图片文件（jpg/png/webp）</label>
+    <input id="imageFile" type="file" accept="image/*" />
+
+    <label for="audioFile">音频文件（可不选）</label>
+    <input id="audioFile" type="file" accept="audio/*,.mp3,.wav,.flac" />
+
+    <button id="detectBtn" type="button">自动识别节点ID</button>
+    <button id="runBtn" type="button">上传并生成视频</button>
+    <p class="muted">新版可只上传图片。若工作流仍依赖音频，再选择音频并填写音频节点与字段。</p>
+  </div>
+
+  <div class="card">
+    <h3>执行日志</h3>
+    <pre id="log"></pre>
+  </div>
+
+  <div class="card">
+    <h3>结果</h3>
+    <div id="result">暂无结果</div>
+  </div>
+
+  <script>
+    const logEl = document.getElementById("log");
+    const resultEl = document.getElementById("result");
+    const runBtn = document.getElementById("runBtn");
+    const detectBtn = document.getElementById("detectBtn");
+    async function getWorkflowJson(baseUrl, apiKey, workflowId) {
+      const resp = await fetch(`${baseUrl}/api/openapi/getJsonApiFormat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ apiKey, workflowId })
+      });
+      const data = await parseJsonSafe(resp);
+      if (!resp.ok) {
+        throw new Error(`获取工作流Json失败(${resp.status}): ${JSON.stringify(data)}`);
+      }
+      if (data.code !== 0) {
+        throw new Error(`获取工作流Json失败(code=${data.code}): ${data.msg || JSON.stringify(data)}`);
+      }
+      const promptRaw = data?.data?.prompt;
+      if (!promptRaw) {
+        throw new Error("获取工作流Json成功，但 data.prompt 为空。");
+      }
+      if (typeof promptRaw === "string") {
+        return JSON.parse(promptRaw);
+      }
+      return promptRaw;
+    }
+
+    function detectNodeIds(promptJson) {
+      let imageNodeId = "";
+      let audioNodeId = "";
+      let imageFieldName = "";
+      let audioFieldName = "";
+      for (const [nodeId, node] of Object.entries(promptJson || {})) {
+        const ct = node?.class_type || "";
+        const inputs = node?.inputs || {};
+        if (!imageNodeId && (ct === "LoadImageFromURL" || ct === "LoadImage" || Object.prototype.hasOwnProperty.call(inputs, "url") || Object.prototype.hasOwnProperty.call(inputs, "image"))) {
+          imageNodeId = nodeId;
+          if (Object.prototype.hasOwnProperty.call(inputs, "image")) imageFieldName = "image";
+          else if (Object.prototype.hasOwnProperty.call(inputs, "url")) imageFieldName = "url";
+        }
+        if (!audioNodeId && (ct === "LoadAudioFromUrl" || ct === "LoadAudio" || Object.prototype.hasOwnProperty.call(inputs, "audio"))) {
+          audioNodeId = nodeId;
+          if (Object.prototype.hasOwnProperty.call(inputs, "audio")) audioFieldName = "audio";
+        }
+      }
+      return { imageNodeId, audioNodeId, imageFieldName, audioFieldName };
+    }
+
+
+    function log(msg, cls) {
+      const line = `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+      logEl.textContent += line;
+      if (cls) {
+        const span = document.createElement("span");
+        span.className = cls;
+      }
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function sleep(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    async function parseJsonSafe(resp) {
+      const text = await resp.text();
+      try { return JSON.parse(text); } catch (_) { return { raw: text }; }
+    }
+
+    async function uploadBinary(baseUrl, apiKey, file) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("apiKey", apiKey);
+      fd.append("fileType", "input");
+
+      const resp = await fetch(`${baseUrl}/task/openapi/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: fd
+      });
+      const data = await parseJsonSafe(resp);
+      if (!resp.ok) {
+        throw new Error(`上传失败(${resp.status}): ${JSON.stringify(data)}`);
+      }
+      return data;
+    }
+
+    function pickMediaValue(uploadResp) {
+      const d = uploadResp && uploadResp.data ? uploadResp.data : {};
+      return d.fileName || d.filename || d.download_url || d.downloadUrl || "";
+    }
+
+    function findUrls(obj, arr = []) {
+      if (!obj) return arr;
+      if (typeof obj === "string" && /^https?:\/\/.+/i.test(obj)) {
+        arr.push(obj);
+        return arr;
+      }
+      if (Array.isArray(obj)) {
+        obj.forEach((x) => findUrls(x, arr));
+        return arr;
+      }
+      if (typeof obj === "object") {
+        Object.values(obj).forEach((v) => findUrls(v, arr));
+      }
+      return arr;
+    }
+
+    async function createTask(baseUrl, createPath, apiKey, workflowId, imageValue, audioValue) {
+      const imageNodeId = document.getElementById("imageNodeId").value.trim();
+      const audioNodeId = document.getElementById("audioNodeId").value.trim();
+      const imageFieldName = document.getElementById("imageFieldName").value.trim() || "image";
+      const audioFieldName = document.getElementById("audioFieldName").value.trim() || "audio";
+      const nodeInfoList = [
+        { nodeId: imageNodeId, fieldName: imageFieldName, fieldValue: imageValue }
+      ];
+      if (audioValue && audioNodeId) {
+        nodeInfoList.push({ nodeId: audioNodeId, fieldName: audioFieldName, fieldValue: audioValue });
+      }
+      const body = {
+        apiKey,
+        workflowId,
+        nodeInfoList
+      };
+
+      const resp = await fetch(`${baseUrl}${createPath}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await parseJsonSafe(resp);
+      if (!resp.ok) {
+        throw new Error(`创建任务失败(${resp.status}): ${JSON.stringify(data)}`);
+      }
+      if (data.code !== 0) {
+        throw new Error(`创建任务失败(code=${data.code}): ${data.msg || JSON.stringify(data)}`);
+      }
+      return data;
+    }
+
+    function getTaskId(createResp) {
+      return createResp?.data?.taskId || createResp?.taskId || createResp?.data?.id || "";
+    }
+
+    async function queryTaskOutputs(baseUrl, outputsPath, apiKey, taskId) {
+      const resp = await fetch(`${baseUrl}${outputsPath}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ apiKey, taskId })
+      });
+      const data = await parseJsonSafe(resp);
+      if (!resp.ok) {
+        throw new Error(`查询结果失败(${resp.status}): ${JSON.stringify(data)}`);
+      }
+      return data;
+    }
+
+    detectBtn.addEventListener("click", async () => {
+      const apiKey = document.getElementById("apiKey").value.trim();
+      const workflowId = document.getElementById("workflowId").value.trim();
+      const baseUrl = document.getElementById("baseUrl").value.trim().replace(/\/+$/, "");
+      if (!apiKey || !workflowId || !baseUrl) {
+        resultEl.innerHTML = `<span class="err">请先填写 API Key、workflowId、baseUrl。</span>`;
+        return;
+      }
+      detectBtn.disabled = true;
+      try {
+        log("正在获取工作流 Json...");
+        const promptJson = await getWorkflowJson(baseUrl, apiKey, workflowId);
+        const ids = detectNodeIds(promptJson);
+        if (!ids.imageNodeId) {
+          throw new Error("未自动识别到图片节点，请手动填写图片节点ID。");
+        }
+        document.getElementById("imageNodeId").value = ids.imageNodeId;
+        if (ids.imageFieldName) {
+          document.getElementById("imageFieldName").value = ids.imageFieldName;
+        }
+        if (ids.audioNodeId) {
+          document.getElementById("audioNodeId").value = ids.audioNodeId;
+          if (ids.audioFieldName) {
+            document.getElementById("audioFieldName").value = ids.audioFieldName;
+          }
+          log(`自动识别成功：图片节点=${ids.imageNodeId}.${ids.imageFieldName || "image"}，音频节点=${ids.audioNodeId}.${ids.audioFieldName || "audio"}`);
+        } else {
+          log(`自动识别成功：图片节点=${ids.imageNodeId}（未发现音频节点，按无音频模式运行）`);
+        }
+        resultEl.innerHTML = `<span class="ok">已自动识别节点ID，可直接点击“上传并生成视频”。</span>`;
+      } catch (err) {
+        log(`自动识别失败: ${err.message}`);
+        resultEl.innerHTML = `<span class="err">${err.message}</span>`;
+      } finally {
+        detectBtn.disabled = false;
+      }
+    });
+
+    runBtn.addEventListener("click", async () => {
+      logEl.textContent = "";
+      resultEl.innerHTML = "处理中...";
+      runBtn.disabled = true;
+
+      const apiKey = document.getElementById("apiKey").value.trim();
+      const workflowId = document.getElementById("workflowId").value.trim();
+      const baseUrl = document.getElementById("baseUrl").value.trim().replace(/\/+$/, "");
+      const createPath = document.getElementById("createPath").value.trim();
+      const outputsPath = document.getElementById("outputsPath").value.trim();
+      const imageNodeId = document.getElementById("imageNodeId").value.trim();
+      const audioNodeId = document.getElementById("audioNodeId").value.trim();
+      const imageFieldName = document.getElementById("imageFieldName").value.trim();
+      const audioFieldName = document.getElementById("audioFieldName").value.trim();
+      const imageFile = document.getElementById("imageFile").files[0];
+      const audioFile = document.getElementById("audioFile").files[0];
+
+      if (!apiKey || !workflowId || !baseUrl || !createPath || !outputsPath || !imageNodeId || !imageFieldName || !imageFile) {
+        resultEl.innerHTML = `<span class="err">请至少填写必填参数并选择图片文件。</span>`;
+        runBtn.disabled = false;
+        return;
+      }
+
+      try {
+        log("开始上传图片...");
+        const imageUploadResp = await uploadBinary(baseUrl, apiKey, imageFile);
+        const imageValue = pickMediaValue(imageUploadResp);
+        log(`图片上传成功，值: ${imageValue}`);
+
+        let audioValue = "";
+        if (audioFile && audioNodeId && audioFieldName) {
+          log("开始上传音频...");
+          const audioUploadResp = await uploadBinary(baseUrl, apiKey, audioFile);
+          audioValue = pickMediaValue(audioUploadResp);
+          log(`音频上传成功，值: ${audioValue}`);
+        } else {
+          log("跳过音频上传（无音频模式）");
+        }
+
+        if (!imageValue) {
+          throw new Error("上传结果未拿到可用的图片值，请检查上传返回结构。");
+        }
+
+        log("提交工作流任务...");
+        const createResp = await createTask(baseUrl, createPath, apiKey, workflowId, imageValue, audioValue);
+        log(`创建任务响应: ${JSON.stringify(createResp)}`);
+
+        const taskId = getTaskId(createResp);
+        if (!taskId) {
+          throw new Error(`创建任务成功但未拿到 taskId：${JSON.stringify(createResp)}`);
+        }
+        log(`taskId: ${taskId}`);
+
+        let successResp = null;
+        for (let i = 0; i < 120; i++) {
+          await sleep(3000);
+          const outputsResp = await queryTaskOutputs(baseUrl, outputsPath, apiKey, taskId);
+          const code = outputsResp?.code;
+          if (code === 0 && Array.isArray(outputsResp?.data) && outputsResp.data.length > 0) {
+            successResp = outputsResp;
+            log("任务状态: SUCCESS");
+            break;
+          }
+          if (code === 805) {
+            throw new Error(`任务失败: ${JSON.stringify(outputsResp)}`);
+          }
+          if (code === 804) {
+            log("任务状态: RUNNING");
+          } else if (code === 813) {
+            log("任务状态: QUEUED");
+          } else {
+            log(`任务状态: ${outputsResp?.msg || "UNKNOWN"} (code=${String(code)})`);
+          }
+        }
+
+        if (!successResp) {
+          throw new Error("轮询超时，任务可能还在运行中。你可以稍后手动查询 taskId。");
+        }
+
+        const urls = findUrls(successResp);
+        const videoUrls = urls.filter((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
+        const showUrls = videoUrls.length ? videoUrls : urls;
+
+        if (!showUrls.length) {
+          resultEl.innerHTML = `<span class="ok">任务成功，但未自动识别到 URL。请看日志中的完整响应。</span>`;
+          log(`SUCCESS 响应: ${JSON.stringify(successResp)}`);
+        } else {
+          const links = showUrls.map((u) => `<li><a href="${u}" target="_blank" rel="noreferrer">${u}</a></li>`).join("");
+          resultEl.innerHTML = `<div class="ok">任务成功，结果链接：</div><ul>${links}</ul>`;
+          log(`已找到 ${showUrls.length} 个结果链接`);
+        }
+      } catch (err) {
+        log(`错误: ${err.message}`);
+        resultEl.innerHTML = `<span class="err">${err.message}</span>`;
+      } finally {
+        runBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
