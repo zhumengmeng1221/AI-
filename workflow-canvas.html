@@ -1066,6 +1066,42 @@
       let generatedImageUrl = '';
       let generatedAudioUrl = '';
 
+      const LAYOUT_STORAGE_KEY = 'rh_workflow_canvas_layout_v1';
+
+      function saveLayoutState() {
+        const state = {
+          panX,
+          panY,
+          scale,
+          nodes: {
+            a: { left: nodes.a.style.left || `${nodes.a.offsetLeft}px`, top: nodes.a.style.top || `${nodes.a.offsetTop}px` },
+            b: { left: nodes.b.style.left || `${nodes.b.offsetLeft}px`, top: nodes.b.style.top || `${nodes.b.offsetTop}px` },
+            c: { left: nodes.c.style.left || `${nodes.c.offsetLeft}px`, top: nodes.c.style.top || `${nodes.c.offsetTop}px` }
+          }
+        };
+        localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function loadLayoutState() {
+        const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
+        if (!raw) return false;
+        try {
+          const state = JSON.parse(raw);
+          if (state?.nodes?.a?.left) nodes.a.style.left = state.nodes.a.left;
+          if (state?.nodes?.a?.top) nodes.a.style.top = state.nodes.a.top;
+          if (state?.nodes?.b?.left) nodes.b.style.left = state.nodes.b.left;
+          if (state?.nodes?.b?.top) nodes.b.style.top = state.nodes.b.top;
+          if (state?.nodes?.c?.left) nodes.c.style.left = state.nodes.c.left;
+          if (state?.nodes?.c?.top) nodes.c.style.top = state.nodes.c.top;
+          panX = Number(state?.panX ?? 0);
+          panY = Number(state?.panY ?? 0);
+          scale = clampScale(Number(state?.scale ?? 1));
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
       function updateZoomText() {
         zoomText.textContent = `${Math.round(scale * 100)}%`;
       }
@@ -1126,8 +1162,10 @@
       });
 
       window.addEventListener('pointerup', () => {
+        const wasPanning = panning;
         panning = false;
         viewport.classList.remove('dragging');
+        if (wasPanning) saveLayoutState();
       });
 
       Object.values(nodes).forEach((node) => {
@@ -1158,6 +1196,7 @@
 
         node.addEventListener('pointerup', () => {
           dragging = false;
+          saveLayoutState();
         });
       });
 
@@ -1168,11 +1207,13 @@
       zoomIn.addEventListener('click', () => {
         scale = clampScale(scale + 0.1);
         applyTransform();
+        saveLayoutState();
       });
 
       zoomOut.addEventListener('click', () => {
         scale = clampScale(scale - 0.1);
         applyTransform();
+        saveLayoutState();
       });
 
       viewport.addEventListener('wheel', (e) => {
@@ -1180,6 +1221,7 @@
         const next = clampScale(scale + (e.deltaY < 0 ? 0.06 : -0.06));
         scale = next;
         applyTransform();
+        saveLayoutState();
       }, { passive: false });
 
       function doFitView() {
@@ -1196,6 +1238,7 @@
         nodes.b.style.left = '520px'; nodes.b.style.top = '710px';
         nodes.c.style.left = '760px'; nodes.c.style.top = '110px';
         doFitView();
+        saveLayoutState();
       });
 
       const videoTopTrigger = document.getElementById('videoTopTrigger');
@@ -1866,6 +1909,7 @@
 
       renderImgIdle();
       renderAudioStageIdle();
+      loadLayoutState();
       applyTransform();
       window.addEventListener('resize', drawLinks);
     })();
