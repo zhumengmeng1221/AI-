@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RunningHub AI 应用页</title>
+  <style>
+    :root {
+      --bg: #070b12;
+      --panel: #0b121f;
+      --line: rgba(105, 130, 168, 0.24);
+      --text: #e6f0ff;
+      --muted: #98add0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 540px at 65% -18%, rgba(29, 86, 182, 0.2), transparent 65%),
+        linear-gradient(180deg, #070a12 0%, #070b12 100%);
+      color: var(--text);
+      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    }
+    .topbar {
+      height: 44px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(6, 10, 17, 0.94);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px 0 10px;
+      gap: 12px;
+    }
+    .search-mini {
+      width: 260px;
+      height: 30px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #101a2b;
+      color: #adc2e5;
+      font-size: 12px;
+      padding: 0 12px;
+      outline: none;
+    }
+    .shell {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      min-height: calc(100vh - 44px);
+    }
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: #090f19;
+      padding: 8px 6px;
+    }
+    .nav-item {
+      width: 100%;
+      margin-bottom: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #9cb3d8;
+      font-size: 11px;
+      text-align: left;
+      border-radius: 8px;
+      padding: 7px 8px;
+    }
+    .nav-item.active {
+      color: #e9f5ff;
+      border-color: rgba(102, 149, 214, 0.5);
+      background: linear-gradient(145deg, rgba(27, 73, 138, 0.58), rgba(14, 34, 63, 0.85));
+    }
+    .content { padding: 10px 14px 16px; }
+    .section { margin-bottom: 14px; }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(145deg, #101a2a, #0b1422);
+      min-height: 56px;
+      padding: 8px;
+    }
+    .hero {
+      height: 110px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: linear-gradient(145deg, #21364f, #1b2c46);
+    }
+    .card {
+      border: 1px solid rgba(113, 148, 193, 0.35);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0c1525;
+    }
+    .cover { aspect-ratio: 3 / 4; background: linear-gradient(145deg, #ffde53, #d1a329); }
+    .card:nth-child(2) .cover { background: linear-gradient(145deg, #ffe26d, #e0ae31); }
+    .card:nth-child(3) .cover { background: linear-gradient(145deg, #bdd7e5, #8ea9ba); }
+    .card:nth-child(4) .cover { background: linear-gradient(145deg, #f1ead8, #d9ceb2); }
+    .meta { padding: 8px; font-size: 12px; color: #cfe0ff; }
+    @media (max-width: 980px) { .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <input class="search-mini" value="搜索工具、模型、关键词..." />
+    <div style="color:#ff9e38;font-size:14px;font-weight:700;">上线无限画布 ◀◀◀</div>
+    <div style="font-size:11px;color:#c9dbf6;">开始创作 | 登录 | 账户</div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <button class="nav-item">首页</button>
+      <button class="nav-item active">AI 应用</button>
+      <button class="nav-item">模型管理</button>
+      <button class="nav-item">工作流</button>
+      <button class="nav-item">API</button>
+      <button class="nav-item">个人中心</button>
+    </aside>
+    <main class="content">
+      <section class="section">
+        <div class="grid-4">
+          <div class="box">Seedance2.0 全能参考视频</div>
+          <div class="box">Seedance2.0 Fast 提速生成</div>
+          <div class="box">Qwen Image 2512 文生图</div>
+          <div class="box">Qwen Image Edit 2511 图像编辑</div>
+        </div>
+      </section>
+      <section class="section">
+        <div class="grid-4">
+          <div class="hero"></div>
+          <div class="hero"></div>
+          <div class="hero"></div>
+          <div class="hero"></div>
+        </div>
+      </section>
+      <section class="section">
+        <div class="grid-4">
+          <article class="card"><div class="cover"></div><div class="meta">全能图片 2.0</div></article>
+          <article class="card"><div class="cover"></div><div class="meta">全能图片 PRO</div></article>
+          <article class="card"><div class="cover"></div><div class="meta">低价渠道版 G2.0 图生图</div></article>
+          <article class="card"><div class="cover"></div><div class="meta">低价渠道版 G2.0 文生图</div></article>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

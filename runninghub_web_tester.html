@@ -3,957 +3,367 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RunningHub 图片+音频 生成视频测试</title>
+  <title>RunningHub AI Application 1:1</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #060b16;
-      --bg-soft: #0b1425;
-      --card: rgba(16, 27, 48, 0.72);
-      --card-border: rgba(107, 134, 180, 0.28);
-      --text: #e6efff;
-      --muted: #9db1d0;
-      --accent: #2dd4f7;
-      --accent-2: #60a5fa;
-      --ok: #33d17a;
-      --err: #ff6b6b;
-      --radius: 16px;
-      --shadow: 0 12px 34px rgba(7, 16, 34, 0.52);
+      --bg: #070b12;
+      --panel: #0b121f;
+      --panel-soft: #0d1727;
+      --line: rgba(105, 130, 168, .24);
+      --text: #e6f0ff;
+      --muted: #98add0;
+      --aqua: #1edaf9;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      min-height: 100vh;
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      color: var(--text);
       background:
-        radial-gradient(1100px 480px at 64% 0%, rgba(55, 161, 255, 0.2) 0%, rgba(18, 48, 89, 0) 60%),
-        radial-gradient(800px 380px at 35% 12%, rgba(23, 203, 255, 0.22) 0%, rgba(11, 26, 46, 0) 62%),
-        linear-gradient(160deg, #040811 0%, #070e1d 46%, #050912 100%);
-      line-height: 1.5;
+        radial-gradient(1200px 540px at 65% -18%, rgba(29, 86, 182, .2), transparent 65%),
+        linear-gradient(180deg, #070a12 0%, #070b12 100%);
+      color: #dbe9ff;
+      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
     }
-    .app-shell {
-      width: min(1320px, 96vw);
-      margin: 16px auto 26px;
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 16px;
-    }
-    .sidebar {
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      background: rgba(11, 20, 37, 0.88);
-      box-shadow: var(--shadow);
-      padding: 14px 10px;
-      position: sticky;
-      top: 16px;
-      height: calc(100vh - 32px);
-      display: flex;
-      flex-direction: column;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px 14px;
-      border-bottom: 1px solid rgba(112, 145, 192, 0.22);
-      margin-bottom: 12px;
-      font-weight: 700;
-      color: #d7e9ff;
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #80edff, #259dff 70%);
-      box-shadow: 0 0 14px rgba(65, 201, 255, 0.6);
-    }
-    .nav-item {
-      border: 1px solid transparent;
-      border-radius: 10px;
-      padding: 9px 10px;
-      color: #b7ccee;
-      font-size: 13px;
-      margin: 4px 2px;
-      background: transparent;
-      display: block;
-      width: calc(100% - 4px);
-      text-align: left;
-    }
-    .nav-item.active {
-      background: rgba(29, 72, 130, 0.42);
-      border-color: rgba(129, 173, 230, 0.4);
-      color: #ebf5ff;
-    }
-    .side-tip {
-      margin-top: auto;
-      padding: 10px;
-      border-radius: 10px;
-      background: rgba(18, 45, 82, 0.38);
-      border: 1px solid rgba(119, 156, 205, 0.3);
-      font-size: 12px;
-      color: #a4bcdd;
-    }
-    .page { min-width: 0; }
-    .topbar {
+    .topbar{
+      height: 44px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(6, 10, 17, .94);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-      padding: 10px 14px;
-      border: 1px solid rgba(114, 149, 193, 0.26);
-      border-radius: 12px;
-      background: rgba(10, 20, 37, 0.7);
+      padding: 0 12px 0 10px;
     }
-    .crumb { color: #a6bddf; font-size: 13px; }
-    .stat-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-    .pill {
-      border: 1px solid rgba(126, 168, 221, 0.34);
-      border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 12px;
-      color: #cfe2ff;
-      background: rgba(21, 49, 87, 0.42);
-    }
-    .hero {
-      border: 1px solid rgba(111, 169, 230, 0.28);
-      border-radius: calc(var(--radius) + 4px);
-      padding: 26px 30px;
-      box-shadow: var(--shadow);
-      background:
-        linear-gradient(120deg, rgba(10, 22, 42, 0.92) 0%, rgba(13, 34, 60, 0.74) 60%, rgba(10, 18, 36, 0.85) 100%),
-        radial-gradient(circle at 70% 10%, rgba(45, 212, 247, 0.2), transparent 45%);
-      margin-bottom: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::after {
-      content: "";
-      position: absolute;
-      right: -10%;
-      top: -60%;
-      width: 340px;
-      height: 340px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(96, 165, 250, 0.22) 0%, rgba(96, 165, 250, 0) 72%);
-      pointer-events: none;
-    }
-    .brand {
-      display: inline-flex;
+    .left-head {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      letter-spacing: .08em;
-      color: #b8cced;
-      text-transform: uppercase;
-      background: rgba(43, 94, 160, 0.25);
-      border: 1px solid rgba(106, 149, 205, 0.36);
-      border-radius: 999px;
-      padding: 6px 12px;
-      margin-bottom: 12px;
+      gap: 10px;
+      min-width: 280px;
     }
-    h2 {
-      margin: 0;
-      font-size: clamp(28px, 5vw, 44px);
-      line-height: 1.15;
-      font-weight: 700;
-      letter-spacing: .02em;
-      max-width: 760px;
-      text-wrap: balance;
+    .rh-logo {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: linear-gradient(140deg, #00e0ff, #0e6cff);
+      box-shadow: 0 0 12px rgba(20, 150, 255, .45);
     }
-    .glow {
-      color: #88e9ff;
-      text-shadow: 0 0 18px rgba(79, 206, 255, 0.45);
-    }
-    .hero .muted {
-      margin-top: 14px;
-      max-width: 700px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(320px, 1.1fr) minmax(280px, .9fr);
-      gap: 16px;
-    }
-    .card {
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      padding: 18px;
-      background: var(--card);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
-    }
-    .card h3 {
-      margin: 0 0 12px;
-      font-size: 17px;
-      font-weight: 650;
-    }
-    .page-section { display: none; }
-    .page-section.active { display: block; }
-    .mock-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .mock-tile {
-      border: 1px solid rgba(116, 156, 210, 0.35);
-      border-radius: 12px;
-      min-height: 128px;
-      padding: 12px;
-      background: linear-gradient(145deg, rgba(13, 30, 53, .85), rgba(10, 22, 40, .7));
-      position: relative;
-      overflow: hidden;
-    }
-    .mock-tile::after {
-      content: "";
-      position: absolute;
-      width: 160px;
-      height: 160px;
-      right: -40px;
-      top: -40px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(91, 183, 255, .24), transparent 70%);
-    }
-    .mock-tile h4 {
-      margin: 0 0 6px;
-      font-size: 14px;
-      color: #dff0ff;
-    }
-    .mock-tile p {
-      margin: 0;
+    .search-mini {
+      width: 220px;
+      height: 30px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #101a2b;
+      color: #adc2e5;
       font-size: 12px;
-      color: #9fb6d7;
-      max-width: 180px;
+      padding: 0 12px;
+      outline: none;
     }
-    .table-lite {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      color: #d1e5ff;
+    .center-head {
+      color: #ff9e38;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .04em;
     }
-    .table-lite th,
-    .table-lite td {
-      text-align: left;
-      padding: 10px;
-      border-bottom: 1px solid rgba(108, 144, 194, 0.28);
+    .right-head {
+      display: flex;
+      gap: 6px;
+      align-items: center;
     }
-    .table-lite th {
-      color: #a8c2e4;
-      font-weight: 600;
+    .head-btn {
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(105, 150, 214, .4);
+      background: #0f1a2c;
+      color: #c9dbf6;
+      font-size: 11px;
+      padding: 0 10px;
     }
-    .uploader-grid {
+    .shell{
       display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 12px;
+      grid-template-columns: 80px 1fr;
+      min-height: calc(100vh - 44px);
+    }
+    .sidebar{
+      border-right: 1px solid var(--line);
+      background: #090f19;
+      padding: 8px 6px;
+    }
+    .logo{
+      text-align: center;
+      color: #22dcf8;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 4px 0 10px;
+    }
+    .nav{
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .nav-item{
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #9cb3d8;
+      font-size: 11px;
+      text-align: left;
+      border-radius: 8px;
+      padding: 7px 8px;
+      cursor: pointer;
+    }
+    .nav-item.active{
+      color: #e9f5ff;
+      border-color: rgba(102, 149, 214, .5);
+      background: linear-gradient(145deg, rgba(27, 73, 138, .58), rgba(14, 34, 63, .85));
+    }
+    .content {
+      padding: 10px 12px 16px;
+      max-width: 1260px;
+    }
+    .page-title {
+      font-size: 13px;
+      color: #d5e6ff;
+      margin-bottom: 7px;
+    }
+    .search-row{
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .search-input{
+      flex: 1;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0f1727;
+      color: #c8dbf8;
+      height: 34px;
+      padding: 0 12px;
+      font-size: 12px;
+      outline: none;
+    }
+    .section{
       margin-bottom: 12px;
     }
-    .upload-panel {
-      border: 1px solid rgba(106, 140, 192, 0.36);
-      border-radius: 12px;
-      background: rgba(8, 21, 39, 0.72);
-      padding: 12px;
-    }
-    .upload-panel h4 {
+    .section h3{
       margin: 0 0 8px;
       font-size: 14px;
-      color: #d9e9ff;
-    }
-    .preview-box {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      border: 1px dashed rgba(118, 161, 214, 0.46);
-      border-radius: 10px;
-      overflow: hidden;
-      background:
-        radial-gradient(70% 100% at 70% 0%, rgba(55, 162, 255, .2) 0%, rgba(12, 29, 52, 0) 65%),
-        linear-gradient(160deg, #09172b 0%, #071224 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #96afcf;
-      font-size: 13px;
-      text-align: center;
-      padding: 10px;
-    }
-    .preview-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: none;
-      background: #030814;
-    }
-    .audio-meta {
-      font-size: 12px;
-      color: #a9bfdc;
-      margin-top: 8px;
-      min-height: 18px;
-    }
-    label {
-      display: block;
-      margin: 0 0 6px;
-      font-size: 13px;
-      color: #c4d5f1;
+      color: #dce9ff;
       font-weight: 600;
     }
-    input[type="text"],
-    input[type="url"] {
-      width: 100%;
-      padding: 11px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(109, 145, 196, 0.4);
-      color: #eaf3ff;
-      background: rgba(9, 20, 37, 0.78);
-      outline: none;
-      transition: border-color .2s ease, box-shadow .2s ease;
-    }
-    input[type="text"]:focus,
-    input[type="url"]:focus {
-      border-color: rgba(103, 205, 255, 0.9);
-      box-shadow: 0 0 0 3px rgba(69, 196, 255, 0.2);
-    }
-    input[type="file"] {
-      width: 100%;
-      padding: 9px 10px;
-      border-radius: 10px;
-      border: 1px dashed rgba(109, 145, 196, 0.45);
-      background: rgba(8, 19, 35, 0.66);
-      color: #d4e5ff;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    button {
-      padding: 10px 16px;
-      border-radius: 11px;
-      border: 1px solid transparent;
-      color: #e6f4ff;
-      font-size: 14px;
-      cursor: pointer;
-      transition: transform .18s ease, box-shadow .18s ease, opacity .2s ease;
-    }
-    #runBtn {
-      background: linear-gradient(135deg, rgba(23, 191, 236, 0.94), rgba(35, 108, 255, 0.95));
-      border-color: rgba(134, 235, 255, 0.65);
-      box-shadow: 0 8px 20px rgba(36, 155, 255, 0.35);
-    }
-    button:hover:not(:disabled) { transform: translateY(-1px); }
-    button:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-    pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      border: 1px solid rgba(100, 132, 180, 0.36);
-      border-radius: 12px;
-      padding: 12px;
-      max-height: 360px;
-      overflow: auto;
-      background: rgba(5, 14, 27, 0.8);
-      color: #b8d2f5;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    #result {
-      border: 1px solid rgba(100, 132, 180, 0.36);
-      border-radius: 12px;
-      min-height: 88px;
-      padding: 12px;
-      background: rgba(5, 14, 27, 0.8);
-      color: #d8e8ff;
-    }
-    #result ul { margin: 8px 0 0 18px; padding: 0; }
-    #result a {
-      color: #8ad9ff;
-      text-decoration: none;
-      word-break: break-all;
-    }
-    #result a:hover { text-decoration: underline; }
-    .muted { color: var(--muted); font-size: 13px; }
-    .ok { color: var(--ok); }
-    .err { color: var(--err); }
-    .status-wrap {
+    .reco-grid{
       display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 12px;
-      margin-top: 14px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
     }
-    .status-badge {
-      border-radius: 12px;
-      border: 1px solid rgba(118, 163, 221, 0.4);
-      background: rgba(10, 27, 49, 0.8);
-      padding: 12px;
-      font-size: 13px;
+    .reco-item{
+      border: 1px solid transparent;
+      border-color: var(--line);
+      border-radius: 8px;
+      min-height: 56px;
+      background: linear-gradient(145deg, #101a2a, #0b1422);
+      padding: 7px;
+      display: grid;
+      grid-template-columns: 1fr 46px;
+      gap: 8px;
     }
-    .status-badge strong { display: block; margin-top: 4px; font-size: 16px; color: #d9edff; }
-    .progress-box {
-      border-radius: 12px;
-      border: 1px solid rgba(118, 163, 221, 0.35);
-      background: rgba(8, 24, 44, 0.76);
-      padding: 12px;
+    .reco-name {
+      font-size: 11px;
+      color: #e6f0ff;
+      line-height: 1.35;
+      margin-bottom: 2px;
     }
-    .progress-track {
-      height: 9px;
-      border-radius: 999px;
+    .reco-sub {
+      font-size: 10px;
+      color: #93abcf;
+    }
+    .reco-thumb {
+      width: 46px;
+      height: 42px;
+      border-radius: 7px;
+      background: linear-gradient(140deg, #265ea8, #2f3f5f);
+    }
+    .pick-grid{
+      display: grid;
+      grid-template-columns: 1.05fr 1.1fr .85fr;
+      gap: 8px;
+    }
+    .pick {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      height: 112px;
       overflow: hidden;
-      background: rgba(103, 132, 178, 0.32);
-      margin-top: 7px;
+      background: linear-gradient(145deg, #20354c, #1a2b45);
+      position: relative;
     }
-    .progress-fill {
-      width: 0;
-      height: 100%;
-      background: linear-gradient(90deg, #25b7ff, #5be6ff);
-      transition: width .35s ease;
+    .pick:nth-child(2){ background: linear-gradient(145deg, #1d364d, #24324c); }
+    .pick:nth-child(3){ background: linear-gradient(145deg, #3c3b45, #232a3a); }
+    .pick span{
+      position: absolute;
+      left: 10px;
+      bottom: 9px;
+      font-size: 12px;
+      color: #edf6ff;
+      font-weight: 600;
+      text-shadow: 0 2px 6px rgba(0,0,0,.45);
     }
-    .progress-note { margin-top: 7px; font-size: 12px; color: #a8c0df; }
-    @media (max-width: 960px) {
-      .app-shell { grid-template-columns: 1fr; width: min(940px, 95vw); }
-      .sidebar {
-        position: static;
-        height: auto;
-        padding: 10px;
-      }
-      .logo { margin-bottom: 8px; }
-      .nav-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-      .nav-item { margin: 0; text-align: center; }
-      .side-tip { margin-top: 8px; }
-      .layout { grid-template-columns: 1fr; }
-      .uploader-grid { grid-template-columns: 1fr; }
-      .hero { padding: 20px; }
-      .topbar { flex-direction: column; align-items: flex-start; }
-      .status-wrap { grid-template-columns: 1fr; }
-      .mock-grid { grid-template-columns: 1fr; }
+    .filters{
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .chip{
+      font-size: 10px;
+      color: #a8bee0;
+      border: 1px solid rgba(103, 136, 179, .35);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #0d1728;
+    }
+    .cards{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .card{
+      border: 1px solid rgba(113, 148, 193, 0.35);
+      border-radius: 10px;
+      background: #0c1525;
+      overflow: hidden;
+    }
+    .cover{
+      aspect-ratio: 3 / 4;
+      position: relative;
+      background: linear-gradient(145deg, #ffde53, #d1a329);
+    }
+    .card:nth-child(2) .cover{ background: linear-gradient(145deg, #ffe26d, #e0ae31); }
+    .card:nth-child(3) .cover{ background: linear-gradient(145deg, #bdd7e5, #8ea9ba); }
+    .card:nth-child(4) .cover{ background: linear-gradient(145deg, #f1ead8, #d9ceb2); }
+    .ribbon{
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: #ff5a95;
+      color: #fff;
+      font-size: 10px;
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+    .body{
+      padding: 8px 9px 10px;
+    }
+    .title{
+      font-size: 12px;
+      margin: 0;
+      color: #e6f0ff;
+    }
+    .meta{
+      margin-top: 4px;
+      font-size: 10px;
+      color: #93abcf;
+    }
+    .feature-memory {
+      display: none;
+    }
+    @media (max-width: 1000px) {
+      .reco-grid, .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pick-grid { grid-template-columns: 1fr; }
+      .center-head { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="app-shell">
+  <header class="topbar">
+    <div class="left-head">
+      <span class="rh-logo"></span>
+      <input class="search-mini" value="搜索工具、模型、关键词..." />
+    </div>
+    <div class="center-head">上线无限画布 ◀◀◀</div>
+    <div class="right-head">
+      <button class="head-btn">开始创作</button>
+      <button class="head-btn">登录</button>
+      <button class="head-btn">账户</button>
+    </div>
+  </header>
+
+  <div class="shell">
     <aside class="sidebar">
-      <div class="logo"><span class="dot"></span> RunningHub</div>
-      <div class="nav-list">
-        <button class="nav-item" type="button" data-page="home">首页</button>
-        <button class="nav-item" type="button" data-page="workflow">工作流</button>
-        <button class="nav-item active" type="button" data-page="api">API 测试</button>
-        <button class="nav-item" type="button" data-page="models">模型中心</button>
-        <button class="nav-item" type="button" data-page="queue">任务队列</button>
-        <button class="nav-item" type="button" data-page="profile">个人设置</button>
-      </div>
-      <div class="side-tip">提示：先自动识别节点，再执行生成，成功率更高。</div>
+      <div class="logo">AIHub</div>
+      <nav class="nav">
+        <button class="nav-item">首页</button>
+        <button class="nav-item active">AI 应用</button>
+        <button class="nav-item">模型管理</button>
+        <button class="nav-item">工作流</button>
+        <button class="nav-item">API</button>
+        <button class="nav-item">个人中心</button>
+      </nav>
     </aside>
-    <div class="page">
-    <section class="topbar">
-      <div class="crumb" id="crumb">控制台 / 工作流 / API 测试器</div>
-      <div class="stat-pills" id="topStats">
-        <span class="pill">状态：<span id="statPhase">READY</span></span>
-        <span class="pill">Task ID：<span id="statTaskId">-</span></span>
-      </div>
-    </section>
-    <section class="page-section active" data-page="api">
-    <section class="hero">
-      <div class="brand">RunningHub · Workflow Tester</div>
-      <h2>用 <span class="glow">ComfyUI 云平台风格</span><br />快速测试工作流生成视频</h2>
-      <p class="muted">
-        按新版接口流程执行：上传 <code>/task/openapi/upload</code>，
-        提交 <code>/task/openapi/create</code>，轮询 <code>/task/openapi/outputs</code>。
-      </p>
-    </section>
 
-    <section class="layout">
-      <div class="card">
-        <h3>一键生成</h3>
-        <div class="uploader-grid">
-          <div class="upload-panel">
-            <h4>上传图片（必选）</h4>
-            <label for="imageFile">选择封面图 / 角色图 / 场景图</label>
-            <input id="imageFile" type="file" accept="image/*" />
-            <div class="preview-box" id="imagePreviewBox">
-              <img id="imagePreview" alt="图片预览" />
-              <span id="imagePlaceholder">上传后在这里预览图片</span>
-            </div>
-          </div>
-          <div class="upload-panel">
-            <h4>上传音乐（可选）</h4>
-            <label for="audioFile">选择背景音乐（mp3/wav/flac）</label>
-            <input id="audioFile" type="file" accept="audio/*,.mp3,.wav,.flac" />
-            <div class="audio-meta" id="audioMeta">未选择音频，将按无音频模式运行</div>
-          </div>
-        </div>
+    <main class="content">
+      <div class="page-title">终结生图赛道「全能图片 G2」</div>
+      <div class="search-row"><input class="search-input" placeholder="推荐应用" /></div>
 
-        <div class="actions">
-          <button id="runBtn" type="button">上传素材并一键生成视频</button>
-        </div>
-        <p class="muted">给小白模式：只上传图片，音乐可选，其它参数已在后台固定。</p>
-        <input id="apiKey" type="hidden" value="6b0b6ac3b887416992eed10fe8b77d65" />
-        <input id="workflowId" type="hidden" value="2044669894783934465" />
-        <input id="baseUrl" type="hidden" value="https://www.runninghub.cn" />
-        <input id="createPath" type="hidden" value="/task/openapi/create" />
-        <input id="outputsPath" type="hidden" value="/task/openapi/outputs" />
-        <input id="imageNodeId" type="hidden" value="133" />
-        <input id="imageFieldName" type="hidden" value="image" />
-        <input id="audioNodeId" type="hidden" value="125" />
-        <input id="audioFieldName" type="hidden" value="audio" />
-        <div class="status-wrap">
-          <div class="status-badge">
-            当前任务状态
-            <strong id="statusBadge">READY</strong>
-            <div class="muted" id="taskIdText">taskId: -</div>
-          </div>
-          <div class="progress-box">
-            任务进度
-            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-            <div class="progress-note" id="progressText">等待执行</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>执行日志</h3>
-        <pre id="log"></pre>
-      </div>
-    </section>
-
-    <section class="card" style="margin-top:16px;">
-      <h3>结果</h3>
-      <div id="result">暂无结果</div>
-    </section>
-    </section>
-
-    <section class="page-section" data-page="home">
-      <section class="hero">
-        <div class="brand">RunningHub · Home</div>
-        <h2>一站式 AI 创作工作台</h2>
-        <p class="muted">面向创作者的工作流、模型、任务和资产管理，支持快速出图与视频生成。</p>
-      </section>
-      <section class="mock-grid">
-        <div class="mock-tile"><h4>今日热门工作流</h4><p>视频转场、文生图、角色一致性、短剧镜头模板</p></div>
-        <div class="mock-tile"><h4>我的最近项目</h4><p>展示最近编辑过的 6 个创作项目和协作成员</p></div>
-        <div class="mock-tile"><h4>推荐模型</h4><p>为当前行业推荐风格模型和爆款提示词模板</p></div>
-      </section>
-    </section>
-
-    <section class="page-section" data-page="workflow">
-      <section class="card">
-        <h3>工作流广场</h3>
-        <div class="mock-grid">
-          <div class="mock-tile"><h4>图生视频</h4><p>单图驱动动态镜头，适合剧情短视频与广告素材。</p></div>
-          <div class="mock-tile"><h4>数字人播报</h4><p>上传文案和语音，自动生成播报类口播视频。</p></div>
-          <div class="mock-tile"><h4>批量封面工厂</h4><p>10 分钟批量产出电商、短视频、社媒封面图。</p></div>
+      <section class="section">
+        <h3>推荐应用</h3>
+        <div class="reco-grid">
+          <article class="reco-item"><div><div class="reco-name">Seedance2.0 全能参考视频</div><div class="reco-sub">真人实拍 · 全景参考</div></div><div class="reco-thumb"></div></article>
+          <article class="reco-item"><div><div class="reco-name">Seedance2.0 Fast 提速生成</div><div class="reco-sub">15秒快产 · 秒级优化</div></div><div class="reco-thumb"></div></article>
+          <article class="reco-item"><div><div class="reco-name">Qwen Image 2512 文生图</div><div class="reco-sub">从关键词到画面</div></div><div class="reco-thumb"></div></article>
+          <article class="reco-item"><div><div class="reco-name">Qwen Image Edit 2511 图像编辑</div><div class="reco-sub">局部替换/融合</div></div><div class="reco-thumb"></div></article>
+          <article class="reco-item"><div><div class="reco-name">可爱V2.0动作转视频</div><div class="reco-sub">动作映射 · 高拟真</div></div><div class="reco-thumb"></div></article>
+          <article class="reco-item"><div><div class="reco-name">视频抠分</div><div class="reco-sub">超分修复 · 降噪</div></div><div class="reco-thumb"></div></article>
+          <article class="reco-item"><div><div class="reco-name">数字人音频驱动</div><div class="reco-sub">歌声转动效 · 口型同步</div></div><div class="reco-thumb"></div></article>
+          <article class="reco-item"><div><div class="reco-name">数字人文本驱动</div><div class="reco-sub">文案生成 · 风格化</div></div><div class="reco-thumb"></div></article>
         </div>
       </section>
-    </section>
 
-    <section class="page-section" data-page="models">
-      <section class="card">
-        <h3>模型中心</h3>
-        <div class="mock-grid">
-          <div class="mock-tile"><h4>人像写真</h4><p>真实肤质、电影级光影，适合人物短片封面。</p></div>
-          <div class="mock-tile"><h4>动漫角色</h4><p>统一角色设定与服饰，支持多场景连续创作。</p></div>
-          <div class="mock-tile"><h4>国风视觉</h4><p>古风人物、山水场景、海报排版一体化输出。</p></div>
+      <section class="section">
+        <h3>精选应用</h3>
+        <div class="pick-grid">
+          <div class="pick"><span>全能图片 V1</span></div>
+          <div class="pick"><span>Qwen文生图角色设定</span></div>
+          <div class="pick"><span>人物讲解生成</span></div>
         </div>
       </section>
-    </section>
 
-    <section class="page-section" data-page="queue">
-      <section class="card">
-        <h3>任务队列</h3>
-        <table class="table-lite">
-          <thead>
-            <tr><th>任务ID</th><th>类型</th><th>状态</th><th>创建时间</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>RH-20446698</td><td>图生视频</td><td>RUNNING</td><td>2026-04-19 10:38</td></tr>
-            <tr><td>RH-20446642</td><td>数字人播报</td><td>QUEUED</td><td>2026-04-19 10:31</td></tr>
-            <tr><td>RH-20446590</td><td>封面批量</td><td>SUCCESS</td><td>2026-04-19 10:12</td></tr>
-          </tbody>
-        </table>
-      </section>
-    </section>
-
-    <section class="page-section" data-page="profile">
-      <section class="card">
-        <h3>个人设置</h3>
-        <div class="mock-grid">
-          <div class="mock-tile"><h4>账户信息</h4><p>头像、昵称、团队权限与 API 权限管理。</p></div>
-          <div class="mock-tile"><h4>计费与套餐</h4><p>查看点数消耗、月度账单、套餐升级入口。</p></div>
-          <div class="mock-tile"><h4>通知偏好</h4><p>任务完成通知、失败提醒、营销消息管理。</p></div>
+      <section class="section">
+        <h3>全部应用</h3>
+        <div class="filters">
+          <span class="chip">全部</span>
+          <span class="chip">文生图</span>
+          <span class="chip">图生图</span>
+          <span class="chip">文生视频</span>
+          <span class="chip">数字人</span>
+          <span class="chip">抠图修复</span>
+          <span class="chip">API</span>
+          <span class="chip">4K渲染</span>
+        </div>
+        <div class="cards">
+          <article class="card"><div class="cover"><span class="ribbon">新</span></div><div class="body"><p class="title">全能图片 2.0</p><div class="meta">三分钟出图 · 多风格</div></div></article>
+          <article class="card"><div class="cover"><span class="ribbon">热</span></div><div class="body"><p class="title">全能图片 PRO</p><div class="meta">图片修复 · 细节增强</div></div></article>
+          <article class="card"><div class="cover"><span class="ribbon">荐</span></div><div class="body"><p class="title">低价渠道版 G2.0 图生图</p><div class="meta">商业海报 · 快速生成</div></div></article>
+          <article class="card"><div class="cover"><span class="ribbon">荐</span></div><div class="body"><p class="title">低价渠道版 G2.0 文生图</p><div class="meta">高效迭代 · 批量出图</div></div></article>
         </div>
       </section>
-    </section>
-  </div>
+    </main>
   </div>
 
   <script>
-    const logEl = document.getElementById("log");
-    const resultEl = document.getElementById("result");
-    const runBtn = document.getElementById("runBtn");
-    const imageFileInput = document.getElementById("imageFile");
-    const audioFileInput = document.getElementById("audioFile");
-    const imagePreviewEl = document.getElementById("imagePreview");
-    const imagePlaceholderEl = document.getElementById("imagePlaceholder");
-    const audioMetaEl = document.getElementById("audioMeta");
-    const statusBadgeEl = document.getElementById("statusBadge");
-    const progressFillEl = document.getElementById("progressFill");
-    const progressTextEl = document.getElementById("progressText");
-    const taskIdTextEl = document.getElementById("taskIdText");
-    const statPhaseEl = document.getElementById("statPhase");
-    const statTaskIdEl = document.getElementById("statTaskId");
-    const navItems = Array.from(document.querySelectorAll(".nav-item[data-page]"));
-    const pageSections = Array.from(document.querySelectorAll(".page-section[data-page]"));
-    const crumbEl = document.getElementById("crumb");
-    const topStatsEl = document.getElementById("topStats");
-    const pageTitles = {
-      home: "控制台 / 首页",
-      workflow: "控制台 / 工作流",
-      api: "控制台 / 工作流 / API 测试器",
-      models: "控制台 / 模型中心",
-      queue: "控制台 / 任务队列",
-      profile: "控制台 / 个人设置"
+    window.preservedVideoFeature = {
+      description: "已记住图+音频生成视频功能，后续可嵌入当前页面",
+      endpoints: {
+        upload: "/task/openapi/upload",
+        create: "/task/openapi/create",
+        outputs: "/task/openapi/outputs"
+      },
+      defaults: {
+        workflowId: "2044669894783934465",
+        imageNodeId: "133",
+        imageFieldName: "image",
+        audioNodeId: "125",
+        audioFieldName: "audio",
+        baseUrl: "https://www.runninghub.cn"
+      }
     };
-    function switchPage(page) {
-      const key = pageTitles[page] ? page : "api";
-      navItems.forEach((item) => item.classList.toggle("active", item.dataset.page === key));
-      pageSections.forEach((sec) => sec.classList.toggle("active", sec.dataset.page === key));
-      crumbEl.textContent = pageTitles[key];
-      topStatsEl.style.display = key === "api" ? "flex" : "none";
-    }
-    navItems.forEach((item) => {
-      item.addEventListener("click", () => switchPage(item.dataset.page));
-    });
-    switchPage("api");
-    function setStatus(phase) {
-      const safe = String(phase || "READY").toUpperCase();
-      statusBadgeEl.textContent = safe;
-      statPhaseEl.textContent = safe;
-    }
-    function setTaskId(taskId) {
-      const safe = taskId || "-";
-      taskIdTextEl.textContent = `taskId: ${safe}`;
-      statTaskIdEl.textContent = safe;
-    }
-    function setProgress(percent, text) {
-      const p = Math.max(0, Math.min(100, Number(percent) || 0));
-      progressFillEl.style.width = `${p}%`;
-      progressTextEl.textContent = text || "处理中";
-    }
-    function bytesToSize(size) {
-      if (!size || size <= 0) return "0 B";
-      const units = ["B", "KB", "MB", "GB"];
-      const idx = Math.min(units.length - 1, Math.floor(Math.log(size) / Math.log(1024)));
-      const val = (size / (1024 ** idx)).toFixed(idx === 0 ? 0 : 1);
-      return `${val} ${units[idx]}`;
-    }
-    imageFileInput.addEventListener("change", () => {
-      const file = imageFileInput.files[0];
-      if (!file) {
-        imagePreviewEl.style.display = "none";
-        imagePlaceholderEl.style.display = "block";
-        imagePlaceholderEl.textContent = "上传后在这里预览图片";
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        imagePreviewEl.src = String(reader.result || "");
-        imagePreviewEl.style.display = "block";
-        imagePlaceholderEl.style.display = "none";
-      };
-      reader.readAsDataURL(file);
-    });
-    audioFileInput.addEventListener("change", () => {
-      const file = audioFileInput.files[0];
-      if (!file) {
-        audioMetaEl.textContent = "未选择音频，将按无音频模式运行";
-        return;
-      }
-      audioMetaEl.textContent = `已选择：${file.name} (${bytesToSize(file.size)})`;
-    });
-    async function getWorkflowJson(baseUrl, apiKey, workflowId) {
-      const resp = await fetch(`${baseUrl}/api/openapi/getJsonApiFormat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({ apiKey, workflowId })
-      });
-      const data = await parseJsonSafe(resp);
-      if (!resp.ok) {
-        throw new Error(`获取工作流Json失败(${resp.status}): ${JSON.stringify(data)}`);
-      }
-      if (data.code !== 0) {
-        throw new Error(`获取工作流Json失败(code=${data.code}): ${data.msg || JSON.stringify(data)}`);
-      }
-      const promptRaw = data?.data?.prompt;
-      if (!promptRaw) {
-        throw new Error("获取工作流Json成功，但 data.prompt 为空。");
-      }
-      if (typeof promptRaw === "string") {
-        return JSON.parse(promptRaw);
-      }
-      return promptRaw;
-    }
-
-    function detectNodeIds(promptJson) {
-      let imageNodeId = "";
-      let audioNodeId = "";
-      let imageFieldName = "";
-      let audioFieldName = "";
-      for (const [nodeId, node] of Object.entries(promptJson || {})) {
-        const ct = node?.class_type || "";
-        const inputs = node?.inputs || {};
-        if (!imageNodeId && (ct === "LoadImageFromURL" || ct === "LoadImage" || Object.prototype.hasOwnProperty.call(inputs, "url") || Object.prototype.hasOwnProperty.call(inputs, "image"))) {
-          imageNodeId = nodeId;
-          if (Object.prototype.hasOwnProperty.call(inputs, "image")) imageFieldName = "image";
-          else if (Object.prototype.hasOwnProperty.call(inputs, "url")) imageFieldName = "url";
-        }
-        if (!audioNodeId && (ct === "LoadAudioFromUrl" || ct === "LoadAudio" || Object.prototype.hasOwnProperty.call(inputs, "audio"))) {
-          audioNodeId = nodeId;
-          if (Object.prototype.hasOwnProperty.call(inputs, "audio")) audioFieldName = "audio";
-        }
-      }
-      return { imageNodeId, audioNodeId, imageFieldName, audioFieldName };
-    }
-
-
-    function log(msg, cls) {
-      const line = `[${new Date().toLocaleTimeString()}] ${msg}\n`;
-      logEl.textContent += line;
-      if (cls) {
-        const span = document.createElement("span");
-        span.className = cls;
-      }
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    function sleep(ms) {
-      return new Promise((r) => setTimeout(r, ms));
-    }
-
-    async function parseJsonSafe(resp) {
-      const text = await resp.text();
-      try { return JSON.parse(text); } catch (_) { return { raw: text }; }
-    }
-
-    async function uploadBinary(baseUrl, apiKey, file) {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("apiKey", apiKey);
-      fd.append("fileType", "input");
-
-      const resp = await fetch(`${baseUrl}/task/openapi/upload`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`
-        },
-        body: fd
-      });
-      const data = await parseJsonSafe(resp);
-      if (!resp.ok) {
-        throw new Error(`上传失败(${resp.status}): ${JSON.stringify(data)}`);
-      }
-      return data;
-    }
-
-    function pickMediaValue(uploadResp) {
-      const d = uploadResp && uploadResp.data ? uploadResp.data : {};
-      return d.fileName || d.filename || d.download_url || d.downloadUrl || "";
-    }
-
-    function findUrls(obj, arr = []) {
-      if (!obj) return arr;
-      if (typeof obj === "string" && /^https?:\/\/.+/i.test(obj)) {
-        arr.push(obj);
-        return arr;
-      }
-      if (Array.isArray(obj)) {
-        obj.forEach((x) => findUrls(x, arr));
-        return arr;
-      }
-      if (typeof obj === "object") {
-        Object.values(obj).forEach((v) => findUrls(v, arr));
-      }
-      return arr;
-    }
-
-    async function createTask(baseUrl, createPath, apiKey, workflowId, imageValue, audioValue) {
-      const imageNodeId = document.getElementById("imageNodeId").value.trim();
-      const audioNodeId = document.getElementById("audioNodeId").value.trim();
-      const imageFieldName = document.getElementById("imageFieldName").value.trim() || "image";
-      const audioFieldName = document.getElementById("audioFieldName").value.trim() || "audio";
-      const nodeInfoList = [
-        { nodeId: imageNodeId, fieldName: imageFieldName, fieldValue: imageValue }
-      ];
-      if (audioValue && audioNodeId) {
-        nodeInfoList.push({ nodeId: audioNodeId, fieldName: audioFieldName, fieldValue: audioValue });
-      }
-      const body = {
-        apiKey,
-        workflowId,
-        nodeInfoList
-      };
-
-      const resp = await fetch(`${baseUrl}${createPath}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(body)
-      });
-      const data = await parseJsonSafe(resp);
-      if (!resp.ok) {
-        throw new Error(`创建任务失败(${resp.status}): ${JSON.stringify(data)}`);
-      }
-      if (data.code !== 0) {
-        throw new Error(`创建任务失败(code=${data.code}): ${data.msg || JSON.stringify(data)}`);
-      }
-      return data;
-    }
-
-    function getTaskId(createResp) {
-      return createResp?.data?.taskId || createResp?.taskId || createResp?.data?.id || "";
-    }
-
-    async function queryTaskOutputs(baseUrl, outputsPath, apiKey, taskId) {
-      const resp = await fetch(`${baseUrl}${outputsPath}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({ apiKey, taskId })
-      });
-      const data = await parseJsonSafe(resp);
-      if (!resp.ok) {
-        throw new Error(`查询结果失败(${resp.status}): ${JSON.stringify(data)}`);
-      }
-      return data;
-    }
-
-    runBtn.addEventListener("click", async () => {
-      logEl.textContent = "";
-      resultEl.innerHTML = "处理中...";
-      runBtn.disabled = true;
-      setTaskId("-");
-      setStatus("PREPARE");
-      setProgress(6, "正在校验参数...");
-
-      const apiKey = document.getElementById("apiKey").value.trim();
-      const workflowId = document.getElementById("workflowId").value.trim();
-      const baseUrl = document.getElementById("baseUrl").value.trim().replace(/\/+$/, "");
-      const createPath = document.getElementById("createPath").value.trim();
-      const outputsPath = document.getElementById("outputsPath").value.trim();
-      const imageNodeId = document.getElementById("imageNodeId").value.trim();
-      const audioNodeId = document.getElementById("audioNodeId").value.trim();
-      const imageFieldName = document.getElementById("imageFieldName").value.trim();
-      const audioFieldName = document.getElementById("audioFieldName").value.trim();
-      const imageFile = imageFileInput.files[0];
-      const audioFile = audioFileInput.files[0];
-
-      if (!apiKey || !workflowId || !baseUrl || !createPath || !outputsPath || !imageNodeId || !imageFieldName || !imageFile) {
-        resultEl.innerHTML = `<span class="err">请至少填写必填参数并选择图片文件。</span>`;
-        runBtn.disabled = false;
-        setStatus("ERROR");
-        setProgress(0, "参数不完整");
-        return;
-      }
-
-      try {
-        setStatus("UPLOADING");
-        setProgress(16, "开始上传图片...");
-        log("开始上传图片...");
-        const imageUploadResp = await uploadBinary(baseUrl, apiKey, imageFile);
-        const imageValue = pickMediaValue(imageUploadResp);
-        log(`图片上传成功，值: ${imageValue}`);
-
-        let audioValue = "";
-        if (audioFile && audioNodeId && audioFieldName) {
-          setProgress(28, "开始上传音频...");
-          log("开始上传音频...");
-          const audioUploadResp = await uploadBinary(baseUrl, apiKey, audioFile);
-          audioValue = pickMediaValue(audioUploadResp);
-          log(`音频上传成功，值: ${audioValue}`);
-        } else {
-          log("跳过音频上传（无音频模式）");
-        }
-
-        if (!imageValue) {
-          throw new Error("上传结果未拿到可用的图片值，请检查上传返回结构。");
-        }
-
-        setStatus("CREATING");
-        setProgress(40, "提交工作流任务...");
-        log("提交工作流任务...");
-        const createResp = await createTask(baseUrl, createPath, apiKey, workflowId, imageValue, audioValue);
-        log(`创建任务响应: ${JSON.stringify(createResp)}`);
-
-        const taskId = getTaskId(createResp);
-        if (!taskId) {
-          throw new Error(`创建任务成功但未拿到 taskId：${JSON.stringify(createResp)}`);
-        }
-        log(`taskId: ${taskId}`);
-        setTaskId(taskId);
-        setStatus("RUNNING");
-        setProgress(48, "任务已创建，开始轮询结果...");
-
-        let successResp = null;
-        for (let i = 0; i < 120; i++) {
-          await sleep(3000);
-          const outputsResp = await queryTaskOutputs(baseUrl, outputsPath, apiKey, taskId);
-          const code = outputsResp?.code;
-          if (code === 0 && Array.isArray(outputsResp?.data) && outputsResp.data.length > 0) {
-            successResp = outputsResp;
-            log("任务状态: SUCCESS");
-            setStatus("SUCCESS");
-            setProgress(100, "任务已完成");
-            break;
-          }
-          if (code === 805) {
-            throw new Error(`任务失败: ${JSON.stringify(outputsResp)}`);
-          }
-          if (code === 804) {
-            log("任务状态: RUNNING");
-            const p = Math.min(95, 50 + Math.floor(((i + 1) / 120) * 40));
-            setProgress(p, "任务运行中...");
-          } else if (code === 813) {
-            log("任务状态: QUEUED");
-            const p = Math.min(60, 45 + Math.floor(((i + 1) / 120) * 15));
-            setProgress(p, "任务排队中...");
-          } else {
-            log(`任务状态: ${outputsResp?.msg || "UNKNOWN"} (code=${String(code)})`);
-            const p = Math.min(90, 50 + Math.floor(((i + 1) / 120) * 30));
-            setProgress(p, `任务处理中（code=${String(code)}）`);
-          }
-        }
-
-        if (!successResp) {
-          throw new Error("轮询超时，任务可能还在运行中。你可以稍后手动查询 taskId。");
-        }
-
-        const urls = findUrls(successResp);
-        const videoUrls = urls.filter((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
-        const showUrls = videoUrls.length ? videoUrls : urls;
-
-        if (!showUrls.length) {
-          resultEl.innerHTML = `<span class="ok">任务成功，但未自动识别到 URL。请看日志中的完整响应。</span>`;
-          log(`SUCCESS 响应: ${JSON.stringify(successResp)}`);
-        } else {
-          const links = showUrls.map((u) => `<li><a href="${u}" target="_blank" rel="noreferrer">${u}</a></li>`).join("");
-          const firstVideo = showUrls.find((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
-          resultEl.innerHTML = `${firstVideo ? `<video src="${firstVideo}" controls style="width:100%;max-height:420px;border-radius:10px;margin-bottom:10px;background:#02060e;"></video>` : ""}<div class="ok">任务成功，结果链接：</div><ul>${links}</ul>`;
-          log(`已找到 ${showUrls.length} 个结果链接`);
-        }
-      } catch (err) {
-        log(`错误: ${err.message}`);
-        resultEl.innerHTML = `<span class="err">${err.message}</span>`;
-        setStatus("ERROR");
-        setProgress(0, "执行失败");
-      } finally {
-        runBtn.disabled = false;
-      }
-    });
   </script>
 </body>
 </html>
