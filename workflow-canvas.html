@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>无限画布工作流 - 数字人</title>
+  <style>
+    :root {
+      --bg: #06080f;
+      --panel: rgba(20, 27, 40, 0.9);
+      --line: rgba(124, 146, 180, 0.28);
+      --text: #dce9ff;
+      --muted: #8ea4c8;
+      --node-border: #f25757;
+      --node-bg: rgba(8, 12, 22, 0.75);
+      --grid-dot: rgba(58, 78, 112, 0.42);
+      --grid-dot-strong: rgba(78, 104, 148, 0.56);
+      --accent: #8cffd9;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background:
+        radial-gradient(circle at 0.5px 0.5px, var(--grid-dot) 0.5px, transparent 0.9px),
+        radial-gradient(circle at 0.5px 0.5px, var(--grid-dot-strong) 0.6px, transparent 1px),
+        radial-gradient(900px 450px at 55% -20%, rgba(43, 92, 210, 0.2), transparent 60%),
+        #05070d;
+      background-size: 20px 20px, 100px 100px, auto, auto;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    .top-left,
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .title-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 9px;
+      padding: 0 12px;
+      font-size: 13px;
+      color: #d9e6ff;
+      backdrop-filter: blur(6px);
+    }
+
+    .title-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4afac5, #e0fb8d);
+      box-shadow: 0 0 8px rgba(138, 255, 214, 0.8);
+    }
+
+    .btn {
+      height: 34px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: #cfe2ff;
+      border-radius: 9px;
+      padding: 0 12px;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      backdrop-filter: blur(6px);
+    }
+
+    .left-tools {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: grid;
+      gap: 8px;
+      z-index: 22;
+    }
+
+    .tool {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: #d9e9ff;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      user-select: none;
+      backdrop-filter: blur(6px);
+    }
+
+    .bottom-controls {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      z-index: 22;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 8px;
+      backdrop-filter: blur(6px);
+    }
+
+    .mini-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(136, 158, 194, 0.35);
+      background: rgba(14, 21, 34, 0.95);
+      color: #d6e7ff;
+      cursor: pointer;
+    }
+
+    .zoom-text {
+      min-width: 54px;
+      text-align: center;
+      font-size: 12px;
+      color: #c8daf9;
+    }
+
+    .viewport {
+      position: absolute;
+      inset: 0;
+      cursor: grab;
+      overflow: hidden;
+    }
+
+    .viewport.dragging { cursor: grabbing; }
+
+    .canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      transform-origin: 0 0;
+    }
+
+    svg.links {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .node {
+      position: absolute;
+      min-width: 188px;
+      min-height: 108px;
+      border: 2px solid var(--node-border);
+      border-radius: 3px;
+      background: var(--node-bg);
+      color: #ffb2b2;
+      padding: 10px 12px;
+      font-size: 14px;
+      user-select: none;
+      cursor: move;
+      box-shadow: inset 0 0 0 1px rgba(255, 118, 118, 0.12);
+    }
+
+    .node .title {
+      color: #ff8c8c;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .node .desc {
+      font-size: 12px;
+      color: rgba(255, 182, 182, 0.86);
+      line-height: 1.35;
+    }
+
+    .video-node {
+      min-width: 690px;
+      min-height: 530px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: #f1f5ff;
+      cursor: move;
+      padding: 6px;
+    }
+
+    .video-top {
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .node-label {
+      font-size: 38px;
+      font-weight: 700;
+      color: rgba(240, 245, 255, 0.8);
+      margin-bottom: 6px;
+    }
+
+    .upload-chip {
+      margin: 0 auto 10px;
+      width: fit-content;
+      border: 1px solid rgba(148, 161, 185, 0.24);
+      background: rgba(22, 27, 38, 0.92);
+      color: #f1f4fa;
+      border-radius: 12px;
+      padding: 7px 16px;
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .video-stage {
+      border: 1px solid rgba(214, 220, 232, 0.65);
+      border-radius: 14px;
+      min-height: 300px;
+      background: linear-gradient(180deg, rgba(45, 47, 53, 0.92), rgba(36, 38, 43, 0.92));
+      padding: 14px 18px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .connector {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid rgba(201, 208, 223, 0.75);
+      color: rgba(234, 240, 253, 0.95);
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      background: rgba(25, 28, 34, 0.9);
+    }
+
+    .connector.left { left: -12px; }
+    .connector.right { right: -12px; }
+
+    .stage-head {
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(243, 248, 255, 0.88);
+    }
+
+    .stage-center {
+      display: grid;
+      place-items: center;
+      color: rgba(229, 236, 249, 0.45);
+      font-size: 96px;
+      line-height: 1;
+    }
+
+    .stage-try {
+      color: rgba(242, 247, 255, 0.9);
+      font-size: 16px;
+      display: grid;
+      gap: 3px;
+      line-height: 1.2;
+    }
+
+    .editor-panel {
+      border: 1px solid rgba(83, 90, 103, 0.65);
+      border-radius: 14px;
+      background: rgba(37, 40, 47, 0.95);
+      padding: 12px;
+    }
+
+    .editor-panel.hidden { display: none; }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .video-card {
+      border: 1px solid rgba(88, 95, 111, 0.85);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(55, 58, 66, 0.75);
+      min-height: 168px;
+      position: relative;
+    }
+
+    .video-card h4 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      color: #eef3ff;
+      font-weight: 700;
+    }
+
+    .video-card p {
+      margin: 0 0 8px;
+      color: rgba(231, 238, 252, 0.82);
+      font-size: 14px;
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .pick-btn {
+      border: 1px solid rgba(166, 174, 192, 0.6);
+      background: rgba(88, 94, 107, 0.55);
+      color: #f1f5ff;
+      border-radius: 9px;
+      padding: 7px 14px;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .file-name {
+      font-size: 13px;
+      color: #d8e2f5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    .preview-box {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      width: 108px;
+      height: 130px;
+      border-radius: 10px;
+      border: 1px solid rgba(161, 177, 209, 0.5);
+      display: grid;
+      place-items: center;
+      color: #9fb4d8;
+      font-size: 14px;
+      background: linear-gradient(135deg, rgba(13, 19, 33, 0.75), rgba(30, 34, 41, 0.9));
+      text-align: center;
+      padding: 8px;
+    }
+
+    .audio-ui {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: #d9e3f5;
+      font-size: 20px;
+    }
+
+    .audio-seek {
+      appearance: none;
+      -webkit-appearance: none;
+      height: 6px;
+      flex: 1;
+      max-width: 210px;
+      border-radius: 999px;
+      background: rgba(201, 207, 220, 0.82);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .audio-seek::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #f2f5fb;
+      border: none;
+    }
+
+    .audio-seek::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #f2f5fb;
+      border: none;
+    }
+
+    .audio-play-btn {
+      border: 0;
+      background: transparent;
+      color: #d9e3f5;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 2px;
+    }
+
+    .expand-mark {
+      position: absolute;
+      right: 10px;
+      top: 8px;
+      font-size: 16px;
+      color: rgba(223, 230, 245, 0.7);
+    }
+
+    .progress-wrap {
+      margin-top: 2px;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      color: #e8effe;
+    }
+
+    .progress-title {
+      white-space: nowrap;
+      color: #edf3ff;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .progress {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(18, 20, 25, 0.95);
+      overflow: hidden;
+      min-width: 180px;
+    }
+
+    .bar {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #24d4b5, #39dcbe);
+    }
+
+    .muted {
+      font-size: 13px;
+      color: rgba(217, 225, 241, 0.75);
+    }
+
+    .gen-btn {
+      border: 1px solid rgba(97, 223, 182, 0.7);
+      background: linear-gradient(90deg, #18b190, #2fd8b4);
+      color: #fff;
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .status-value { font-weight: 700; font-size: 20px; }
+
+    .hidden-input { display: none; }
+
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      border-radius: 9px;
+      padding: 7px 12px;
+      z-index: 20;
+      backdrop-filter: blur(6px);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="top-left">
+        <div class="title-chip">
+          <span class="title-dot"></span>
+          <span>Untitled · 数字人工作流</span>
+        </div>
+      </div>
+      <div class="top-right">
+        <a class="btn" href="./index.html">返回应用页</a>
+        <button class="btn" id="resetBtn">重置视图</button>
+      </div>
+    </header>
+
+    <div class="left-tools" aria-hidden="true">
+      <div class="tool">+</div>
+      <div class="tool">◻</div>
+      <div class="tool">↔</div>
+      <div class="tool">✂</div>
+    </div>
+
+    <div class="viewport" id="viewport">
+      <div class="canvas" id="canvas">
+        <svg class="links" id="links"></svg>
+
+        <div class="node" id="node-a" style="left: 520px; top: 150px;">
+          <div class="title">文生图</div>
+          <div class="desc">输入提示词，生成关键帧画面</div>
+        </div>
+
+        <div class="node" id="node-b" style="left: 520px; top: 292px;">
+          <div class="title">文生音频</div>
+          <div class="desc">生成配音/旁白音轨</div>
+        </div>
+
+        <div class="node video-node" id="node-c" style="left: 760px; top: 110px;">
+          <div class="video-top" id="videoTopTrigger">
+            <div class="upload-chip">⇧ 上传</div>
+            <div class="video-stage">
+              <span class="connector left">+</span>
+              <span class="connector right">+</span>
+              <div class="node-label">▶ 视频节点 2</div>
+              <div class="stage-center">▶</div>
+              <div class="stage-try">
+                <div>尝试：</div>
+                <div>◈ 上传图片</div>
+                <div>✦ 上传音频</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-panel" id="editorPanel">
+            <div class="video-grid">
+              <div class="video-card">
+                <h4>上传图片(必选)</h4>
+                <p>选择角色图</p>
+                <div class="file-row">
+                  <label class="pick-btn" for="imageInput">选择文件</label>
+                  <span class="file-name" id="imageName">未选择文件</span>
+                </div>
+                <input class="hidden-input" type="file" id="imageInput" accept="image/*" />
+                <div class="preview-box" id="imagePreview">图片预览</div>
+              </div>
+
+              <div class="video-card">
+                <span class="expand-mark">↗</span>
+                <h4>上传音乐(必选)</h4>
+                <p>选择音色</p>
+                <div class="file-row">
+                  <label class="pick-btn" for="audioInput">选择文件</label>
+                  <span class="file-name" id="audioName">未选择文件</span>
+                </div>
+                <input class="hidden-input" type="file" id="audioInput" accept=".mp3,.wav,.flac,audio/*" />
+                <audio id="audioPlayer" preload="metadata" style="display:none;"></audio>
+                <div class="audio-ui">
+                  <input type="range" class="audio-seek" id="audioSeek" min="0" max="100" value="0" step="0.1" />
+                  <button type="button" class="audio-play-btn" id="audioPlayBtn" aria-label="播放或暂停">▶</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="progress-wrap">
+              <div class="progress-title">任务进度：</div>
+              <div class="progress"><div class="bar" id="progressBar"></div></div>
+              <div class="status-value" id="taskStatus">1个</div>
+              <div class="muted" id="progressText">⚡108 / 135</div>
+              <button class="gen-btn" id="generateBtn">⇧</button>
+            </div>
+
+            <div class="muted" id="taskId" style="margin-top:8px;">taskId: -</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-controls">
+      <button class="mini-btn" id="zoomOut">-</button>
+      <div class="zoom-text" id="zoomText">100%</div>
+      <button class="mini-btn" id="zoomIn">+</button>
+      <button class="mini-btn" id="fitView" title="适配画布">⌖</button>
+    </div>
+
+    <div class="hint">按住空白处拖动画布；拖动节点调整流程；左下角可缩放</div>
+  </div>
+
+  <script>
+    (function () {
+      const viewport = document.getElementById('viewport');
+      const canvas = document.getElementById('canvas');
+      const links = document.getElementById('links');
+      const resetBtn = document.getElementById('resetBtn');
+      const zoomIn = document.getElementById('zoomIn');
+      const zoomOut = document.getElementById('zoomOut');
+      const fitView = document.getElementById('fitView');
+      const zoomText = document.getElementById('zoomText');
+
+      const nodes = {
+        a: document.getElementById('node-a'),
+        b: document.getElementById('node-b'),
+        c: document.getElementById('node-c')
+      };
+
+      // RunningHub OpenAPI 配置（来自 runninghub_web_tester.html）
+      const RH = {
+        baseUrl: 'https://www.runninghub.cn',
+        uploadPath: '/task/openapi/upload',
+        createPath: '/task/openapi/create',
+        outputsPath: '/task/openapi/outputs',
+        workflowId: '2044669894783934465',
+        imageNodeId: '133',
+        imageFieldName: 'image',
+        audioNodeId: '125',
+        audioFieldName: 'audio'
+      };
+
+      let panX = 0;
+      let panY = 0;
+      let scale = 1;
+
+      function updateZoomText() {
+        zoomText.textContent = `${Math.round(scale * 100)}%`;
+      }
+
+      function applyTransform() {
+        canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        drawLinks();
+        updateZoomText();
+      }
+
+      function nodeCenterRight(el) {
+        return {
+          x: el.offsetLeft + el.offsetWidth,
+          y: el.offsetTop + el.offsetHeight / 2
+        };
+      }
+
+      function nodeCenterLeft(el) {
+        return {
+          x: el.offsetLeft,
+          y: el.offsetTop + el.offsetHeight / 2
+        };
+      }
+
+      function curve(p1, p2) {
+        const dx = Math.max(85, (p2.x - p1.x) * 0.42);
+        return `M ${p1.x} ${p1.y} C ${p1.x + dx} ${p1.y}, ${p2.x - dx} ${p2.y}, ${p2.x} ${p2.y}`;
+      }
+
+      function drawLinks() {
+        const s1 = nodeCenterRight(nodes.a);
+        const s2 = nodeCenterRight(nodes.b);
+        const t = nodeCenterLeft(nodes.c);
+
+        links.innerHTML = `
+          <path d="${curve(s1, t)}" stroke="#ff5f5f" stroke-width="3" fill="none" stroke-linecap="round" />
+          <path d="${curve(s2, t)}" stroke="#ff5f5f" stroke-width="3" fill="none" stroke-linecap="round" />
+        `;
+      }
+
+      let panning = false;
+      let startX = 0;
+      let startY = 0;
+
+      viewport.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.node')) return;
+        panning = true;
+        viewport.classList.add('dragging');
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!panning) return;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        applyTransform();
+      });
+
+      window.addEventListener('pointerup', () => {
+        panning = false;
+        viewport.classList.remove('dragging');
+      });
+
+      Object.values(nodes).forEach((node) => {
+        let dragging = false;
+        let dx = 0;
+        let dy = 0;
+
+        node.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('button, input, label, textarea, .video-stage, .video-top')) {
+            e.stopPropagation();
+            return;
+          }
+          dragging = true;
+          node.setPointerCapture(e.pointerId);
+          dx = e.clientX - (node.offsetLeft * scale + panX);
+          dy = e.clientY - (node.offsetTop * scale + panY);
+          e.stopPropagation();
+        });
+
+        node.addEventListener('pointermove', (e) => {
+          if (!dragging) return;
+          const worldX = (e.clientX - dx - panX) / scale;
+          const worldY = (e.clientY - dy - panY) / scale;
+          node.style.left = `${worldX}px`;
+          node.style.top = `${worldY}px`;
+          drawLinks();
+        });
+
+        node.addEventListener('pointerup', () => {
+          dragging = false;
+        });
+      });
+
+      function clampScale(v) {
+        return Math.min(2, Math.max(0.4, v));
+      }
+
+      zoomIn.addEventListener('click', () => {
+        scale = clampScale(scale + 0.1);
+        applyTransform();
+      });
+
+      zoomOut.addEventListener('click', () => {
+        scale = clampScale(scale - 0.1);
+        applyTransform();
+      });
+
+      viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const next = clampScale(scale + (e.deltaY < 0 ? 0.06 : -0.06));
+        scale = next;
+        applyTransform();
+      }, { passive: false });
+
+      function doFitView() {
+        panX = 0;
+        panY = 0;
+        scale = 1;
+        applyTransform();
+      }
+
+      fitView.addEventListener('click', doFitView);
+
+      resetBtn.addEventListener('click', () => {
+        nodes.a.style.left = '520px'; nodes.a.style.top = '150px';
+        nodes.b.style.left = '520px'; nodes.b.style.top = '292px';
+        nodes.c.style.left = '760px'; nodes.c.style.top = '110px';
+        doFitView();
+      });
+
+      const videoTopTrigger = document.getElementById('videoTopTrigger');
+      const imageInput = document.getElementById('imageInput');
+      const audioInput = document.getElementById('audioInput');
+      const imageName = document.getElementById('imageName');
+      const audioName = document.getElementById('audioName');
+      const imagePreview = document.getElementById('imagePreview');
+      const audioPlayer = document.getElementById('audioPlayer');
+      const audioSeek = document.getElementById('audioSeek');
+      const audioPlayBtn = document.getElementById('audioPlayBtn');
+      const generateBtn = document.getElementById('generateBtn');
+      const taskStatus = document.getElementById('taskStatus');
+      const taskId = document.getElementById('taskId');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+
+      function getApiKey() {
+        return (localStorage.getItem('runninghub_api_key') || '').trim();
+      }
+
+      async function uploadFileToRunningHub(file) {
+        const key = getApiKey();
+        if (!key) throw new Error('缺少 API Key。请在浏览器 localStorage 中设置 runninghub_api_key');
+
+        const form = new FormData();
+        form.append('file', file);
+
+        const res = await fetch(`${RH.baseUrl}${RH.uploadPath}`, {
+          method: 'POST',
+          headers: { 'Authorization': key },
+          body: form
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          throw new Error(`上传失败(${res.status}) ${txt}`);
+        }
+
+        const data = await res.json();
+        const url = data?.data?.url || data?.url || data?.data?.fileUrl || '';
+        if (!url) throw new Error('上传返回中没有可用文件 URL');
+        return url;
+      }
+
+      async function createTaskOnRunningHub(imageUrl, audioUrl) {
+        const key = getApiKey();
+        if (!key) throw new Error('缺少 API Key。请在浏览器 localStorage 中设置 runninghub_api_key');
+
+        const nodeInfoList = [
+          {
+            nodeId: RH.imageNodeId,
+            fieldName: RH.imageFieldName,
+            fieldValue: imageUrl
+          }
+        ];
+
+        if (audioUrl) {
+          nodeInfoList.push({
+            nodeId: RH.audioNodeId,
+            fieldName: RH.audioFieldName,
+            fieldValue: audioUrl
+          });
+        }
+
+        const payload = {
+          workflowId: RH.workflowId,
+          nodeInfoList
+        };
+
+        const res = await fetch(`${RH.baseUrl}${RH.createPath}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': key
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          throw new Error(`创建任务失败(${res.status}) ${txt}`);
+        }
+
+        const data = await res.json();
+        const tId = data?.data?.taskId || data?.taskId || '';
+        if (!tId) throw new Error('创建任务成功但未返回 taskId');
+        return tId;
+      }
+
+      async function pollOutputs(taskId) {
+        const key = getApiKey();
+        if (!key) throw new Error('缺少 API Key。请在浏览器 localStorage 中设置 runninghub_api_key');
+
+        let attempt = 0;
+        const maxAttempts = 120;
+
+        while (attempt < maxAttempts) {
+          attempt += 1;
+          const res = await fetch(`${RH.baseUrl}${RH.outputsPath}?taskId=${encodeURIComponent(taskId)}`, {
+            method: 'GET',
+            headers: { 'Authorization': key }
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const status = data?.data?.status || data?.status || '';
+            const outputs = data?.data?.outputs || data?.outputs || [];
+            const progress = Number(data?.data?.progress ?? data?.progress ?? 0);
+
+            if (!Number.isNaN(progress) && progress >= 0) {
+              const percent = Math.max(0, Math.min(100, progress));
+              progressBar.style.width = `${percent}%`;
+              progressText.textContent = `⚡${Math.floor(percent * 1.35)} / 135`;
+            }
+
+            if (status === 'SUCCESS' || status === 'SUCCEED' || outputs.length > 0) {
+              return { status, outputs };
+            }
+            if (status === 'FAILED' || status === 'FAIL') {
+              throw new Error('任务执行失败');
+            }
+          }
+
+          await new Promise(r => setTimeout(r, 2000));
+        }
+
+        throw new Error('轮询超时，请稍后在 RunningHub 控制台查看任务状态');
+      }
+
+      if (videoTopTrigger) {
+        videoTopTrigger.addEventListener('click', (e) => {
+          if (e.target.closest('button, input, label, textarea')) return;
+        });
+      }
+
+      if (imageInput && audioInput && generateBtn) {
+        imageInput.addEventListener('change', () => {
+          const file = imageInput.files && imageInput.files[0];
+          imageName.textContent = file ? file.name : '未选择文件';
+          if (!file) {
+            imagePreview.textContent = '上传后在这里预览图片';
+            imagePreview.style.backgroundImage = '';
+            return;
+          }
+          const url = URL.createObjectURL(file);
+          imagePreview.textContent = '';
+          imagePreview.style.backgroundImage = `url(${url})`;
+          imagePreview.style.backgroundSize = 'cover';
+          imagePreview.style.backgroundPosition = 'center';
+        });
+
+        audioInput.addEventListener('change', () => {
+          const file = audioInput.files && audioInput.files[0];
+          audioName.textContent = file ? file.name : '未选择文件';
+
+          if (audioPlayer) {
+            if (audioPlayer.dataset.objectUrl) {
+              URL.revokeObjectURL(audioPlayer.dataset.objectUrl);
+            }
+
+            if (file) {
+              const url = URL.createObjectURL(file);
+              audioPlayer.src = url;
+              audioPlayer.dataset.objectUrl = url;
+              if (audioSeek) audioSeek.value = '0';
+              if (audioPlayBtn) audioPlayBtn.textContent = '▶';
+            } else {
+              audioPlayer.removeAttribute('src');
+              audioPlayer.load();
+              delete audioPlayer.dataset.objectUrl;
+              if (audioSeek) audioSeek.value = '0';
+              if (audioPlayBtn) audioPlayBtn.textContent = '▶';
+            }
+          }
+        });
+
+        if (audioPlayer && audioSeek && audioPlayBtn) {
+          audioPlayBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!audioPlayer.src) return;
+            if (audioPlayer.paused) {
+              try {
+                await audioPlayer.play();
+                audioPlayBtn.textContent = '❚❚';
+              } catch (_) {}
+            } else {
+              audioPlayer.pause();
+              audioPlayBtn.textContent = '▶';
+            }
+          });
+
+          audioPlayer.addEventListener('timeupdate', () => {
+            if (!audioPlayer.duration || Number.isNaN(audioPlayer.duration)) return;
+            const ratio = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            audioSeek.value = String(ratio);
+          });
+
+          audioSeek.addEventListener('input', (e) => {
+            e.stopPropagation();
+            if (!audioPlayer.duration || Number.isNaN(audioPlayer.duration)) return;
+            const ratio = Number(audioSeek.value) / 100;
+            audioPlayer.currentTime = ratio * audioPlayer.duration;
+          });
+
+          audioPlayer.addEventListener('ended', () => {
+            audioPlayBtn.textContent = '▶';
+            audioSeek.value = '0';
+          });
+
+          audioPlayer.addEventListener('pause', () => {
+            audioPlayBtn.textContent = '▶';
+          });
+
+          audioPlayer.addEventListener('play', () => {
+            audioPlayBtn.textContent = '❚❚';
+          });
+        }
+
+        generateBtn.addEventListener('click', async () => {
+          try {
+            const imageFile = imageInput.files && imageInput.files[0];
+            const audioFile = audioInput.files && audioInput.files[0];
+
+            if (!imageFile) {
+              taskStatus.textContent = '0个';
+              progressText.textContent = '请先上传图片';
+              return;
+            }
+
+            taskStatus.textContent = '上传中';
+            progressBar.style.width = '8%';
+            progressText.textContent = '上传图片...';
+
+            const imageUrl = await uploadFileToRunningHub(imageFile);
+
+            let audioUrl = '';
+            if (audioFile) {
+              progressBar.style.width = '16%';
+              progressText.textContent = '上传音频...';
+              audioUrl = await uploadFileToRunningHub(audioFile);
+            }
+
+            taskStatus.textContent = '创建中';
+            progressBar.style.width = '28%';
+            progressText.textContent = '创建任务...';
+
+            const realTaskId = await createTaskOnRunningHub(imageUrl, audioUrl);
+            taskId.textContent = `taskId: ${realTaskId}`;
+            taskStatus.textContent = '1个';
+
+            progressBar.style.width = '35%';
+            progressText.textContent = '任务执行中...';
+
+            const result = await pollOutputs(realTaskId);
+
+            progressBar.style.width = '100%';
+            progressText.textContent = '⚡135 / 135';
+            taskStatus.textContent = '完成';
+
+            if (Array.isArray(result.outputs) && result.outputs.length > 0) {
+              console.log('RunningHub outputs:', result.outputs);
+            }
+          } catch (err) {
+            console.error(err);
+            taskStatus.textContent = '失败';
+            progressText.textContent = String(err && err.message ? err.message : err);
+          }
+        });
+      }
+
+      applyTransform();
+      window.addEventListener('resize', drawLinks);
+    })();
+  </script>
+</body>
+</html>

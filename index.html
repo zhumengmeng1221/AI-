@@ -3,146 +3,615 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RunningHub AI 应用页</title>
+  <title>AIHub - AI 应用</title>
   <style>
     :root {
-      --bg: #070b12;
-      --panel: #0b121f;
-      --line: rgba(105, 130, 168, 0.24);
-      --text: #e6f0ff;
-      --muted: #98add0;
+      --bg: #060a12;
+      --panel: #0a111d;
+      --panel-2: #101a2a;
+      --line: rgba(116, 145, 188, 0.2);
+      --text: #e8f1ff;
+      --muted: #8ea3c7;
+      --accent: #1fd0a5;
+      --top-h: 44px;
+      --left-w: 78px;
+      --radius: 10px;
     }
+
     * { box-sizing: border-box; }
-    body {
+
+    html, body {
+      width: 100%;
+      height: 100%;
       margin: 0;
-      background:
-        radial-gradient(1200px 540px at 65% -18%, rgba(29, 86, 182, 0.2), transparent 65%),
-        linear-gradient(180deg, #070a12 0%, #070b12 100%);
       color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 58% -25%, rgba(34, 97, 203, 0.22), transparent 64%),
+        linear-gradient(180deg, #050912 0%, #060a12 100%);
       font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
     }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: var(--top-h) minmax(0, 1fr);
+    }
+
     .topbar {
-      height: 44px;
       border-bottom: 1px solid var(--line);
-      background: rgba(6, 10, 17, 0.94);
+      background: rgba(5, 9, 16, 0.92);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      min-width: 0;
+    }
+
+    .top-left {
+      min-width: 0;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 12px 0 10px;
-      gap: 12px;
-    }
-    .search-mini {
-      width: 260px;
-      height: 30px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: #101a2b;
-      color: #adc2e5;
-      font-size: 12px;
-      padding: 0 12px;
-      outline: none;
-    }
-    .shell {
-      display: grid;
-      grid-template-columns: 84px 1fr;
-      min-height: calc(100vh - 44px);
-    }
-    .sidebar {
-      border-right: 1px solid var(--line);
-      background: #090f19;
-      padding: 8px 6px;
-    }
-    .nav-item {
-      width: 100%;
-      margin-bottom: 6px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: #9cb3d8;
-      font-size: 11px;
-      text-align: left;
-      border-radius: 8px;
-      padding: 7px 8px;
-    }
-    .nav-item.active {
-      color: #e9f5ff;
-      border-color: rgba(102, 149, 214, 0.5);
-      background: linear-gradient(145deg, rgba(27, 73, 138, 0.58), rgba(14, 34, 63, 0.85));
-    }
-    .content { padding: 10px 14px 16px; }
-    .section { margin-bottom: 14px; }
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(170px, 1fr));
       gap: 10px;
     }
-    .box {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: linear-gradient(145deg, #101a2a, #0b1422);
-      min-height: 56px;
-      padding: 8px;
+
+    .brand {
+      font-size: 14px;
+      color: #d7f7ff;
+      font-weight: 700;
+      white-space: nowrap;
     }
-    .hero {
-      height: 110px;
+
+    .search {
+      width: min(260px, 35vw);
+      min-width: 110px;
+      height: 28px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #0f1828;
+      color: #a9bfdf;
+      font-size: 12px;
+      padding: 0 10px;
+      outline: none;
+    }
+
+    .top-title {
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      text-align: center;
+      color: #f4f7ff;
+    }
+
+    .top-title span {
+      color: #ff9f35;
+      margin-left: 12px;
+      font-weight: 800;
+    }
+
+    .top-right {
+      justify-self: end;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill {
+      border: 1px solid #2f7f75;
+      border-radius: 999px;
+      height: 24px;
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      color: #bff9ef;
+      background: rgba(20, 97, 83, 0.25);
+    }
+
+    .icon-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: #0f1726;
+    }
+
+    .layout {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: var(--left-w) minmax(0, 1fr);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: rgba(7, 12, 21, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 8px 6px;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .side-group {
+      display: grid;
+      gap: 5px;
+    }
+
+    .item {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #9ab0d3;
+      font-size: 11px;
+      border-radius: 8px;
+      padding: 7px 7px;
+      text-align: left;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .item.active {
+      color: #e9f5ff;
+      border-color: rgba(84, 143, 226, 0.42);
+      background: linear-gradient(145deg, rgba(18, 64, 132, 0.58), rgba(10, 28, 52, 0.9));
+    }
+
+    .workspace-btn {
+      margin-top: 10px;
       border: 1px solid var(--line);
       border-radius: 9px;
-      background: linear-gradient(145deg, #21364f, #1b2c46);
+      background: #11192a;
+      color: #bbcef0;
+      font-size: 11px;
+      padding: 8px 0;
+      text-align: center;
     }
+
+    .main {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 10px 12px 14px;
+    }
+
+    .section {
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #e9f0ff;
+    }
+
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 8px;
+    }
+
+    .recommend-grid {
+      grid-template-columns: max-content;
+      justify-content: start;
+    }
+
+    .recommend-grid .mini-card {
+      width: fit-content;
+      max-width: 100%;
+      grid-template-columns: auto auto;
+      gap: 10px;
+      align-items: stretch;
+      padding: 0 0 0 14px;
+      overflow: hidden;
+    }
+
+    .recommend-grid .mini-card > div:first-child {
+      padding: 12px 0;
+    }
+
+    .recommend-grid .thumb {
+      height: 100%;
+      min-height: 82px;
+      align-self: stretch;
+      border-radius: 0;
+      border-left: 1px solid rgba(190, 210, 255, 0.28);
+      border-right: 0;
+      border-top: 0;
+      border-bottom: 0;
+      box-shadow: none;
+    }
+
+    .mini-card {
+      border: 1px solid rgba(126, 160, 208, 0.32);
+      border-radius: 14px;
+      background: linear-gradient(108deg, #0f1e35 0%, #0d1a30 45%, #0a172b 100%);
+      padding: 12px 14px;
+      min-height: 82px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      box-shadow: inset 0 1px 0 rgba(180, 211, 255, 0.08), 0 8px 20px rgba(0, 0, 0, 0.28);
+    }
+
+    .clickable {
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .clickable:hover {
+      transform: translateY(-1px);
+      border-color: rgba(92, 170, 255, 0.5);
+      box-shadow: inset 0 1px 0 rgba(180, 211, 255, 0.12), 0 10px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .mini-card h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #eef5ff;
+      line-height: 1.2;
+    }
+
+    .mini-card p {
+      margin: 6px 0 0;
+      font-size: 14px;
+      color: #d7e6ff;
+      line-height: 1.25;
+    }
+
+    .thumb {
+      width: 74px;
+      height: 54px;
+      border-radius: 11px;
+      border: 1px solid rgba(190, 210, 255, 0.3);
+      overflow: hidden;
+      background: #0d1626;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
+      flex-shrink: 0;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .hero-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 8px;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      height: clamp(88px, 13vh, 128px);
+      background: linear-gradient(145deg, #233b5d, #1b2f4a);
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      border: 1px solid var(--line);
+      background: #0e1626;
+      color: #9db5d9;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 10px;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tag.active {
+      color: #dff7ff;
+      border-color: rgba(56, 208, 168, 0.45);
+      background: rgba(19, 109, 90, 0.24);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px;
+    }
+
+    .empty-pane {
+      min-height: 220px;
+      border: 1px dashed rgba(116, 145, 188, 0.18);
+      border-radius: 10px;
+      background: rgba(8, 15, 28, 0.45);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
     .card {
-      border: 1px solid rgba(113, 148, 193, 0.35);
+      border: 1px solid rgba(113, 148, 193, 0.36);
       border-radius: 10px;
       overflow: hidden;
       background: #0c1525;
     }
-    .cover { aspect-ratio: 3 / 4; background: linear-gradient(145deg, #ffde53, #d1a329); }
-    .card:nth-child(2) .cover { background: linear-gradient(145deg, #ffe26d, #e0ae31); }
-    .card:nth-child(3) .cover { background: linear-gradient(145deg, #bdd7e5, #8ea9ba); }
-    .card:nth-child(4) .cover { background: linear-gradient(145deg, #f1ead8, #d9ceb2); }
-    .meta { padding: 8px; font-size: 12px; color: #cfe0ff; }
-    @media (max-width: 980px) { .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    .cover {
+      aspect-ratio: 3 / 4;
+      background: #101b30;
+      overflow: hidden;
+    }
+
+    .cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .meta {
+      padding: 8px;
+      font-size: 12px;
+      color: #d6e4ff;
+      line-height: 1.3;
+    }
+
+    /* 4K / 超宽屏：在不破坏2K观感的前提下提升可读性 */
+    @media (min-width: 3000px) {
+      :root {
+        --top-h: 56px;
+        --left-w: 96px;
+        --radius: 12px;
+      }
+
+      .topbar { padding: 0 16px; }
+      .brand { font-size: 18px; }
+      .search {
+        height: 36px;
+        border-radius: 18px;
+        font-size: 15px;
+        padding: 0 14px;
+      }
+      .top-title { font-size: 20px; }
+      .pill {
+        height: 30px;
+        font-size: 14px;
+        padding: 0 14px;
+      }
+      .icon-dot {
+        width: 30px;
+        height: 30px;
+      }
+
+      .sidebar { padding: 12px 8px; }
+      .item {
+        font-size: 14px;
+        padding: 10px 9px;
+      }
+      .workspace-btn {
+        font-size: 14px;
+        padding: 10px 0;
+      }
+
+      .main { padding: 16px 18px 20px; }
+      .section { margin-bottom: 14px; }
+      .section-title {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .apps-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 12px;
+      }
+      .recommend-grid {
+        grid-template-columns: minmax(360px, 520px);
+      }
+      .mini-card {
+        min-height: 78px;
+        padding: 12px;
+        grid-template-columns: 1fr 78px;
+        gap: 12px;
+      }
+      .mini-card h4 { font-size: 16px; }
+      .mini-card p { font-size: 13px; }
+      .thumb {
+        width: 78px;
+        height: 58px;
+      }
+
+      .hero-row {
+        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        gap: 12px;
+      }
+      .hero {
+        border-radius: 12px;
+        height: clamp(120px, 14vh, 180px);
+      }
+
+      .tags {
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .tag {
+        font-size: 13px;
+        padding: 6px 12px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 12px;
+      }
+      .meta {
+        padding: 12px;
+        font-size: 15px;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .topbar {
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+          "left right"
+          "title title";
+        height: auto;
+        padding: 6px 10px;
+      }
+      .top-left { grid-area: left; }
+      .top-right { grid-area: right; }
+      .top-title { grid-area: title; text-align: left; font-size: 14px; }
+      .search { width: 180px; }
+      .layout { grid-template-columns: 70px minmax(0, 1fr); }
+    }
+
+    @media (max-width: 720px) {
+      .app { grid-template-rows: auto minmax(0, 1fr); }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        display: block;
+        padding: 8px;
+      }
+      .side-group {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .item { width: auto; margin: 0; }
+      .workspace-btn { display: none; }
+      .main { padding: 10px; }
+      .apps-grid { grid-template-columns: 1fr; }
+      .hero-row { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 460px) {
+      .cards { grid-template-columns: 1fr; }
+      .search { width: 120px; }
+      .brand { display: none; }
+    }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <input class="search-mini" value="搜索工具、模型、关键词..." />
-    <div style="color:#ff9e38;font-size:14px;font-weight:700;">上线无限画布 ◀◀◀</div>
-    <div style="font-size:11px;color:#c9dbf6;">开始创作 | 登录 | 账户</div>
-  </header>
-  <div class="shell">
-    <aside class="sidebar">
-      <button class="nav-item">首页</button>
-      <button class="nav-item active">AI 应用</button>
-      <button class="nav-item">模型管理</button>
-      <button class="nav-item">工作流</button>
-      <button class="nav-item">API</button>
-      <button class="nav-item">个人中心</button>
-    </aside>
-    <main class="content">
-      <section class="section">
-        <div class="grid-4">
-          <div class="box">Seedance2.0 全能参考视频</div>
-          <div class="box">Seedance2.0 Fast 提速生成</div>
-          <div class="box">Qwen Image 2512 文生图</div>
-          <div class="box">Qwen Image Edit 2511 图像编辑</div>
+  <div class="app">
+    <header class="topbar">
+      <div class="top-left">
+        <div class="brand">AIHub</div>
+        <input class="search" value="文生视频、图片修复、角色..." />
+      </div>
+      <div class="top-title">终结生图赛道「全能图片 G2」<span>上线无限画布 ◀◀◀</span></div>
+      <div class="top-right">
+        <div class="pill">开始创作</div>
+        <div class="icon-dot"></div>
+        <div class="icon-dot"></div>
+        <div class="icon-dot"></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="side-group">
+          <button class="item">首页</button>
+          <button class="item">热门</button>
+          <button class="item active">AI 应用</button>
+          <button class="item">模型资产</button>
+          <button class="item">工作流</button>
+          <button class="item">视频</button>
+          <button class="item">创作中心</button>
         </div>
-      </section>
-      <section class="section">
-        <div class="grid-4">
-          <div class="hero"></div>
-          <div class="hero"></div>
-          <div class="hero"></div>
-          <div class="hero"></div>
+
+        <div class="side-group" style="margin-top:10px;">
+          <button class="item">API</button>
+          <button class="item">会员中心</button>
+          <button class="item">个人中心</button>
         </div>
-      </section>
-      <section class="section">
-        <div class="grid-4">
-          <article class="card"><div class="cover"></div><div class="meta">全能图片 2.0</div></article>
-          <article class="card"><div class="cover"></div><div class="meta">全能图片 PRO</div></article>
-          <article class="card"><div class="cover"></div><div class="meta">低价渠道版 G2.0 图生图</div></article>
-          <article class="card"><div class="cover"></div><div class="meta">低价渠道版 G2.0 文生图</div></article>
-        </div>
-      </section>
-    </main>
+
+        <div class="workspace-btn">我的空间</div>
+      </aside>
+
+      <main class="main">
+        <section class="section">
+          <div class="section-title">推荐应用</div>
+          <div class="apps-grid recommend-grid">
+            <article class="mini-card clickable" data-open-canvas="digital-human"><div><h4>数字人</h4><p>真人/动漫，口型同步</p></div><div class="thumb"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人应用封面" /></div></article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">全部应用</div>
+          <div class="tags" id="all-tags">
+            <span class="tag active" data-key="workflow">工作流</span>
+            <span class="tag" data-key="new">新人必试</span>
+            <span class="tag" data-key="image">图片工具</span>
+            <span class="tag" data-key="video">视频工具</span>
+            <span class="tag" data-key="copy">文案</span>
+            <span class="tag" data-key="commerce">电商</span>
+            <span class="tag" data-key="training">模型训练</span>
+            <span class="tag" data-key="api">API</span>
+            <span class="tag" data-key="anime">动漫</span>
+            <span class="tag" data-key="more">更多</span>
+          </div>
+
+          <div class="cards" data-pane="workflow">
+            <article class="card clickable" data-open-canvas="digital-human"><div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人工作流封面" /></div><div class="meta">数字人</div></article>
+          </div>
+
+          <div class="empty-pane hidden" data-pane="new"></div>
+          <div class="empty-pane hidden" data-pane="image"></div>
+          <div class="empty-pane hidden" data-pane="video"></div>
+          <div class="empty-pane hidden" data-pane="copy"></div>
+          <div class="empty-pane hidden" data-pane="commerce"></div>
+          <div class="empty-pane hidden" data-pane="training"></div>
+          <div class="empty-pane hidden" data-pane="api"></div>
+          <div class="empty-pane hidden" data-pane="anime"></div>
+          <div class="empty-pane hidden" data-pane="more"></div>
+        </section>
+      </main>
+    </div>
   </div>
+
+  <script>
+    (function () {
+      const tagsWrap = document.getElementById('all-tags');
+      const openCards = Array.from(document.querySelectorAll('[data-open-canvas="digital-human"]'));
+
+      openCards.forEach((card) => {
+        card.addEventListener('click', () => {
+          window.location.href = './workflow-canvas.html';
+        });
+      });
+
+      if (!tagsWrap) return;
+
+      const tags = Array.from(tagsWrap.querySelectorAll('.tag'));
+      const panes = Array.from(document.querySelectorAll('[data-pane]'));
+
+      function showPane(key) {
+        tags.forEach((tag) => {
+          tag.classList.toggle('active', tag.dataset.key === key);
+        });
+
+        panes.forEach((pane) => {
+          pane.classList.toggle('hidden', pane.dataset.pane !== key);
+        });
+      }
+
+      tags.forEach((tag) => {
+        tag.addEventListener('click', () => showPane(tag.dataset.key));
+      });
+
+      showPane('workflow');
+    })();
+  </script>
 </body>
 </html>
