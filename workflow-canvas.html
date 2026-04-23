@@ -3,1052 +3,237 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>无限画布工作流 - 数字人</title>
+  <title>简洁工作流 - 文生图/文生音频/图+音频生视频</title>
   <style>
     :root {
-      --bg: #06080f;
-      --panel: rgba(20, 27, 40, 0.9);
-      --line: rgba(124, 146, 180, 0.28);
-      --text: #dce9ff;
-      --muted: #8ea4c8;
-      --node-border: #f25757;
-      --node-bg: rgba(8, 12, 22, 0.75);
-      --grid-dot: rgba(58, 78, 112, 0.42);
-      --grid-dot-strong: rgba(78, 104, 148, 0.56);
-      --accent: #8cffd9;
+      --bg-1: #f4f7ff;
+      --bg-2: #e8eefb;
+      --glass: rgba(255, 255, 255, 0.58);
+      --glass-strong: rgba(255, 255, 255, 0.76);
+      --line: rgba(107, 123, 152, 0.16);
+      --text: #0f1728;
+      --muted: #677489;
+      --primary: #3a7bff;
+      --shadow: 0 14px 34px rgba(28, 40, 68, 0.10);
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
     }
-
     * { box-sizing: border-box; }
-
-    html, body {
-      width: 100%;
-      height: 100%;
+    body {
       margin: 0;
-      background: var(--bg);
       color: var(--text);
-      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
-      overflow: hidden;
-    }
-
-    .app {
-      width: 100%;
-      height: 100%;
-      position: relative;
+      font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at 0.5px 0.5px, var(--grid-dot) 0.5px, transparent 0.9px),
-        radial-gradient(circle at 0.5px 0.5px, var(--grid-dot-strong) 0.6px, transparent 1px),
-        radial-gradient(900px 450px at 55% -20%, rgba(43, 92, 210, 0.2), transparent 60%),
-        #05070d;
-      background-size: 20px 20px, 100px 100px, auto, auto;
+        radial-gradient(1200px 620px at -8% -10%, rgba(158, 196, 255, 0.42), transparent 56%),
+        radial-gradient(980px 560px at 105% -18%, rgba(204, 182, 255, 0.30), transparent 58%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
     }
-
-    .topbar {
-      position: absolute;
-      top: 12px;
-      left: 14px;
-      right: 14px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 30;
-      pointer-events: none;
-    }
-
-    .top-left,
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      pointer-events: auto;
-    }
-
-    .title-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      height: 34px;
+    .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; gap: 12px; padding: 12px; }
+    .side {
       border: 1px solid var(--line);
-      background: var(--panel);
-      border-radius: 9px;
-      padding: 0 12px;
-      font-size: 13px;
-      color: #d9e6ff;
-      backdrop-filter: blur(6px);
+      border-radius: var(--radius-xl);
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(130%);
+      -webkit-backdrop-filter: blur(18px) saturate(130%);
+      box-shadow: var(--shadow);
+      padding: 14px 12px;
     }
-
-    .title-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #4afac5, #e0fb8d);
-      box-shadow: 0 0 8px rgba(138, 255, 214, 0.8);
-    }
-
-    .btn {
-      height: 34px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      color: #cfe2ff;
-      border-radius: 9px;
-      padding: 0 12px;
-      font-size: 12px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      backdrop-filter: blur(6px);
-    }
-
-    .left-tools {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: grid;
-      gap: 8px;
-      z-index: 22;
-    }
-
-    .tool {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      color: #d9e9ff;
-      display: grid;
-      place-items: center;
-      font-size: 14px;
-      user-select: none;
-      backdrop-filter: blur(6px);
-    }
-
-    .bottom-controls {
-      position: absolute;
-      left: 12px;
-      bottom: 12px;
-      z-index: 22;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 6px 8px;
-      backdrop-filter: blur(6px);
-    }
-
-    .mini-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      border: 1px solid rgba(136, 158, 194, 0.35);
-      background: rgba(14, 21, 34, 0.95);
-      color: #d6e7ff;
-      cursor: pointer;
-    }
-
-    .zoom-text {
-      min-width: 54px;
-      text-align: center;
-      font-size: 12px;
-      color: #c8daf9;
-    }
-
-    .viewport {
-      position: absolute;
-      inset: 0;
-      cursor: grab;
-      overflow: hidden;
-    }
-
-    .viewport.dragging { cursor: grabbing; }
-
-    .canvas {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      transform-origin: 0 0;
-    }
-
-    svg.links {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    .node {
-      position: absolute;
-      min-width: 188px;
-      min-height: 108px;
-      border: 2px solid var(--node-border);
-      border-radius: 3px;
-      background: var(--node-bg);
-      color: #ffb2b2;
+    .menu { display: grid; gap: 6px; }
+    .menu button {
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
       padding: 10px 12px;
-      font-size: 14px;
-      user-select: none;
-      cursor: move;
-      box-shadow: inset 0 0 0 1px rgba(255, 118, 118, 0.12);
-    }
-
-    .node .title {
-      color: #ff8c8c;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .node .desc {
-      font-size: 12px;
-      color: rgba(255, 182, 182, 0.86);
-      line-height: 1.35;
-    }
-
-    .img-node {
-      min-width: 710px;
-      min-height: 580px;
-      border: 0;
-      background: transparent;
-      box-shadow: none;
-      color: #f1f5ff;
-      padding: 4px;
-    }
-
-    .img-node-top { margin-bottom: 14px; }
-
-    .img-upload-chip {
-      margin: 0 auto 12px;
-      width: fit-content;
-      border: 1px solid rgba(148, 161, 185, 0.26);
-      background: rgba(14, 20, 33, 0.96);
-      color: #eef3fe;
-      border-radius: 12px;
-      padding: 8px 18px;
-      font-size: 14px;
-      line-height: 1;
-      user-select: none;
-      box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.03);
-    }
-
-    .img-stage {
-      border: 2px solid rgba(214, 220, 232, 0.52);
-      border-radius: 18px;
-      min-height: 346px;
-      background: linear-gradient(180deg, rgba(47, 50, 59, 0.96), rgba(33, 37, 47, 0.96));
-      padding: 16px 20px;
-      position: relative;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 12px 28px rgba(0,0,0,.25);
-    }
-
-    .img-stage-title {
-      color: rgba(225, 233, 247, 0.86);
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: .01em;
-    }
-
-    .img-stage-center {
-      display: grid;
-      place-items: center;
-      color: rgba(229, 236, 249, 0.3);
-      font-size: 96px;
-      line-height: 1;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .img-stage-generating .img-loader {
-      width: 220px;
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      overflow: hidden;
-      position: absolute;
-      bottom: 24px;
-    }
-
-    .img-stage-generating .img-loader::before {
-      content: '';
-      display: block;
-      width: 40%;
-      height: 100%;
-      background: linear-gradient(90deg, rgba(79,233,194,0.2), rgba(79,233,194,1), rgba(79,233,194,0.2));
-      animation: img-loading 1.1s linear infinite;
-    }
-
-    @keyframes img-loading {
-      from { transform: translateX(-120%); }
-      to { transform: translateX(260%); }
-    }
-
-    .img-result {
-      width: 90%;
-      max-width: 540px;
-      border: 1px solid rgba(173, 184, 207, 0.5);
-      border-radius: 12px;
-      padding: 10px;
-      background: rgba(20, 24, 31, 0.75);
-      display: grid;
-      gap: 8px;
-    }
-
-    .img-result-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .img-thumb {
-      height: 88px;
-      border-radius: 9px;
-      border: 1px solid rgba(181, 193, 219, 0.5);
-      background: linear-gradient(135deg, rgba(34, 95, 171, 0.55), rgba(95, 55, 142, 0.6));
-    }
-
-    .img-meta {
-      display: flex;
-      justify-content: space-between;
-      color: rgba(224, 234, 248, 0.85);
-      font-size: 12px;
-    }
-
-    .img-stage-try {
-      color: rgba(242, 247, 255, 0.88);
-      font-size: 15px;
-      display: grid;
-      gap: 4px;
-      line-height: 1.25;
-      text-shadow: 0 1px 2px rgba(0,0,0,.25);
-      margin-top: 4px;
-    }
-
-    .img-editor {
-      margin-top: 12px;
-      border: 1px solid rgba(101, 110, 129, 0.56);
-      border-radius: 16px;
-      background: linear-gradient(180deg, rgba(40, 43, 53, 0.96), rgba(33, 37, 47, 0.96));
-      padding: 12px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 10px 24px rgba(0,0,0,.22);
-    }
-
-    .img-prompt {
-      width: 100%;
-      min-height: 190px;
-      border-radius: 12px;
-      border: 1px solid rgba(80, 107, 148, 0.46);
-      background: rgba(13, 27, 53, 0.55);
-      color: #e6f1ff;
-      padding: 12px;
-      font-size: 15px;
-      resize: vertical;
-      outline: none;
-      line-height: 1.5;
-    }
-
-    .img-prompt::placeholder {
-      color: rgba(163, 180, 211, 0.62);
-    }
-
-    .img-prompt:focus {
-      border-color: rgba(129, 171, 233, 0.72);
-      box-shadow: 0 0 0 3px rgba(73, 127, 215, 0.2);
-    }
-
-    .img-bottom-row {
-      margin-top: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: rgba(212, 223, 240, 0.82);
-      font-size: 14px;
-      padding: 0 2px;
-    }
-
-    .img-gen-btn {
-      border: 1px solid rgba(151, 161, 183, 0.72);
-      background: linear-gradient(180deg, rgba(111, 121, 140, 0.46), rgba(88, 96, 112, 0.46));
-      color: #fff;
-      border-radius: 12px;
-      width: 38px;
-      height: 38px;
+      border-radius: var(--radius-md);
       cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.09);
-      transition: transform .14s ease, background .2s ease;
-    }
-
-    .img-gen-btn:hover { transform: translateY(-1px); }
-    .img-gen-btn:active { transform: translateY(0); }
-
-    .audio-node {
-      min-width: 710px;
-      min-height: 560px;
-      border: 0;
-      background: transparent;
-      box-shadow: none;
-      color: #f1f5ff;
-      padding: 4px;
-    }
-
-    .audio-upload-chip {
-      margin: 0 auto 12px;
-      width: fit-content;
-      border: 1px solid rgba(148, 161, 185, 0.24);
-      background: rgba(22, 27, 38, 0.92);
-      color: #f1f4fa;
-      border-radius: 10px;
-      padding: 7px 16px;
+      color: #475467;
       font-size: 14px;
-      line-height: 1;
-      user-select: none;
+      transition: .15s ease;
     }
-
-    .audio-stage {
-      border: 2px solid rgba(214, 220, 232, 0.68);
+    .menu button:hover { background: rgba(255,255,255,.72); border-color: rgba(123,136,162,.18); }
+    .menu button.active {
+      color: #12358f;
+      border-color: rgba(47,107,255,.24);
+      background: linear-gradient(145deg, rgba(210,227,255,.82), rgba(233,240,255,.92));
+      font-weight: 600;
+    }
+    .main { padding: 6px; }
+    .title { font-size: 30px; font-weight: 700; margin: 6px 4px; }
+    .sub { color: var(--muted); margin: 0 4px 14px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--glass-strong);
+      backdrop-filter: blur(16px) saturate(128%);
+      -webkit-backdrop-filter: blur(16px) saturate(128%);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .step { font-size: 12px; color: #565f6b; font-weight: 700; margin-bottom: 10px; }
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .drop {
+      min-height: 220px;
+      border: 1px dashed #d9dde4;
       border-radius: 14px;
-      min-height: 320px;
-      background: linear-gradient(180deg, rgba(45, 47, 53, 0.94), rgba(34, 37, 44, 0.94));
-      padding: 14px 18px;
-      position: relative;
-      display: grid;
-      grid-template-rows: 1fr auto;
-      margin-bottom: 12px;
-    }
-
-    .audio-stage-center {
       display: grid;
       place-items: center;
-      color: rgba(229, 236, 249, 0.35);
-      font-size: 86px;
-      line-height: 1;
-      gap: 10px;
       text-align: center;
+      color: #8b93a1;
+      padding: 14px;
+      background: #fafbfc;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      cursor: zoom-in;
     }
-
-    .audio-stage-play-btn {
-      border: 1px solid rgba(180, 194, 221, 0.7);
-      background: rgba(30, 36, 49, 0.85);
-      color: #eff5ff;
-      border-radius: 999px;
-      padding: 8px 16px;
-      font-size: 14px;
+    .drop b { color: #404854; display: block; margin-top: 6px; }
+    .ctrl-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+    .pill { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: #555d69; background: #fff; }
+    .right { margin-left: auto; }
+    .btn {
+      border: 1px solid #000;
+      background: #000;
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
       cursor: pointer;
-    }
-
-    .audio-stage-ready {
       font-size: 14px;
-      color: rgba(225, 236, 255, 0.9);
     }
-
-    .audio-stage-try {
-      color: rgba(242, 247, 255, 0.9);
-      font-size: 15px;
-      display: grid;
-      gap: 4px;
-      line-height: 1.2;
-    }
-
-    .audio-editor {
-      margin-top: 12px;
-      border: 1px solid rgba(83, 90, 103, 0.65);
-      border-radius: 12px;
-      background: rgba(37, 40, 47, 0.95);
-      padding: 10px;
-    }
-
-    .audio-prompt {
+    .btn.light { background: #fff; color: #111; border-color: #d8dce3; }
+    .file { display: none; }
+    textarea {
       width: 100%;
       min-height: 120px;
-      border-radius: 10px;
-      border: 1px solid rgba(108, 143, 191, 0.35);
-      background: rgba(7, 19, 44, 0.35);
-      color: #e6f1ff;
-      padding: 10px;
-      font-size: 14px;
-      resize: vertical;
-      outline: none;
-      line-height: 1.5;
-      margin-bottom: 10px;
-    }
-
-    .audio-card {
-      border: 1px solid rgba(88, 95, 111, 0.85);
-      border-radius: 12px;
-      padding: 10px;
-      background: rgba(55, 58, 66, 0.75);
-      min-height: 118px;
-      position: relative;
-    }
-
-    .audio-card h4 {
-      margin: 0 0 4px;
-      font-size: 18px;
-      color: #eef3ff;
-      font-weight: 700;
-    }
-
-    .audio-card p {
-      margin: 0 0 8px;
-      color: rgba(231, 238, 252, 0.82);
-      font-size: 14px;
-    }
-
-    .audio-bottom {
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: rgba(212, 223, 240, 0.82);
-      font-size: 14px;
-      padding: 0 2px;
-    }
-
-    .audio-gen-btn {
-      border: 1px solid rgba(151, 161, 183, 0.72);
-      background: linear-gradient(180deg, rgba(111, 121, 140, 0.46), rgba(88, 96, 112, 0.46));
-      color: #fff;
-      border-radius: 12px;
-      width: 38px;
-      height: 38px;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.09);
-    }
-
-    .audio-seek-inline {
-      appearance: none;
-      height: 6px;
-      width: 220px;
-      border-radius: 999px;
-      background: rgba(201, 207, 220, 0.82);
-      outline: none;
-    }
-
-    .audio-seek-inline::-webkit-slider-thumb {
-      appearance: none;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #f2f5fb;
-      border: 0;
-      cursor: pointer;
-    }
-
-    .audio-play-inline {
-      border: 0;
-      background: transparent;
-      color: #e6eefc;
-      font-size: 26px;
-      cursor: pointer;
-      padding: 0 4px;
-    }
-
-    .video-node {
-      min-width: 690px;
-      min-height: 530px;
-      border: 0;
-      background: transparent;
-      box-shadow: none;
-      color: #f1f5ff;
-      cursor: move;
-      padding: 6px;
-    }
-
-    .video-top {
-      margin-bottom: 12px;
-      position: relative;
-    }
-
-    .node-label {
-      font-size: 38px;
-      font-weight: 700;
-      color: rgba(240, 245, 255, 0.8);
-      margin-bottom: 6px;
-    }
-
-    .upload-chip {
-      margin: 0 auto 10px;
-      width: fit-content;
-      border: 1px solid rgba(148, 161, 185, 0.24);
-      background: rgba(22, 27, 38, 0.92);
-      color: #f1f4fa;
-      border-radius: 12px;
-      padding: 7px 16px;
-      font-size: 20px;
-      cursor: pointer;
-      user-select: none;
-      line-height: 1;
-    }
-
-    .video-stage {
-      border: 1px solid rgba(214, 220, 232, 0.65);
-      border-radius: 14px;
-      min-height: 300px;
-      background: linear-gradient(180deg, rgba(45, 47, 53, 0.92), rgba(36, 38, 43, 0.92));
-      padding: 14px 18px;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .connector {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 1px solid rgba(201, 208, 223, 0.64);
-      color: rgba(234, 240, 253, 0.96);
-      display: grid;
-      place-items: center;
-      font-size: 20px;
-      background: rgba(25, 28, 34, 0.88);
-      box-shadow: 0 2px 8px rgba(0,0,0,.35);
-    }
-
-    .connector.left { left: -15px; }
-    .connector.right { right: -15px; }
-
-    .stage-head {
-      font-size: 14px;
-      font-weight: 700;
-      color: rgba(243, 248, 255, 0.88);
-    }
-
-    .stage-center {
-      display: grid;
-      place-items: center;
-      color: rgba(229, 236, 249, 0.45);
-      font-size: 96px;
-      line-height: 1;
-    }
-
-    .stage-try {
-      color: rgba(242, 247, 255, 0.9);
-      font-size: 16px;
-      display: grid;
-      gap: 3px;
-      line-height: 1.2;
-    }
-
-    .editor-panel {
-      border: 1px solid rgba(83, 90, 103, 0.65);
-      border-radius: 14px;
-      background: rgba(37, 40, 47, 0.95);
-      padding: 12px;
-    }
-
-    .editor-panel.hidden { display: none; }
-
-    .video-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .video-card {
-      border: 1px solid rgba(88, 95, 111, 0.85);
-      border-radius: 12px;
-      padding: 10px;
-      background: rgba(55, 58, 66, 0.75);
-      min-height: 168px;
-      position: relative;
-    }
-
-    .video-card h4 {
-      margin: 0 0 4px;
-      font-size: 18px;
-      color: #eef3ff;
-      font-weight: 700;
-    }
-
-    .video-card p {
-      margin: 0 0 8px;
-      color: rgba(231, 238, 252, 0.82);
-      font-size: 14px;
-    }
-
-    .file-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .pick-btn {
-      border: 1px solid rgba(166, 174, 192, 0.6);
-      background: rgba(88, 94, 107, 0.55);
-      color: #f1f5ff;
-      border-radius: 9px;
-      padding: 7px 14px;
-      font-size: 14px;
-      line-height: 1;
-      cursor: pointer;
-    }
-
-    .file-name {
-      font-size: 13px;
-      color: #d8e2f5;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 150px;
-    }
-
-    .preview-box {
-      position: absolute;
-      right: 10px;
-      bottom: 10px;
-      width: 108px;
-      height: 130px;
-      border-radius: 10px;
-      border: 1px solid rgba(161, 177, 209, 0.5);
-      display: grid;
-      place-items: center;
-      color: #9fb4d8;
-      font-size: 14px;
-      background: linear-gradient(135deg, rgba(13, 19, 33, 0.75), rgba(30, 34, 41, 0.9));
-      text-align: center;
-      padding: 8px;
-    }
-
-    .audio-ui {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      color: #d9e3f5;
-      font-size: 20px;
-    }
-
-    .audio-seek {
-      appearance: none;
-      -webkit-appearance: none;
-      height: 6px;
-      flex: 1;
-      max-width: 210px;
-      border-radius: 999px;
-      background: rgba(201, 207, 220, 0.82);
-      outline: none;
-      cursor: pointer;
-    }
-
-    .audio-seek::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #f2f5fb;
-      border: none;
-    }
-
-    .audio-seek::-moz-range-thumb {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #f2f5fb;
-      border: none;
-    }
-
-    .audio-play-btn {
-      border: 0;
-      background: transparent;
-      color: #d9e3f5;
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 0 2px;
-    }
-
-    .expand-mark {
-      position: absolute;
-      right: 10px;
-      top: 8px;
-      font-size: 16px;
-      color: rgba(223, 230, 245, 0.7);
-    }
-
-    .progress-wrap {
-      margin-top: 2px;
-      display: grid;
-      grid-template-columns: auto 1fr auto auto auto;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      color: #e8effe;
-    }
-
-    .progress-title {
-      white-space: nowrap;
-      color: #edf3ff;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .progress {
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(18, 20, 25, 0.95);
-      overflow: hidden;
-      min-width: 180px;
-    }
-
-    .bar {
-      width: 0%;
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #24d4b5, #39dcbe);
-    }
-
-    .muted {
-      font-size: 13px;
-      color: rgba(217, 225, 241, 0.75);
-    }
-
-    .gen-btn {
-      border: 1px solid rgba(97, 223, 182, 0.7);
-      background: linear-gradient(90deg, #18b190, #2fd8b4);
-      color: #fff;
-      border-radius: 8px;
-      padding: 5px 9px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .status-value { font-weight: 700; font-size: 20px; }
-
-    .hidden-input { display: none; }
-
-    .hint {
-      position: absolute;
-      left: 50%;
-      bottom: 14px;
-      transform: translateX(-50%);
-      background: var(--panel);
       border: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 12px;
-      border-radius: 9px;
-      padding: 7px 12px;
-      z-index: 20;
-      backdrop-filter: blur(6px);
+      border-radius: 10px;
+      padding: 10px;
+      outline: none;
+      resize: vertical;
+    }
+    .muted { color: #7e8796; font-size: 13px; }
+    .status { margin-top: 10px; font-size: 13px; color: #4a5360; }
+    audio { width: 100%; margin-top: 8px; }
+
+    .preview-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .preview-modal.open { display: flex; }
+    .preview-modal img {
+      max-width: min(96vw, 1600px);
+      max-height: 92vh;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      background: #111;
+    }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .upload-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <header class="topbar">
-      <div class="top-left">
-        <div class="title-chip">
-          <span class="title-dot"></span>
-          <span>Untitled · 数字人工作流</span>
-        </div>
+    <aside class="side">
+      <div class="menu">
+        <button class="active" data-panel="p-image">文生图</button>
+        <button data-panel="p-audio">文生音频</button>
+        <button data-panel="p-video">图+音频生视频</button>
       </div>
-      <div class="top-right">
-        <a class="btn" href="./index.html">返回应用页</a>
-        <button class="btn" id="resetBtn">重置视图</button>
-      </div>
-    </header>
+    </aside>
 
-    <div class="left-tools" aria-hidden="true">
-      <div class="tool">+</div>
-      <div class="tool">◻</div>
-      <div class="tool">↔</div>
-      <div class="tool">✂</div>
-    </div>
+    <main class="main">
+      <div class="title">一站式高品质数字人</div>
+      <div class="sub">先生成图和音频，再一键合成视频。若已有上游结果，会自动填充到视频节点。</div>
 
-    <div class="viewport" id="viewport">
-      <div class="canvas" id="canvas">
-        <svg class="links" id="links"></svg>
+      <section class="card panel active" id="p-image">
+        <div class="step">01 文生图</div>
+        <textarea id="imgPrompt" placeholder="输入文生图提示词"></textarea>
+        <div class="ctrl-row">
+          <span class="pill" id="imgState">未生成</span>
+          <button class="btn right" id="imgGenBtn">生成图片</button>
+        </div>
+        <div class="drop" id="imgResultBox">🖼<b>生成结果会显示在这里</b></div>
+        <div class="status" id="imgStatus">状态：READY</div>
+      </section>
 
-        <div class="node img-node" id="node-a" style="left: 500px; top: 90px;">
-          <div class="img-node-top">
-            <div class="img-upload-chip">⇧ 上传</div>
-            <div class="img-stage" id="imgStage">
-              <span class="connector left">+</span>
-              <span class="connector right">+</span>
-              <div class="img-stage-title">🖼 图片节点 3</div>
-              <div class="img-stage-center" id="imgStageCenter">
-                <span id="imgStagePlaceholder">🖼</span>
-              </div>
-              <div class="img-stage-try">
-                <div>尝试:</div>
-                <div>⇧ 图生图</div>
-                <div>HD 图片高清</div>
-              </div>
+      <section class="card panel" id="p-audio">
+        <div class="step">02 文生音频</div>
+        <textarea id="audioPrompt" placeholder="输入文生音频文案"></textarea>
+        <div class="ctrl-row" style="margin-top:8px;">
+          <label class="btn light" for="refAudio">上传参考音频(可选)</label>
+          <input class="file" id="refAudio" type="file" accept="audio/*,.mp3,.wav,.flac" />
+          <span class="muted" id="refAudioName">未选择参考音频</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="pill" id="audioState">未生成</span>
+          <button class="btn right" id="audioGenBtn">生成音频</button>
+        </div>
+        <audio id="audioPreview" controls></audio>
+        <div class="status" id="audioStatus">状态：READY</div>
+      </section>
+
+      <section class="card panel" id="p-video">
+        <div class="step">03 图+音频生视频</div>
+        <div class="upload-grid">
+          <div>
+            <div class="drop" id="videoImageBox">🖼<b>上传商品图 / 或自动使用文生图结果</b></div>
+            <div class="ctrl-row">
+              <label class="btn light" for="videoImage">上传图片</label>
+              <input class="file" id="videoImage" type="file" accept="image/*" />
+              <span class="muted" id="videoImageName">未选择图片</span>
             </div>
           </div>
-
-          <div class="img-editor">
-            <textarea class="img-prompt" id="imgPromptInput" placeholder="描述你想要生成的画面内容"></textarea>
-            <div class="img-bottom-row">
-              <div>
-                <span id="imgCountText">1张</span>
-                <span style="margin:0 5px;opacity:.5;">•</span>
-                <span id="imgTokenText">14</span>
-              </div>
-              <button class="img-gen-btn" id="imgGenerateBtn" type="button">↑</button>
+          <div>
+            <div class="drop" id="videoAudioBox">🎵<b>上传音频 / 或自动使用文生音频结果</b></div>
+            <div class="ctrl-row">
+              <label class="btn light" for="videoAudio">上传音频</label>
+              <input class="file" id="videoAudio" type="file" accept="audio/*,.mp3,.wav,.flac" />
+              <span class="muted" id="videoAudioName">未选择音频</span>
             </div>
           </div>
         </div>
-
-        <div class="node audio-node" id="node-b" style="left: 520px; top: 710px;">
-          <div class="audio-upload-chip">⇧ 上传</div>
-          <div class="audio-stage" id="audioStage">
-            <span class="connector left">+</span>
-            <span class="connector right">+</span>
-            <div class="audio-stage-center" id="audioStageCenter">🖼</div>
-            <div class="audio-stage-try">
-              <div>尝试:</div>
-              <div>声音克隆</div>
-            </div>
-          </div>
-
-          <div class="audio-editor">
-            <textarea class="audio-prompt" id="audioPromptInput" placeholder="描述你想要生成的画面内容"></textarea>
-
-            <div class="audio-card">
-              <h4>上传音乐(必选)</h4>
-              <p>选择音色</p>
-              <div class="file-row" style="margin-bottom:0;">
-                <label class="pick-btn" for="audioInputInline">选择文件</label>
-                <input class="hidden-input" type="file" id="audioInputInline" accept=".mp3,.wav,.flac,audio/*" />
-                <span class="file-name" id="audioInlineName">未选择文件</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-                <input type="range" class="audio-seek-inline" id="audioSeekInline" min="0" max="100" value="0" step="0.1" />
-                <button type="button" class="audio-play-inline" id="audioPlayInline">▶</button>
-              </div>
-              <audio id="audioInlinePlayer" preload="metadata" style="display:none;"></audio>
-            </div>
-
-            <div class="audio-bottom">
-              <div><span id="audioTokenText">14</span></div>
-              <button class="audio-gen-btn" id="audioGenerateBtn" type="button">↑</button>
-            </div>
-          </div>
+        <div class="ctrl-row">
+          <span class="pill" id="videoState">等待生成</span>
+          <button class="btn right" id="videoGenBtn">生成视频</button>
         </div>
+        <div class="status" id="videoStatus">taskId: -</div>
+      </section>
+    </main>
+  </div>
 
-        <div class="node video-node" id="node-c" style="left: 760px; top: 110px;">
-          <div class="video-top" id="videoTopTrigger">
-            <div class="upload-chip">⇧ 上传</div>
-            <div class="video-stage">
-              <span class="connector left">+</span>
-              <span class="connector right">+</span>
-              <div class="node-label">▶ 视频节点 2</div>
-              <div class="stage-center">▶</div>
-              <div class="stage-try">
-                <div>尝试：</div>
-                <div>◈ 上传图片</div>
-                <div>✦ 上传音频</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="editor-panel" id="editorPanel">
-            <div class="video-grid">
-              <div class="video-card">
-                <h4>上传图片(必选)</h4>
-                <p>选择角色图</p>
-                <div class="file-row">
-                  <label class="pick-btn" for="imageInput">选择文件</label>
-                  <span class="file-name" id="imageName">未选择文件</span>
-                </div>
-                <input class="hidden-input" type="file" id="imageInput" accept="image/*" />
-                <div class="preview-box" id="imagePreview">图片预览</div>
-              </div>
-
-              <div class="video-card">
-                <span class="expand-mark">↗</span>
-                <h4>上传音乐(必选)</h4>
-                <p>选择音色</p>
-                <div class="file-row">
-                  <label class="pick-btn" for="audioInput">选择文件</label>
-                  <span class="file-name" id="audioName">未选择文件</span>
-                </div>
-                <input class="hidden-input" type="file" id="audioInput" accept=".mp3,.wav,.flac,audio/*" />
-                <audio id="audioPlayer" preload="metadata" style="display:none;"></audio>
-                <div class="audio-ui">
-                  <input type="range" class="audio-seek" id="audioSeek" min="0" max="100" value="0" step="0.1" />
-                  <button type="button" class="audio-play-btn" id="audioPlayBtn" aria-label="播放或暂停">▶</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="progress-wrap">
-              <div class="progress-title">任务进度：</div>
-              <div class="progress"><div class="bar" id="progressBar"></div></div>
-              <div class="status-value" id="taskStatus">1个</div>
-              <div class="muted" id="progressText">⚡108 / 135</div>
-              <button class="gen-btn" id="generateBtn">⇧</button>
-            </div>
-
-            <div class="muted" id="taskId" style="margin-top:8px;">taskId: -</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="bottom-controls">
-      <button class="mini-btn" id="zoomOut">-</button>
-      <div class="zoom-text" id="zoomText">100%</div>
-      <button class="mini-btn" id="zoomIn">+</button>
-      <button class="mini-btn" id="fitView" title="适配画布">⌖</button>
-    </div>
-
-    <div class="hint">按住空白处拖动画布；拖动节点调整流程；左下角可缩放</div>
+  <div class="preview-modal" id="previewModal">
+    <img id="previewModalImg" alt="预览大图" />
   </div>
 
   <script>
     (function () {
-      const viewport = document.getElementById('viewport');
-      const canvas = document.getElementById('canvas');
-      const links = document.getElementById('links');
-      const resetBtn = document.getElementById('resetBtn');
-      const zoomIn = document.getElementById('zoomIn');
-      const zoomOut = document.getElementById('zoomOut');
-      const fitView = document.getElementById('fitView');
-      const zoomText = document.getElementById('zoomText');
-
-      const nodes = {
-        a: document.getElementById('node-a'),
-        b: document.getElementById('node-b'),
-        c: document.getElementById('node-c')
-      };
-
-      // RunningHub OpenAPI 配置
       const RH = {
         baseUrl: 'https://www.runninghub.cn',
         uploadPath: '/task/openapi/upload',
         createPath: '/task/openapi/create',
         outputsPath: '/task/openapi/outputs',
 
-        // 视频节点工作流
         workflowId: '2044669894783934465',
         imageNodeId: '133',
         imageFieldName: 'image',
         audioNodeId: '125',
         audioFieldName: 'audio',
 
-        // 文生图工作流（来自“万能图像生成器”）
         imageWorkflowId: '2047014805009080321',
         imagePromptNodeId: '100',
         imagePromptFieldName: 'text',
 
-        // 文生声音工作流（乱神版-IndexTTS2）
         ttsWorkflowId: '2046420823195525122',
         ttsPromptNodeId: '47',
         ttsPromptFieldName: 'prompt',
@@ -1058,222 +243,60 @@
         apiKey: '6b0b6ac3b887416992eed10fe8b77d65'
       };
 
-      let panX = 0;
-      let panY = 0;
-      let scale = 1;
-
-      // 上游节点产物缓存：用于自动填充图生视频节点
       let generatedImageUrl = '';
       let generatedAudioUrl = '';
 
-      const LAYOUT_STORAGE_KEY = 'rh_workflow_canvas_layout_v1';
-
-      function saveLayoutState() {
-        const state = {
-          panX,
-          panY,
-          scale,
-          nodes: {
-            a: { left: nodes.a.style.left || `${nodes.a.offsetLeft}px`, top: nodes.a.style.top || `${nodes.a.offsetTop}px` },
-            b: { left: nodes.b.style.left || `${nodes.b.offsetLeft}px`, top: nodes.b.style.top || `${nodes.b.offsetTop}px` },
-            c: { left: nodes.c.style.left || `${nodes.c.offsetLeft}px`, top: nodes.c.style.top || `${nodes.c.offsetTop}px` }
-          }
-        };
-        localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(state));
-      }
-
-      function loadLayoutState() {
-        const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
-        if (!raw) return false;
-        try {
-          const state = JSON.parse(raw);
-          if (state?.nodes?.a?.left) nodes.a.style.left = state.nodes.a.left;
-          if (state?.nodes?.a?.top) nodes.a.style.top = state.nodes.a.top;
-          if (state?.nodes?.b?.left) nodes.b.style.left = state.nodes.b.left;
-          if (state?.nodes?.b?.top) nodes.b.style.top = state.nodes.b.top;
-          if (state?.nodes?.c?.left) nodes.c.style.left = state.nodes.c.left;
-          if (state?.nodes?.c?.top) nodes.c.style.top = state.nodes.c.top;
-          panX = Number(state?.panX ?? 0);
-          panY = Number(state?.panY ?? 0);
-          scale = clampScale(Number(state?.scale ?? 1));
-          return true;
-        } catch (_) {
-          return false;
-        }
-      }
-
-      function updateZoomText() {
-        zoomText.textContent = `${Math.round(scale * 100)}%`;
-      }
-
-      function applyTransform() {
-        canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-        drawLinks();
-        updateZoomText();
-      }
-
-      function nodeCenterRight(el) {
-        return {
-          x: el.offsetLeft + el.offsetWidth,
-          y: el.offsetTop + el.offsetHeight / 2
-        };
-      }
-
-      function nodeCenterLeft(el) {
-        return {
-          x: el.offsetLeft,
-          y: el.offsetTop + el.offsetHeight / 2
-        };
-      }
-
-      function curve(p1, p2) {
-        const dx = Math.max(85, (p2.x - p1.x) * 0.42);
-        return `M ${p1.x} ${p1.y} C ${p1.x + dx} ${p1.y}, ${p2.x - dx} ${p2.y}, ${p2.x} ${p2.y}`;
-      }
-
-      function drawLinks() {
-        const s1 = nodeCenterRight(nodes.a);
-        const s2 = nodeCenterRight(nodes.b);
-        const t = nodeCenterLeft(nodes.c);
-
-        links.innerHTML = `
-          <path d="${curve(s1, t)}" stroke="#ff5f5f" stroke-width="3" fill="none" stroke-linecap="round" />
-          <path d="${curve(s2, t)}" stroke="#ff5f5f" stroke-width="3" fill="none" stroke-linecap="round" />
-        `;
-      }
-
-      let panning = false;
-      let startX = 0;
-      let startY = 0;
-
-      viewport.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.node')) return;
-        panning = true;
-        viewport.classList.add('dragging');
-        startX = e.clientX - panX;
-        startY = e.clientY - panY;
-      });
-
-      window.addEventListener('pointermove', (e) => {
-        if (!panning) return;
-        panX = e.clientX - startX;
-        panY = e.clientY - startY;
-        applyTransform();
-      });
-
-      window.addEventListener('pointerup', () => {
-        const wasPanning = panning;
-        panning = false;
-        viewport.classList.remove('dragging');
-        if (wasPanning) saveLayoutState();
-      });
-
-      Object.values(nodes).forEach((node) => {
-        let dragging = false;
-        let dx = 0;
-        let dy = 0;
-
-        node.addEventListener('pointerdown', (e) => {
-          if (e.target.closest('button, input, label, textarea, .audio-seek, .audio-play-btn, .pick-btn, .gen-btn, .img-gen-btn, .img-prompt')) {
-            e.stopPropagation();
-            return;
-          }
-          dragging = true;
-          node.setPointerCapture(e.pointerId);
-          dx = e.clientX - (node.offsetLeft * scale + panX);
-          dy = e.clientY - (node.offsetTop * scale + panY);
-          e.stopPropagation();
-        });
-
-        node.addEventListener('pointermove', (e) => {
-          if (!dragging) return;
-          const worldX = (e.clientX - dx - panX) / scale;
-          const worldY = (e.clientY - dy - panY) / scale;
-          node.style.left = `${worldX}px`;
-          node.style.top = `${worldY}px`;
-          drawLinks();
-        });
-
-        node.addEventListener('pointerup', () => {
-          dragging = false;
-          saveLayoutState();
+      const panelBtns = Array.from(document.querySelectorAll('.menu button'));
+      const panels = Array.from(document.querySelectorAll('.panel'));
+      panelBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          panelBtns.forEach((x) => x.classList.toggle('active', x === btn));
+          const id = btn.dataset.panel;
+          panels.forEach((p) => p.classList.toggle('active', p.id === id));
         });
       });
 
-      function clampScale(v) {
-        return Math.min(2, Math.max(0.4, v));
-      }
+      const imgPrompt = document.getElementById('imgPrompt');
+      const imgGenBtn = document.getElementById('imgGenBtn');
+      const imgResultBox = document.getElementById('imgResultBox');
+      const imgState = document.getElementById('imgState');
+      const imgStatus = document.getElementById('imgStatus');
 
-      zoomIn.addEventListener('click', () => {
-        scale = clampScale(scale + 0.1);
-        applyTransform();
-        saveLayoutState();
-      });
+      const audioPrompt = document.getElementById('audioPrompt');
+      const refAudio = document.getElementById('refAudio');
+      const refAudioName = document.getElementById('refAudioName');
+      const audioGenBtn = document.getElementById('audioGenBtn');
+      const audioPreview = document.getElementById('audioPreview');
+      const audioState = document.getElementById('audioState');
+      const audioStatus = document.getElementById('audioStatus');
 
-      zoomOut.addEventListener('click', () => {
-        scale = clampScale(scale - 0.1);
-        applyTransform();
-        saveLayoutState();
-      });
-
-      viewport.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const next = clampScale(scale + (e.deltaY < 0 ? 0.06 : -0.06));
-        scale = next;
-        applyTransform();
-        saveLayoutState();
-      }, { passive: false });
-
-      function doFitView() {
-        panX = 0;
-        panY = 0;
-        scale = 1;
-        applyTransform();
-      }
-
-      fitView.addEventListener('click', doFitView);
-
-      resetBtn.addEventListener('click', () => {
-        nodes.a.style.left = '500px'; nodes.a.style.top = '90px';
-        nodes.b.style.left = '520px'; nodes.b.style.top = '710px';
-        nodes.c.style.left = '760px'; nodes.c.style.top = '110px';
-        doFitView();
-        saveLayoutState();
-      });
-
-      const videoTopTrigger = document.getElementById('videoTopTrigger');
-      const imgStage = document.getElementById('imgStage');
-      const imgStageCenter = document.getElementById('imgStageCenter');
-      const imgPromptInput = document.getElementById('imgPromptInput');
-      const imgGenerateBtn = document.getElementById('imgGenerateBtn');
-      const imgCountText = document.getElementById('imgCountText');
-      const imgTokenText = document.getElementById('imgTokenText');
-      const imageInput = document.getElementById('imageInput');
-      const audioInput = document.getElementById('audioInput');
-      const audioPromptInput = document.getElementById('audioPromptInput');
-      const audioGenerateBtn = document.getElementById('audioGenerateBtn');
-      const audioTokenText = document.getElementById('audioTokenText');
-      const audioInputInline = document.getElementById('audioInputInline');
-      const audioInlineName = document.getElementById('audioInlineName');
-      const audioInlinePlayer = document.getElementById('audioInlinePlayer');
-      const audioSeekInline = document.getElementById('audioSeekInline');
-      const audioPlayInline = document.getElementById('audioPlayInline');
-      const audioStageCenter = document.getElementById('audioStageCenter');
-      const imageName = document.getElementById('imageName');
-      const audioName = document.getElementById('audioName');
-      const imagePreview = document.getElementById('imagePreview');
-      const audioPlayer = document.getElementById('audioPlayer');
-      const audioSeek = document.getElementById('audioSeek');
-      const audioPlayBtn = document.getElementById('audioPlayBtn');
-      const generateBtn = document.getElementById('generateBtn');
-      const taskStatus = document.getElementById('taskStatus');
-      const taskId = document.getElementById('taskId');
-      const progressBar = document.getElementById('progressBar');
-      const progressText = document.getElementById('progressText');
+      const videoImage = document.getElementById('videoImage');
+      const videoAudio = document.getElementById('videoAudio');
+      const videoImageName = document.getElementById('videoImageName');
+      const videoAudioName = document.getElementById('videoAudioName');
+      const videoImageBox = document.getElementById('videoImageBox');
+      const videoAudioBox = document.getElementById('videoAudioBox');
+      const videoGenBtn = document.getElementById('videoGenBtn');
+      const previewModal = document.getElementById('previewModal');
+      const previewModalImg = document.getElementById('previewModalImg');
+      const videoState = document.getElementById('videoState');
+      const videoStatus = document.getElementById('videoStatus');
+      let latestVideoUrls = [];
 
       function getApiKey() {
-        // 优先本地覆盖，其次走页面内置默认值（与 runninghub_web_tester 一致）
         return (localStorage.getItem('runninghub_api_key') || RH.apiKey || '').trim();
+      }
+
+      function openPreview(src) {
+        if (!src || !previewModal || !previewModalImg) return;
+        previewModalImg.src = src;
+        previewModal.classList.add('open');
+      }
+
+      function closePreview() {
+        if (!previewModal || !previewModalImg) return;
+        previewModal.classList.remove('open');
+        previewModalImg.removeAttribute('src');
       }
 
       async function parseJsonSafe(resp) {
@@ -1284,634 +307,224 @@
       async function uploadFileToRunningHub(file) {
         const key = getApiKey();
         if (!key) throw new Error('缺少 API Key');
-
         const form = new FormData();
         form.append('file', file);
         form.append('apiKey', key);
         form.append('fileType', 'input');
-
         const res = await fetch(`${RH.baseUrl}${RH.uploadPath}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${key}` },
-          body: form
+          method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form
         });
-
         const data = await parseJsonSafe(res);
-        if (!res.ok) {
-          throw new Error(`上传失败(${res.status}) ${JSON.stringify(data)}`);
-        }
-
-        const value = data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
-        if (!value) throw new Error('上传返回中没有可用 fileName/download_url');
-        return value;
+        if (!res.ok) throw new Error(`上传失败(${res.status}) ${JSON.stringify(data)}`);
+        return data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
       }
 
       async function createTaskOnRunningHub({ workflowId, nodeInfoList }) {
         const key = getApiKey();
-        if (!key) throw new Error('缺少 API Key');
-
-        const payload = {
-          apiKey: key,
-          workflowId,
-          nodeInfoList
-        };
-
         const res = await fetch(`${RH.baseUrl}${RH.createPath}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`
-          },
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+          body: JSON.stringify({ apiKey: key, workflowId, nodeInfoList })
         });
-
         const data = await parseJsonSafe(res);
-        if (!res.ok) {
-          throw new Error(`创建任务失败(${res.status}) ${JSON.stringify(data)}`);
-        }
-        if (data?.code !== 0) {
-          throw new Error(`创建任务失败(code=${data?.code}): ${data?.msg || JSON.stringify(data)}`);
-        }
-
-        const tId = data?.data?.taskId || data?.taskId || data?.data?.id || '';
-        if (!tId) throw new Error('创建任务成功但未返回 taskId');
-        return tId;
-      }
-
-      function findUrls(obj, arr = []) {
-        if (!obj) return arr;
-        if (typeof obj === 'string' && /^https?:\/\/.+/i.test(obj)) {
-          arr.push(obj);
-          return arr;
-        }
-        if (Array.isArray(obj)) {
-          obj.forEach((x) => findUrls(x, arr));
-          return arr;
-        }
-        if (typeof obj === 'object') {
-          Object.values(obj).forEach((v) => findUrls(v, arr));
-        }
-        return arr;
+        if (!res.ok || data?.code !== 0) throw new Error(`创建任务失败: ${JSON.stringify(data)}`);
+        return data?.data?.taskId || data?.taskId || '';
       }
 
       async function pollOutputs(taskId) {
         const key = getApiKey();
-        if (!key) throw new Error('缺少 API Key');
-
-        let attempt = 0;
-        const maxAttempts = 120;
-
-        while (attempt < maxAttempts) {
-          attempt += 1;
-
+        for (let i = 0; i < 120; i++) {
           const res = await fetch(`${RH.baseUrl}${RH.outputsPath}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${key}`
-            },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
             body: JSON.stringify({ apiKey: key, taskId })
           });
-
           const data = await parseJsonSafe(res);
-          if (!res.ok) {
-            throw new Error(`查询结果失败(${res.status}): ${JSON.stringify(data)}`);
-          }
+          if (!res.ok) throw new Error(`查询失败(${res.status})`);
+          if (data?.code === 0 && Array.isArray(data?.data) && data.data.length > 0) {
+            const urls = [];
+            (function walk(x) {
+              if (!x) return;
+              if (typeof x === 'string' && /^https?:\/\//i.test(x)) { urls.push(x); return; }
+              if (Array.isArray(x)) x.forEach(walk);
+              else if (typeof x === 'object') Object.values(x).forEach(walk);
+            })(data);
 
-          const code = data?.code;
-          if (code === 0 && Array.isArray(data?.data) && data.data.length > 0) {
-            progressBar.style.width = '100%';
-            progressText.textContent = '⚡135 / 135';
-            return { raw: data, outputs: findUrls(data) };
+            const videos = urls.filter((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
+            const list = videos.length ? videos : urls;
+            return { raw: data, urls: list };
           }
-          if (code === 805) {
-            throw new Error(`任务失败: ${JSON.stringify(data)}`);
-          }
-
-          if (code === 804) {
-            const p = Math.min(95, 50 + Math.floor((attempt / maxAttempts) * 40));
-            progressBar.style.width = `${p}%`;
-            progressText.textContent = '任务运行中...';
-          } else if (code === 813) {
-            const p = Math.min(60, 45 + Math.floor((attempt / maxAttempts) * 15));
-            progressBar.style.width = `${p}%`;
-            progressText.textContent = '任务排队中...';
-          } else {
-            const p = Math.min(90, 50 + Math.floor((attempt / maxAttempts) * 30));
-            progressBar.style.width = `${p}%`;
-            progressText.textContent = `任务处理中（code=${String(code)}）`;
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
+          if (data?.code === 805) throw new Error(`任务失败: ${JSON.stringify(data)}`);
+          await new Promise((r) => setTimeout(r, 3000));
         }
-
-        throw new Error('轮询超时，请稍后在 RunningHub 控制台查看任务状态');
+        throw new Error('轮询超时');
       }
 
       async function runWorkflowV2(workflowId, nodeInfoList = []) {
         const key = getApiKey();
-        if (!key) throw new Error('缺少 API Key');
-
         const res = await fetch(`${RH.baseUrl}/openapi/v2/run/workflow/${encodeURIComponent(workflowId)}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`
-          },
-          body: JSON.stringify({
-            addMetadata: true,
-            nodeInfoList,
-            instanceType: 'default',
-            usePersonalQueue: false
-          })
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+          body: JSON.stringify({ addMetadata: true, nodeInfoList, instanceType: 'default', usePersonalQueue: false })
         });
-
         const data = await parseJsonSafe(res);
-        if (!res.ok) {
-          throw new Error(`v2创建失败(${res.status}): ${JSON.stringify(data)}`);
-        }
-        if (!data?.taskId) {
-          throw new Error(`v2创建返回缺少taskId: ${JSON.stringify(data)}`);
-        }
-        return data;
-      }
-
-      async function queryWorkflowV2(taskId) {
-        const key = getApiKey();
-        if (!key) throw new Error('缺少 API Key');
-
-        const res = await fetch(`${RH.baseUrl}/openapi/v2/query`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`
-          },
-          body: JSON.stringify({ taskId })
-        });
-
-        const data = await parseJsonSafe(res);
-        if (!res.ok) {
-          throw new Error(`v2查询失败(${res.status}): ${JSON.stringify(data)}`);
-        }
-        return data;
+        if (!res.ok || !data?.taskId) throw new Error(`v2创建失败: ${JSON.stringify(data)}`);
+        return data.taskId;
       }
 
       async function pollOutputsV2(taskId) {
-        let attempt = 0;
-        const maxAttempts = 120;
-
-        while (attempt < maxAttempts) {
-          attempt += 1;
-          const data = await queryWorkflowV2(taskId);
+        const key = getApiKey();
+        for (let i = 0; i < 120; i++) {
+          const res = await fetch(`${RH.baseUrl}/openapi/v2/query`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+            body: JSON.stringify({ taskId })
+          });
+          const data = await parseJsonSafe(res);
+          if (!res.ok) throw new Error(`v2查询失败(${res.status})`);
           const status = String(data?.status || '').toUpperCase();
-
-          if (status === 'SUCCESS') {
-            const results = Array.isArray(data?.results) ? data.results : [];
-            const urls = results.map((r) => r?.url).filter(Boolean);
-            return { raw: data, outputs: urls };
-          }
-          if (status === 'FAILED') {
-            throw new Error(`v2任务失败: ${data?.errorMessage || JSON.stringify(data)}`);
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
+          if (status === 'SUCCESS') return (data?.results || []).map((r) => r?.url).filter(Boolean);
+          if (status === 'FAILED') throw new Error(`v2任务失败: ${data?.errorMessage || JSON.stringify(data)}`);
+          await new Promise((r) => setTimeout(r, 3000));
         }
-
         throw new Error('v2轮询超时');
       }
 
-      if (videoTopTrigger) {
-        videoTopTrigger.addEventListener('click', (e) => {
-          if (e.target.closest('button, input, label, textarea')) return;
+      refAudio.addEventListener('change', () => {
+        const f = refAudio.files && refAudio.files[0];
+        refAudioName.textContent = f ? f.name : '未选择参考音频';
+      });
+
+      videoImage.addEventListener('change', () => {
+        const f = videoImage.files && videoImage.files[0];
+        videoImageName.textContent = f ? f.name : '未选择图片';
+        if (!f) return;
+        const url = URL.createObjectURL(f);
+        videoImageBox.style.backgroundImage = `url(${url})`;
+        videoImageBox.innerHTML = '';
+      });
+
+      videoAudio.addEventListener('change', () => {
+        const f = videoAudio.files && videoAudio.files[0];
+        videoAudioName.textContent = f ? f.name : '未选择音频';
+      });
+
+      [imgResultBox, videoImageBox].forEach((box) => {
+        box.addEventListener('dblclick', () => {
+          const bg = box.style.backgroundImage || '';
+          const m = bg.match(/url\(["']?(.*?)["']?\)/);
+          if (m && m[1]) openPreview(m[1]);
+        });
+      });
+
+      if (previewModal) {
+        previewModal.addEventListener('click', (e) => {
+          if (e.target === previewModal) closePreview();
         });
       }
 
-      function renderImgIdle() {
-        if (!imgStage || !imgStageCenter) return;
-        imgStage.classList.remove('img-stage-generating');
-        imgStageCenter.innerHTML = '<span id="imgStagePlaceholder">🖼</span>';
-      }
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePreview();
+      });
 
-      function renderImgGenerating() {
-        if (!imgStage || !imgStageCenter) return;
-        imgStage.classList.add('img-stage-generating');
-        imgStageCenter.innerHTML = '<div style="font-size:64px;opacity:.45;">🖼</div><div class="img-loader"></div>';
-      }
-
-      function renderAudioStageIdle() {
-        if (!audioStageCenter) return;
-        audioStageCenter.innerHTML = '🖼';
-      }
-
-      function renderAudioStageReady() {
-        if (!audioStageCenter) return;
-        audioStageCenter.innerHTML = `
-          <div class="audio-stage-ready">已生成音频</div>
-          <button type="button" class="audio-stage-play-btn" id="audioStagePlayBtn">▶ 点击播放</button>
-        `;
-        const btn = document.getElementById('audioStagePlayBtn');
-        if (btn) {
-          btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!audioInlinePlayer || !audioInlinePlayer.src) return;
-            if (audioInlinePlayer.paused) {
-              try {
-                await audioInlinePlayer.play();
-                btn.textContent = '❚❚ 暂停';
-              } catch (_) {}
-            } else {
-              audioInlinePlayer.pause();
-              btn.textContent = '▶ 点击播放';
-            }
-          });
+      imgGenBtn.addEventListener('click', async () => {
+        const prompt = (imgPrompt.value || '').trim();
+        if (!prompt) return alert('请先输入文生图提示词');
+        imgGenBtn.disabled = true;
+        imgState.textContent = '生成中';
+        imgStatus.textContent = '状态：RUNNING';
+        try {
+          const taskId = await runWorkflowV2(RH.imageWorkflowId, [{ nodeId: RH.imagePromptNodeId, fieldName: RH.imagePromptFieldName, fieldValue: prompt }]);
+          const urls = await pollOutputsV2(taskId);
+          const imageUrl = urls.find((u) => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u)) || urls[0] || '';
+          if (!imageUrl) throw new Error('未获取到图片URL');
+          generatedImageUrl = imageUrl;
+          imgResultBox.style.backgroundImage = `url(${imageUrl})`;
+          imgResultBox.innerHTML = '';
+          imgState.textContent = '已生成';
+          imgStatus.textContent = `状态：SUCCESS，taskId=${taskId}`;
+          videoImageName.textContent = '已自动填充(来自文生图)';
+          videoImageBox.style.backgroundImage = `url(${imageUrl})`;
+          videoImageBox.innerHTML = '';
+        } catch (e) {
+          alert(`文生图失败：${e.message || e}`);
+          imgState.textContent = '失败';
+          imgStatus.textContent = '状态：FAILED';
+        } finally {
+          imgGenBtn.disabled = false;
         }
-      }
+      });
 
-      function renderImgResult(promptText, imageUrlList = []) {
-        if (!imgStage || !imgStageCenter) return;
-        imgStage.classList.remove('img-stage-generating');
-        const title = (promptText || '未命名生成结果').trim().slice(0, 22);
-        const urls = Array.isArray(imageUrlList) ? imageUrlList.filter(Boolean) : [];
-
-        if (urls.length > 0) {
-          const thumbs = urls.slice(0, 2).map((u) => {
-            const safe = String(u).replace(/"/g, '&quot;');
-            return `<div class="img-thumb" style="background-image:url('${safe}');background-size:cover;background-position:center;"></div>`;
-          }).join('');
-
-          imgStageCenter.innerHTML = `
-            <div class="img-result">
-              <div class="img-meta"><span>生成结构</span><span>完成</span></div>
-              <div class="img-result-grid">${thumbs}</div>
-              <div class="img-meta"><span>${title || '图像结果'}</span><span>${urls.length} / ${urls.length}</span></div>
-            </div>
-          `;
-          return;
+      audioGenBtn.addEventListener('click', async () => {
+        const prompt = (audioPrompt.value || '').trim();
+        if (!prompt) return alert('请先输入文生音频文案');
+        audioGenBtn.disabled = true;
+        audioState.textContent = '生成中';
+        audioStatus.textContent = '状态：RUNNING';
+        try {
+          let refValue = '';
+          const f = refAudio.files && refAudio.files[0];
+          if (f) refValue = await uploadFileToRunningHub(f);
+          const nodeInfoList = [
+            { nodeId: RH.ttsPromptNodeId, fieldName: RH.ttsPromptFieldName, fieldValue: prompt },
+            ...(refValue ? [{ nodeId: RH.ttsRefAudioNodeId, fieldName: RH.ttsRefAudioFieldName, fieldValue: refValue }] : [])
+          ];
+          const taskId = await runWorkflowV2(RH.ttsWorkflowId, nodeInfoList);
+          const urls = await pollOutputsV2(taskId);
+          const audioUrl = urls.find((u) => /\.(mp3|wav|flac|m4a|aac|ogg)(\?|$)/i.test(u)) || urls[0] || '';
+          if (!audioUrl) throw new Error('未获取到音频URL');
+          generatedAudioUrl = audioUrl;
+          audioPreview.src = audioUrl;
+          audioState.textContent = '已生成';
+          audioStatus.textContent = `状态：SUCCESS，taskId=${taskId}`;
+          videoAudioName.textContent = '已自动填充(来自文生音频)';
+          videoAudioBox.innerHTML = '🎵<b>已自动填充音频，可直接生成视频</b>';
+        } catch (e) {
+          alert(`文生音频失败：${e.message || e}`);
+          audioState.textContent = '失败';
+          audioStatus.textContent = '状态：FAILED';
+        } finally {
+          audioGenBtn.disabled = false;
         }
+      });
 
-        imgStageCenter.innerHTML = `
-          <div class="img-result">
-            <div class="img-meta"><span>生成结构</span><span>完成</span></div>
-            <div class="img-result-grid">
-              <div class="img-thumb"></div>
-              <div class="img-thumb" style="background:linear-gradient(135deg, rgba(68,143,95,.55), rgba(36,86,124,.6));"></div>
-            </div>
-            <div class="img-meta"><span>${title || '图像结果'}</span><span>2 / 2</span></div>
-          </div>
-        `;
-      }
+      videoGenBtn.addEventListener('click', async () => {
+        videoGenBtn.disabled = true;
+        videoState.textContent = '处理中';
+        try {
+          let imageUrl = generatedImageUrl;
+          let audioUrl = generatedAudioUrl;
 
-      function looksLikeUuid(v) {
-        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v || '').trim());
-      }
+          const imgFile = videoImage.files && videoImage.files[0];
+          const audFile = videoAudio.files && videoAudio.files[0];
 
-      if (imgGenerateBtn) {
-        imgGenerateBtn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const prompt = (imgPromptInput && imgPromptInput.value ? imgPromptInput.value : '').trim();
-          const token = Math.max(14, Math.min(300, prompt.length || 14));
-          if (imgTokenText) imgTokenText.textContent = String(token);
-          if (imgCountText) imgCountText.textContent = '1张';
+          if (!imageUrl && imgFile) imageUrl = await uploadFileToRunningHub(imgFile);
+          if (!audioUrl && audFile) audioUrl = await uploadFileToRunningHub(audFile);
 
-          if (looksLikeUuid(RH.imageWorkflowId)) {
-            throw new Error('文生图 workflowId 配置错误：请使用 RunningHub 长数字 workflowId，而不是 UUID。');
-          }
+          if (!imageUrl) throw new Error('请上传图片，或先生成文生图');
 
-          if (!prompt) {
-            renderImgIdle();
-            if (imgCountText) imgCountText.textContent = '0张';
-            if (imgTokenText) imgTokenText.textContent = '0';
-            return;
-          }
-
-          renderImgGenerating();
-          imgGenerateBtn.disabled = true;
-          imgGenerateBtn.style.opacity = '.6';
-
-          try {
-            const nodeInfoList = [
-              {
-                nodeId: RH.imagePromptNodeId,
-                fieldName: RH.imagePromptFieldName,
-                fieldValue: prompt
-              }
-            ];
-
-            // 文生图改为 v2 接口链路
-            const start = await runWorkflowV2(RH.imageWorkflowId, nodeInfoList);
-            const taskIdV2 = start?.taskId || '';
-            if (!taskIdV2) throw new Error(`v2未返回taskId: ${JSON.stringify(start)}`);
-
-            const result = await pollOutputsV2(taskIdV2);
-            const urls = (result.outputs || []).filter((u) => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u));
-            if (imgCountText) imgCountText.textContent = `${Math.max(1, urls.length)}张`;
-            if (urls[0]) {
-              generatedImageUrl = urls[0];
-              imageName.textContent = '已自动填充(来自文生图)';
-              imagePreview.textContent = '';
-              imagePreview.style.backgroundImage = `url(${urls[0]})`;
-              imagePreview.style.backgroundSize = 'cover';
-              imagePreview.style.backgroundPosition = 'center';
-            }
-            renderImgResult(prompt, urls);
-          } catch (err) {
-            console.error(err);
-            alert(`文生图调用失败：${String(err && err.message ? err.message : err)}`);
-            renderImgIdle();
-            if (imgCountText) imgCountText.textContent = '0张';
-            if (imgTokenText) imgTokenText.textContent = String(token);
-          } finally {
-            imgGenerateBtn.disabled = false;
-            imgGenerateBtn.style.opacity = '1';
-          }
-        });
-      }
-
-      if (audioInputInline && audioInlinePlayer && audioSeekInline && audioPlayInline) {
-        audioInputInline.addEventListener('change', () => {
-          const file = audioInputInline.files && audioInputInline.files[0];
-          if (audioInlineName) audioInlineName.textContent = file ? file.name : '未选择文件';
-
-          if (audioInlinePlayer.dataset.objectUrl) {
-            URL.revokeObjectURL(audioInlinePlayer.dataset.objectUrl);
-          }
-
-          if (file) {
-            const url = URL.createObjectURL(file);
-            audioInlinePlayer.src = url;
-            audioInlinePlayer.dataset.objectUrl = url;
-            audioSeekInline.value = '0';
-            audioPlayInline.textContent = '▶';
-          } else {
-            audioInlinePlayer.removeAttribute('src');
-            audioInlinePlayer.load();
-            delete audioInlinePlayer.dataset.objectUrl;
-            audioSeekInline.value = '0';
-            audioPlayInline.textContent = '▶';
-          }
-        });
-
-        audioPlayInline.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          if (!audioInlinePlayer.src) return;
-          if (audioInlinePlayer.paused) {
-            try {
-              await audioInlinePlayer.play();
-              audioPlayInline.textContent = '❚❚';
-            } catch (_) {}
-          } else {
-            audioInlinePlayer.pause();
-            audioPlayInline.textContent = '▶';
-          }
-        });
-
-        audioInlinePlayer.addEventListener('timeupdate', () => {
-          if (!audioInlinePlayer.duration || Number.isNaN(audioInlinePlayer.duration)) return;
-          const ratio = (audioInlinePlayer.currentTime / audioInlinePlayer.duration) * 100;
-          audioSeekInline.value = String(ratio);
-        });
-
-        audioSeekInline.addEventListener('input', (e) => {
-          e.stopPropagation();
-          if (!audioInlinePlayer.duration || Number.isNaN(audioInlinePlayer.duration)) return;
-          const ratio = Number(audioSeekInline.value) / 100;
-          audioInlinePlayer.currentTime = ratio * audioInlinePlayer.duration;
-        });
-
-        audioInlinePlayer.addEventListener('ended', () => {
-          audioPlayInline.textContent = '▶';
-          audioSeekInline.value = '0';
-          const btn = document.getElementById('audioStagePlayBtn');
-          if (btn) btn.textContent = '▶ 点击播放';
-        });
-
-        audioInlinePlayer.addEventListener('pause', () => {
-          const btn = document.getElementById('audioStagePlayBtn');
-          if (btn) btn.textContent = '▶ 点击播放';
-        });
-
-        audioInlinePlayer.addEventListener('play', () => {
-          const btn = document.getElementById('audioStagePlayBtn');
-          if (btn) btn.textContent = '❚❚ 暂停';
-        });
-      }
-
-      if (audioGenerateBtn) {
-        audioGenerateBtn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const t = (audioPromptInput && audioPromptInput.value ? audioPromptInput.value : '').trim();
-          const token = Math.max(14, Math.min(300, t.length || 14));
-          if (audioTokenText) audioTokenText.textContent = String(token);
-
-          if (!t) return;
-
-          audioGenerateBtn.disabled = true;
-          audioGenerateBtn.style.opacity = '.6';
-
-          try {
-            let refAudioValue = '';
-            const refFile = audioInputInline && audioInputInline.files ? audioInputInline.files[0] : null;
-            if (refFile) {
-              refAudioValue = await uploadFileToRunningHub(refFile);
-            }
-
-            const nodeInfoList = [
-              {
-                nodeId: RH.ttsPromptNodeId,
-                fieldName: RH.ttsPromptFieldName,
-                fieldValue: t
-              },
-              ...(refAudioValue ? [{
-                nodeId: RH.ttsRefAudioNodeId,
-                fieldName: RH.ttsRefAudioFieldName,
-                fieldValue: refAudioValue
-              }] : [])
-            ];
-
-            const runResp = await runWorkflowV2(RH.ttsWorkflowId, nodeInfoList);
-            const ttsTaskId = runResp.taskId;
-            const ttsResult = await pollOutputsV2(ttsTaskId);
-            const audioUrls = (ttsResult.outputs || []).filter((u) => /\.(mp3|wav|flac|m4a|aac|ogg)(\?|$)/i.test(u));
-
-            if (audioUrls[0] && audioInlinePlayer) {
-              generatedAudioUrl = audioUrls[0];
-              audioInlinePlayer.src = audioUrls[0];
-              audioInlinePlayer.load();
-              if (audioInlineName) audioInlineName.textContent = '生成完成(可播放)';
-              renderAudioStageReady();
-              audioName.textContent = '已自动填充(来自文生声音)';
-              if (audioPlayer) {
-                audioPlayer.src = audioUrls[0];
-                audioPlayer.load();
-                if (audioSeek) audioSeek.value = '0';
-                if (audioPlayBtn) audioPlayBtn.textContent = '▶';
-              }
-            }
-          } catch (err) {
-            console.error(err);
-            alert(`文生声音调用失败：${err && err.message ? err.message : err}`);
-          } finally {
-            audioGenerateBtn.disabled = false;
-            audioGenerateBtn.style.opacity = '1';
-          }
-        });
-      }
-
-      if (imageInput && audioInput && generateBtn) {
-        imageInput.addEventListener('change', () => {
-          const file = imageInput.files && imageInput.files[0];
-          imageName.textContent = file ? file.name : '未选择文件';
-          if (!file) {
-            imagePreview.textContent = '上传后在这里预览图片';
-            imagePreview.style.backgroundImage = '';
-            return;
-          }
-          const url = URL.createObjectURL(file);
-          imagePreview.textContent = '';
-          imagePreview.style.backgroundImage = `url(${url})`;
-          imagePreview.style.backgroundSize = 'cover';
-          imagePreview.style.backgroundPosition = 'center';
-        });
-
-        audioInput.addEventListener('change', () => {
-          const file = audioInput.files && audioInput.files[0];
-          audioName.textContent = file ? file.name : '未选择文件';
-
-          if (audioPlayer) {
-            if (audioPlayer.dataset.objectUrl) {
-              URL.revokeObjectURL(audioPlayer.dataset.objectUrl);
-            }
-
-            if (file) {
-              const url = URL.createObjectURL(file);
-              audioPlayer.src = url;
-              audioPlayer.dataset.objectUrl = url;
-              if (audioSeek) audioSeek.value = '0';
-              if (audioPlayBtn) audioPlayBtn.textContent = '▶';
-            } else {
-              audioPlayer.removeAttribute('src');
-              audioPlayer.load();
-              delete audioPlayer.dataset.objectUrl;
-              if (audioSeek) audioSeek.value = '0';
-              if (audioPlayBtn) audioPlayBtn.textContent = '▶';
-            }
-          }
-        });
-
-        if (audioPlayer && audioSeek && audioPlayBtn) {
-          audioPlayBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!audioPlayer.src) return;
-            if (audioPlayer.paused) {
-              try {
-                await audioPlayer.play();
-                audioPlayBtn.textContent = '❚❚';
-              } catch (_) {}
-            } else {
-              audioPlayer.pause();
-              audioPlayBtn.textContent = '▶';
-            }
+          const taskId = await createTaskOnRunningHub({
+            workflowId: RH.workflowId,
+            nodeInfoList: [
+              { nodeId: RH.imageNodeId, fieldName: RH.imageFieldName, fieldValue: imageUrl },
+              ...(audioUrl ? [{ nodeId: RH.audioNodeId, fieldName: RH.audioFieldName, fieldValue: audioUrl }] : [])
+            ]
           });
-
-          audioPlayer.addEventListener('timeupdate', () => {
-            if (!audioPlayer.duration || Number.isNaN(audioPlayer.duration)) return;
-            const ratio = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-            audioSeek.value = String(ratio);
-          });
-
-          audioSeek.addEventListener('input', (e) => {
-            e.stopPropagation();
-            if (!audioPlayer.duration || Number.isNaN(audioPlayer.duration)) return;
-            const ratio = Number(audioSeek.value) / 100;
-            audioPlayer.currentTime = ratio * audioPlayer.duration;
-          });
-
-          audioPlayer.addEventListener('ended', () => {
-            audioPlayBtn.textContent = '▶';
-            audioSeek.value = '0';
-          });
-
-          audioPlayer.addEventListener('pause', () => {
-            audioPlayBtn.textContent = '▶';
-          });
-
-          audioPlayer.addEventListener('play', () => {
-            audioPlayBtn.textContent = '❚❚';
-          });
+          videoStatus.textContent = `taskId: ${taskId}`;
+          const out = await pollOutputs(taskId);
+          latestVideoUrls = out?.urls || [];
+          const firstVideo = latestVideoUrls.find((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
+          if (firstVideo) {
+            videoAudioBox.innerHTML = `<video src="${firstVideo}" controls style="width:100%;max-height:220px;border-radius:10px;background:#0b0c0f;"></video>`;
+          }
+          videoState.textContent = '已完成';
+        } catch (e) {
+          alert(`图+音频生视频失败：${e.message || e}`);
+          videoState.textContent = '失败';
+        } finally {
+          videoGenBtn.disabled = false;
         }
-
-        generateBtn.addEventListener('click', async () => {
-          try {
-            const imageFile = imageInput.files && imageInput.files[0];
-            const audioFile = audioInput.files && audioInput.files[0];
-
-            let imageUrl = generatedImageUrl || '';
-            let audioUrl = generatedAudioUrl || '';
-
-            if (!imageUrl && !imageFile) {
-              taskStatus.textContent = '0个';
-              progressText.textContent = '请先上传图片，或先生成文生图';
-              return;
-            }
-
-            taskStatus.textContent = '上传中';
-            progressBar.style.width = '8%';
-
-            if (!imageUrl && imageFile) {
-              progressText.textContent = '上传图片...';
-              imageUrl = await uploadFileToRunningHub(imageFile);
-            } else {
-              progressText.textContent = '使用文生图结果...';
-            }
-
-            if (!audioUrl && audioFile) {
-              progressBar.style.width = '16%';
-              progressText.textContent = '上传音频...';
-              audioUrl = await uploadFileToRunningHub(audioFile);
-            } else if (audioUrl) {
-              progressBar.style.width = '16%';
-              progressText.textContent = '使用文生声音结果...';
-            }
-
-            taskStatus.textContent = '创建中';
-            progressBar.style.width = '28%';
-            progressText.textContent = '创建任务...';
-
-            const realTaskId = await createTaskOnRunningHub({
-              workflowId: RH.workflowId,
-              nodeInfoList: [
-                { nodeId: RH.imageNodeId, fieldName: RH.imageFieldName, fieldValue: imageUrl },
-                ...(audioUrl ? [{ nodeId: RH.audioNodeId, fieldName: RH.audioFieldName, fieldValue: audioUrl }] : [])
-              ]
-            });
-            taskId.textContent = `taskId: ${realTaskId}`;
-            taskStatus.textContent = '1个';
-
-            progressBar.style.width = '35%';
-            progressText.textContent = '任务执行中...';
-
-            const result = await pollOutputs(realTaskId);
-
-            progressBar.style.width = '100%';
-            progressText.textContent = '⚡135 / 135';
-            taskStatus.textContent = '完成';
-
-            if (Array.isArray(result.outputs) && result.outputs.length > 0) {
-              console.log('RunningHub outputs:', result.outputs);
-            }
-          } catch (err) {
-            console.error(err);
-            taskStatus.textContent = '失败';
-            progressText.textContent = String(err && err.message ? err.message : err);
-          }
-        });
-      }
-
-      renderImgIdle();
-      renderAudioStageIdle();
-      loadLayoutState();
-      applyTransform();
-      window.addEventListener('resize', drawLinks);
+      });
     })();
   </script>
 </body>
