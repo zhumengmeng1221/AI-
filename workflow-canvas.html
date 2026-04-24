@@ -239,6 +239,7 @@
         <button :class="{active: activePanel==='p-image'}" @click="activePanel='p-image'">文生图</button>
         <button :class="{active: activePanel==='p-audio'}" @click="activePanel='p-audio'">文生音频</button>
         <button :class="{active: activePanel==='p-video'}" @click="activePanel='p-video'">图+音频生视频</button>
+        <button :class="{active: activePanel==='p-long-video'}" @click="activePanel='p-long-video'">图生视频（长）</button>
       </div>
     </aside>
 
@@ -351,6 +352,47 @@
             </div>
           </div>
         </div>
+
+      </section>
+
+      <section class="card panel" :class="{active: activePanel==='p-long-video'}" id="p-long-video">
+        <div class="step">04 图生视频（长）</div>
+        <div class="muted" style="margin-bottom:8px;">使用 InfiniteTalk 长视频工作流：图片必填，音频可选（可自动带入上游音频）。</div>
+        <div class="upload-grid">
+          <div>
+            <div class="drop" :style="boxBg(longVideoImagePreview)" @click="openPreviewFromUrl(longVideoImagePreview)"><template v-if="!longVideoImagePreview">🖼<b>上传人像图 / 或自动使用文生图结果</b></template></div>
+            <div class="ctrl-row">
+              <label class="btn light" for="longVideoImage">上传图片</label>
+              <input class="file" id="longVideoImage" type="file" accept="image/*" @change="onLongVideoImageChange" />
+              <span class="muted">{{ longVideoImageName }}</span>
+            </div>
+          </div>
+          <div>
+            <div class="drop">🎵<b>{{ longVideoAudioTip }}</b></div>
+            <div class="ctrl-row">
+              <label class="btn light" for="longVideoAudio">上传音频</label>
+              <input class="file" id="longVideoAudio" type="file" accept="audio/*,.mp3,.wav,.flac" @change="onLongVideoAudioChange" />
+              <span class="muted">{{ longVideoAudioName }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <span class="pill">{{ longVideoState }}</span>
+          <button class="btn right" @click="generateLongVideo">生成长视频</button>
+        </div>
+        <div class="status">{{ longVideoStatus }}</div>
+        <div class="history-grid" v-if="longVideoHistory.length" style="margin-top:10px;">
+          <div class="history-item" v-for="item in longVideoHistory" :key="item.id" :class="{ loading: item.status === 'loading' }">
+            <template v-if="item.status === 'loading'">
+              <div class="history-loading-dot"></div>
+              <div class="history-loading-text">长视频生成中...</div>
+            </template>
+            <template v-else>
+              <video :src="item.url" controls style="width:100%;max-height:220px;border-radius:10px;background:#0b0c0f;"></video>
+              <div class="history-meta">{{ formatTime(item.createdAt) }}</div>
+            </template>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -384,6 +426,14 @@
             ttsPromptFieldName: 'prompt',
             ttsRefAudioNodeId: '46',
             ttsRefAudioFieldName: 'audio',
+
+            // 图生视频（长）工作流（RunningHub 后台“长数字 workflowId”）
+            longVideoWorkflowId: '2047610350090063873',
+            longVideoImageNodeId: '221',
+            longVideoImageFieldName: 'image',
+            longVideoAudioNodeId: '238',
+            longVideoAudioFieldName: 'audio',
+
             apiKey: '397d32954e194d75893a011dc0dcaf36'
           },
           activePanel: 'p-image',
@@ -410,6 +460,17 @@
           videoImageName: '未选择图片',
           videoAudioName: '未选择音频',
           videoAudioTip: '上传音频 / 或自动使用文生音频结果',
+
+          longVideoImageFile: null,
+          longVideoAudioFile: null,
+          longVideoImagePreviewUrl: '',
+          longVideoImageName: '未选择图片',
+          longVideoAudioName: '未选择音频',
+          longVideoAudioTip: '上传音频 / 或自动使用文生音频结果',
+          longVideoState: '等待生成',
+          longVideoStatus: 'taskId: -',
+          longVideoHistory: [],
+
           imgLoading: false,
           imgPendingMap: {},
           audioLoading: false,
@@ -424,6 +485,9 @@
       computed: {
         videoImagePreview() {
           return this.videoImagePreviewUrl || this.generatedImageUrl || '';
+        },
+        longVideoImagePreview() {
+          return this.longVideoImagePreviewUrl || this.generatedImageUrl || '';
         }
       },
       methods: {
@@ -630,6 +694,42 @@
           this.videoAudioFile = f || null;
           this.videoAudioName = f ? f.name : '未选择音频';
         },
+        onLongVideoImageChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.longVideoImageFile = f || null;
+          this.longVideoImageName = f ? f.name : '未选择图片';
+          if (!f) {
+            this.longVideoImagePreviewUrl = this.generatedImageUrl || '';
+            return;
+          }
+          if (this.longVideoImagePreviewUrl && this.longVideoImagePreviewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(this.longVideoImagePreviewUrl);
+          }
+          this.longVideoImagePreviewUrl = URL.createObjectURL(f);
+        },
+        onLongVideoAudioChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.longVideoAudioFile = f || null;
+          this.longVideoAudioName = f ? f.name : '未选择音频';
+        },
+        onLongVideoImageChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.longVideoImageFile = f || null;
+          this.longVideoImageName = f ? f.name : '未选择图片';
+          if (!f) {
+            this.longVideoImagePreviewUrl = this.generatedImageUrl || '';
+            return;
+          }
+          if (this.longVideoImagePreviewUrl && this.longVideoImagePreviewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(this.longVideoImagePreviewUrl);
+          }
+          this.longVideoImagePreviewUrl = URL.createObjectURL(f);
+        },
+        onLongVideoAudioChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.longVideoAudioFile = f || null;
+          this.longVideoAudioName = f ? f.name : '未选择音频';
+        },
         openPreviewFromUrl(src) {
           if (!src) return;
           this.previewUrl = src;
@@ -738,6 +838,54 @@
             this.resolveLoadingHistory('video', loadingId, '');
             alert(`图+音频生视频失败：${e.message || e}`);
             this.videoState = '失败';
+          } finally {
+            this.videoLoading = false;
+          }
+        },
+        async generateLongVideo() {
+          if (!this.RH.longVideoWorkflowId) {
+            alert('请先在代码中配置 longVideoWorkflowId（RunningHub 长数字 workflowId）');
+            return;
+          }
+
+          const loadingId = this.addLoadingHistory('video');
+          this.longVideoState = '处理中';
+          this.videoLoading = true;
+          try {
+            let imageUrl = this.generatedImageUrl;
+            let audioUrl = this.generatedAudioUrl;
+
+            if (this.longVideoImageFile) {
+              imageUrl = await this.uploadFileToRunningHub(this.longVideoImageFile);
+            } else if (!imageUrl) {
+              throw new Error('请上传图片，或先生成文生图');
+            }
+
+            if (this.longVideoAudioFile) {
+              audioUrl = await this.uploadFileToRunningHub(this.longVideoAudioFile);
+            }
+
+            const taskId = await this.createTaskOnRunningHub({
+              workflowId: this.RH.longVideoWorkflowId,
+              nodeInfoList: [
+                { nodeId: this.RH.longVideoImageNodeId, fieldName: this.RH.longVideoImageFieldName, fieldValue: imageUrl },
+                ...(audioUrl ? [{ nodeId: this.RH.longVideoAudioNodeId, fieldName: this.RH.longVideoAudioFieldName, fieldValue: audioUrl }] : [])
+              ]
+            });
+            this.longVideoStatus = `taskId: ${taskId}`;
+            const out = await this.pollOutputs(taskId);
+            const urls = out?.urls || [];
+            const first = urls.find((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u)) || urls[0] || '';
+            this.resolveLoadingHistory('video', loadingId, first);
+            if (first) {
+              const id = `long_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+              this.longVideoHistory = [{ id, url: first, createdAt: Date.now(), status: 'done' }, ...this.longVideoHistory].slice(0, 60);
+            }
+            this.longVideoState = '已完成';
+          } catch (e) {
+            this.resolveLoadingHistory('video', loadingId, '');
+            alert(`图生视频（长）失败：${e.message || e}`);
+            this.longVideoState = '失败';
           } finally {
             this.videoLoading = false;
           }

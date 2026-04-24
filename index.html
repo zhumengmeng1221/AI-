@@ -467,6 +467,10 @@
                 <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人工作流封面" /></div>
                 <div class="meta">数字人</div>
               </article>
+              <article class="card clickable" @click="openPosWorkflow()">
+                <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/c2d9dec685f25fab12df85d62cfcdc31/output/ComfyUI_00001_obkeh_1776322552.png?imageMogr2/format/webp/rquality/60/ignore-error/1/minisize/1" alt="穿搭大师POS工作流封面" /></div>
+                <div class="meta">穿搭大师POS工作流</div>
+              </article>
             </div>
           </template>
 
@@ -586,6 +590,9 @@
       methods: {
         openCanvas() {
           window.location.href = './workflow-canvas.html';
+        },
+        openPosWorkflow() {
+          window.location.href = './workflow-canvas.html?scene=pos-master';
         },
         selectFeature(feature) {
           this.selectedFeature = feature;
