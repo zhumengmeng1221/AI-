@@ -263,6 +263,7 @@
             v-for="item in imageHistory"
             :key="item.id"
             :class="{ loading: item.status === 'loading' }"
+            @click="item.status === 'done' && openPreviewFromUrl(item.url)"
             @dblclick="item.status === 'done' && openPreviewFromUrl(item.url)"
           >
             <template v-if="item.status === 'loading'">
@@ -297,7 +298,7 @@
         <div class="step">03 图+音频生视频</div>
         <div class="upload-grid">
           <div>
-            <div class="drop" :style="boxBg(videoImagePreview)" @click="openPreviewFromUrl(videoImagePreview)"><template v-if="!videoImagePreview">🖼<b>上传商品图 / 或自动使用文生图结果</b></template></div>
+            <div class="drop" :style="boxBg(videoImagePreview)" @click="openPreviewFromUrl(videoImagePreview)" @dblclick="openPreviewFromUrl(videoImagePreview)"><template v-if="!videoImagePreview">🖼<b>上传商品图 / 或自动使用文生图结果</b></template></div>
             <div class="ctrl-row">
               <label class="btn light" for="videoImage">上传图片</label>
               <input class="file" id="videoImage" type="file" accept="image/*" @change="onVideoImageChange" />
@@ -330,10 +331,10 @@
         </div>
       </section>
     </main>
-  </div>
 
-  <div class="preview-modal" :class="{open: previewOpen}" @click="closePreview">
-    <img :src="previewUrl" alt="预览大图" @click.stop />
+    <div class="preview-modal" :class="{open: previewOpen}" @click="closePreview">
+      <img :src="previewUrl" alt="预览大图" @click.stop />
+    </div>
   </div>
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -376,6 +377,7 @@
           generatedAudioUrl: '',
           latestVideoUrls: [],
           firstVideoUrl: '',
+          videoImagePreviewUrl: '',
           imageHistory: [],
           refAudioFile: null,
           refAudioName: '未选择参考音频',
@@ -394,7 +396,7 @@
       },
       computed: {
         videoImagePreview() {
-          return this.generatedImageUrl || '';
+          return this.videoImagePreviewUrl || this.generatedImageUrl || '';
         }
       },
       methods: {
@@ -558,9 +560,14 @@
           const f = e.target.files && e.target.files[0];
           this.videoImageFile = f || null;
           this.videoImageName = f ? f.name : '未选择图片';
-          if (f) {
-            this.generatedImageUrl = URL.createObjectURL(f);
+          if (!f) {
+            this.videoImagePreviewUrl = this.generatedImageUrl || '';
+            return;
           }
+          if (this.videoImagePreviewUrl && this.videoImagePreviewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(this.videoImagePreviewUrl);
+          }
+          this.videoImagePreviewUrl = URL.createObjectURL(f);
         },
         onVideoAudioChange(e) {
           const f = e.target.files && e.target.files[0];
@@ -589,6 +596,9 @@
             const imageUrl = urls.find((u) => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u)) || urls[0] || '';
             if (!imageUrl) throw new Error('未获取到图片URL');
             this.generatedImageUrl = imageUrl;
+            if (!this.videoImageFile) {
+              this.videoImagePreviewUrl = imageUrl;
+            }
             this.resolveImageLoadingHistory(loadingId, imageUrl);
             this.imgState = '已生成';
             this.imgStatus = `状态：SUCCESS，taskId=${taskId}`;
@@ -639,8 +649,16 @@
             let imageUrl = this.generatedImageUrl;
             let audioUrl = this.generatedAudioUrl;
 
-            if (!imageUrl && this.videoImageFile) imageUrl = await this.uploadFileToRunningHub(this.videoImageFile);
-            if (!audioUrl && this.videoAudioFile) audioUrl = await this.uploadFileToRunningHub(this.videoAudioFile);
+            if (this.videoImageFile) {
+              imageUrl = await this.uploadFileToRunningHub(this.videoImageFile);
+            } else if (!imageUrl) {
+              throw new Error('请上传图片，或先生成文生图');
+            }
+
+            if (this.videoAudioFile) {
+              audioUrl = await this.uploadFileToRunningHub(this.videoAudioFile);
+            }
+
             if (!imageUrl) throw new Error('请上传图片，或先生成文生图');
 
             const taskId = await this.createTaskOnRunningHub({
