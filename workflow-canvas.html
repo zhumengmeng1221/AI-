@@ -288,10 +288,25 @@
         </div>
         <div class="ctrl-row">
           <span class="pill">{{ audioState }}</span>
-          <button class="btn right" @click="generateAudio" :disabled="audioLoading">生成音频</button>
+          <button class="btn right" @click="generateAudio">生成音频</button>
         </div>
         <audio controls :src="generatedAudioUrl"></audio>
         <div class="status">{{ audioStatus }}</div>
+
+        <div class="step" style="margin-top:12px;">音频提交记录</div>
+        <div class="muted" v-if="!audioHistory.length">暂无音频提交记录</div>
+        <div class="history-grid" v-else>
+          <div class="history-item" v-for="item in audioHistory" :key="item.id" :class="{ loading: item.status === 'loading' }">
+            <template v-if="item.status === 'loading'">
+              <div class="history-loading-dot"></div>
+              <div class="history-loading-text">音频生成中...</div>
+            </template>
+            <template v-else>
+              <audio controls :src="item.url" style="width:100%;margin:8px 0 0;"></audio>
+              <div class="history-meta">{{ formatTime(item.createdAt) }}</div>
+            </template>
+          </div>
+        </div>
       </section>
 
       <section class="card panel" :class="{active: activePanel==='p-video'}" id="p-video">
@@ -316,17 +331,24 @@
         </div>
         <div class="ctrl-row">
           <span class="pill">{{ videoState }}</span>
-          <button class="btn right" @click="generateVideo" :disabled="videoLoading">生成视频</button>
+          <button class="btn right" @click="generateVideo">生成视频</button>
         </div>
         <div class="status">{{ videoStatus }}</div>
 
         <div style="margin-top:12px;">
-          <div class="step" style="margin-bottom:8px;">视频结果</div>
-          <div class="drop" style="min-height:220px;cursor:default;">
-            <template v-if="firstVideoUrl">
-              <video :src="firstVideoUrl" controls style="width:100%;max-height:220px;border-radius:10px;background:#0b0c0f;"></video>
-            </template>
-            <template v-else>🎬<b>生成后视频会显示在这里</b></template>
+          <div class="step" style="margin-bottom:8px;">视频提交记录</div>
+          <div class="muted" v-if="!videoHistory.length">暂无视频提交记录</div>
+          <div class="history-grid" v-else>
+            <div class="history-item" v-for="item in videoHistory" :key="item.id" :class="{ loading: item.status === 'loading' }">
+              <template v-if="item.status === 'loading'">
+                <div class="history-loading-dot"></div>
+                <div class="history-loading-text">视频生成中...</div>
+              </template>
+              <template v-else>
+                <video :src="item.url" controls style="width:100%;max-height:220px;border-radius:10px;background:#0b0c0f;"></video>
+                <div class="history-meta">{{ formatTime(item.createdAt) }}</div>
+              </template>
+            </div>
           </div>
         </div>
       </section>
@@ -379,6 +401,8 @@
           firstVideoUrl: '',
           videoImagePreviewUrl: '',
           imageHistory: [],
+          audioHistory: [],
+          videoHistory: [],
           refAudioFile: null,
           refAudioName: '未选择参考音频',
           videoImageFile: null,
@@ -390,6 +414,9 @@
           imgPendingMap: {},
           audioLoading: false,
           videoLoading: false,
+          audioPendingMap: {},
+          videoPendingMap: {},
+
           previewOpen: false,
           previewUrl: ''
         };
@@ -461,6 +488,35 @@
           delete this.imgPendingMap[loadingId];
           this.saveImageHistory();
         },
+        addLoadingHistory(type) {
+          const id = `${type}_loading_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const item = { id, url: '', createdAt: Date.now(), status: 'loading' };
+          if (type === 'audio') {
+            this.audioHistory = [item, ...this.audioHistory].slice(0, 60);
+            this.audioPendingMap[id] = true;
+          } else if (type === 'video') {
+            this.videoHistory = [item, ...this.videoHistory].slice(0, 60);
+            this.videoPendingMap[id] = true;
+          }
+          return id;
+        },
+        resolveLoadingHistory(type, loadingId, url) {
+          if (!loadingId) return;
+          const listName = type === 'audio' ? 'audioHistory' : 'videoHistory';
+          const mapName = type === 'audio' ? 'audioPendingMap' : 'videoPendingMap';
+          const list = this[listName];
+          const idx = list.findIndex((x) => x.id === loadingId);
+          if (idx === -1) return;
+          if (url) {
+            list[idx] = { ...list[idx], url, status: 'done', createdAt: Date.now() };
+            const current = list[idx];
+            this[listName] = [current, ...list.filter((x, i) => i !== idx && x.url !== url)].slice(0, 60);
+          } else {
+            list.splice(idx, 1);
+            this[listName] = [...list];
+          }
+          delete this[mapName][loadingId];
+        },
         formatTime(ts) {
           if (!ts) return '';
           const d = new Date(ts);
@@ -498,7 +554,7 @@
         },
         async pollOutputs(taskId) {
           const key = this.getApiKey();
-          for (let i = 0; i < 120; i++) {
+          for (let i = 0; i < 1200; i++) {
             const res = await fetch(`${this.RH.baseUrl}${this.RH.outputsPath}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -536,7 +592,7 @@
         },
         async pollOutputsV2(taskId) {
           const key = this.getApiKey();
-          for (let i = 0; i < 120; i++) {
+          for (let i = 0; i < 1200; i++) {
             const res = await fetch(`${this.RH.baseUrl}/openapi/v2/query`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -615,6 +671,7 @@
         async generateAudio() {
           const prompt = (this.audioPrompt || '').trim();
           if (!prompt) return alert('请先输入文生音频文案');
+          const loadingId = this.addLoadingHistory('audio');
           this.audioLoading = true;
           this.audioState = '生成中';
           this.audioStatus = '状态：RUNNING';
@@ -630,11 +687,13 @@
             const audioUrl = urls.find((u) => /\.(mp3|wav|flac|m4a|aac|ogg)(\?|$)/i.test(u)) || urls[0] || '';
             if (!audioUrl) throw new Error('未获取到音频URL');
             this.generatedAudioUrl = audioUrl;
+            this.resolveLoadingHistory('audio', loadingId, audioUrl);
             this.audioState = '已生成';
             this.audioStatus = `状态：SUCCESS，taskId=${taskId}`;
             this.videoAudioName = '已自动填充(来自文生音频)';
             this.videoAudioTip = '已自动填充音频，可直接生成视频';
           } catch (e) {
+            this.resolveLoadingHistory('audio', loadingId, '');
             alert(`文生音频失败：${e.message || e}`);
             this.audioState = '失败';
             this.audioStatus = '状态：FAILED';
@@ -643,6 +702,7 @@
           }
         },
         async generateVideo() {
+          const loadingId = this.addLoadingHistory('video');
           this.videoLoading = true;
           this.videoState = '处理中';
           try {
@@ -672,8 +732,10 @@
             const out = await this.pollOutputs(taskId);
             this.latestVideoUrls = out?.urls || [];
             this.firstVideoUrl = this.latestVideoUrls.find((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u)) || '';
+            this.resolveLoadingHistory('video', loadingId, this.firstVideoUrl || (this.latestVideoUrls[0] || ''));
             this.videoState = '已完成';
           } catch (e) {
+            this.resolveLoadingHistory('video', loadingId, '');
             alert(`图+音频生视频失败：${e.message || e}`);
             this.videoState = '失败';
           } finally {

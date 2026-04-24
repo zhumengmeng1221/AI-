@@ -294,6 +294,91 @@
       background: rgba(255, 255, 255, 0.5);
     }
 
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 10px;
+    }
+
+    .mock-card {
+      border: 1px solid rgba(123, 136, 162, 0.22);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.84);
+      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
+      padding: 14px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .mock-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(47, 107, 255, 0.24);
+      box-shadow: 0 10px 24px rgba(18, 44, 96, 0.14);
+    }
+
+    .mock-card.active {
+      border-color: rgba(47, 107, 255, 0.34);
+      background: linear-gradient(145deg, rgba(214, 229, 255, 0.88), rgba(238, 244, 255, 0.95));
+    }
+
+    .mock-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #101828;
+    }
+
+    .mock-card-desc {
+      font-size: 13px;
+      color: #667085;
+      line-height: 1.4;
+    }
+
+    .mock-panel {
+      border: 1px solid rgba(123, 136, 162, 0.22);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.84);
+      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
+      padding: 14px;
+    }
+
+    .mock-panel h4 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .mock-panel p {
+      margin: 0;
+      font-size: 14px;
+      color: #475467;
+      line-height: 1.45;
+    }
+
+    .mock-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mock-btn {
+      border: 1px solid rgba(47, 107, 255, 0.26);
+      border-radius: 999px;
+      height: 34px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      font-size: 13px;
+      color: #1f4fd1;
+      background: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
     .hidden { display: none !important; }
 
     @media (max-width: 1080px) {
@@ -376,14 +461,40 @@
             <span class="tag" v-for="tag in tags" :key="tag.key" :class="{active: activeTag===tag.key}" @click="activeTag=tag.key">{{tag.label}}</span>
           </div>
 
-          <div class="cards" v-show="activeTag==='workflow'">
-            <article class="card clickable" @click="openCanvas()">
-              <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人工作流封面" /></div>
-              <div class="meta">数字人</div>
-            </article>
-          </div>
+          <template v-if="activeTag==='workflow'">
+            <div class="cards">
+              <article class="card clickable" @click="openCanvas()">
+                <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人工作流封面" /></div>
+                <div class="meta">数字人</div>
+              </article>
+            </div>
+          </template>
 
-          <div class="empty-pane" v-show="activeTag!=='workflow'"></div>
+          <template v-else>
+            <div class="mock-grid">
+              <article
+                class="mock-card"
+                v-for="feature in currentFeatures"
+                :key="feature.key"
+                :class="{active: selectedFeature && selectedFeature.key===feature.key}"
+                @click="selectFeature(feature)">
+                <div class="mock-card-title">{{ feature.title }}</div>
+                <div class="mock-card-desc">{{ feature.desc }}</div>
+              </article>
+            </div>
+
+            <div class="mock-panel" v-if="selectedFeature">
+              <h4>{{ selectedFeature.title }}</h4>
+              <p>{{ selectedFeature.detail }}</p>
+              <div class="mock-actions">
+                <button class="mock-btn" type="button" @click="fakeAction('预览')">预览</button>
+                <button class="mock-btn" type="button" @click="fakeAction('立即使用')">立即使用</button>
+                <button class="mock-btn" type="button" @click="fakeAction('收藏')">收藏</button>
+              </div>
+            </div>
+
+            <div class="empty-pane" v-else></div>
+          </template>
         </section>
       </main>
     </div>
@@ -399,6 +510,7 @@
           searchText: '搜索应用 / 工作流 / 模型',
           nav: 'AI 应用',
           activeTag: 'workflow',
+          selectedFeature: null,
           tags: [
             { key: 'workflow', label: '工作流' },
             { key: 'new', label: '新人必试' },
@@ -410,13 +522,82 @@
             { key: 'api', label: 'API' },
             { key: 'anime', label: '动漫' },
             { key: 'more', label: '更多' }
-          ]
+          ],
+          mockFeaturesMap: {
+            new: [
+              { key: 'new-1', title: '一键口播', desc: '输入文案，自动生成口播视频。', detail: '这是演示功能：可快速体验文案到口播的视频生成流程。' },
+              { key: 'new-2', title: '智能抠图', desc: '上传图片，秒级完成抠图。', detail: '这是演示功能：支持人像与商品图抠图，结果可直接下载。' },
+              { key: 'new-3', title: '图文转短视频', desc: '图文素材自动拼接成片。', detail: '这是演示功能：系统会自动匹配转场、字幕与背景音乐。' }
+            ],
+            image: [
+              { key: 'img-1', title: '海报生成器', desc: '多风格电商海报一键生成。', detail: '这是演示功能：支持简约、科技、节日等多种视觉模板。' },
+              { key: 'img-2', title: '图片增强', desc: '模糊图像自动修复清晰。', detail: '这是演示功能：可进行降噪、超分辨率和色彩增强。' },
+              { key: 'img-3', title: 'AI 商品换背景', desc: '自动生成高质量商品场景。', detail: '这是演示功能：可快速替换纯色背景与生活化场景。' }
+            ],
+            video: [
+              { key: 'vd-1', title: '爆款剪辑助手', desc: '自动识别高光片段并剪辑。', detail: '这是演示功能：可智能识别停顿、口误并自动裁切。' },
+              { key: 'vd-2', title: 'AI 字幕精修', desc: '一键生成并优化字幕样式。', detail: '这是演示功能：支持双语字幕、关键字高亮和模板套用。' },
+              { key: 'vd-3', title: '数字人播报', desc: '输入稿件即可生成播报视频。', detail: '这是演示功能：包含多形象、多语速和表情动作模板。' }
+            ],
+            copy: [
+              { key: 'cp-1', title: '标题生成器', desc: '自动生成高点击标题。', detail: '这是演示功能：支持小红书、抖音、电商等场景标题。' },
+              { key: 'cp-2', title: '脚本助手', desc: '生成短视频分镜和旁白。', detail: '这是演示功能：可按时长自动拆分镜头与台词节奏。' },
+              { key: 'cp-3', title: '营销文案优化', desc: '强化转化率与表达力。', detail: '这是演示功能：可输出不同语气和人群定向版本。' }
+            ],
+            commerce: [
+              { key: 'ec-1', title: '商品详情页助手', desc: '自动生成卖点与排版结构。', detail: '这是演示功能：支持 3C、美妆、服饰等常见电商类目。' },
+              { key: 'ec-2', title: '客服回复机器人', desc: '自动回复常见售前售后问题。', detail: '这是演示功能：可按店铺话术风格统一回复口径。' },
+              { key: 'ec-3', title: '活动页快速搭建', desc: '快速生成大促活动页面。', detail: '这是演示功能：可一键套用模板并自动填充商品信息。' }
+            ],
+            training: [
+              { key: 'tr-1', title: '风格模型训练', desc: '上传素材训练专属风格。', detail: '这是演示功能：支持插画、产品渲染和人物风格训练。' },
+              { key: 'tr-2', title: 'LoRA 管理台', desc: '管理与测试你的模型资产。', detail: '这是演示功能：支持模型版本管理与效果对比。' },
+              { key: 'tr-3', title: '数据集清洗', desc: '自动打标与筛除低质样本。', detail: '这是演示功能：可批量执行质量检测与标签修正。' }
+            ],
+            api: [
+              { key: 'ap-1', title: '文本生成 API', desc: '提供标准化文案生成接口。', detail: '这是演示功能：支持参数配置、速率限制和调用统计展示。' },
+              { key: 'ap-2', title: '图像生成 API', desc: '将生图能力接入业务系统。', detail: '这是演示功能：支持同步/异步调用与任务状态查询。' },
+              { key: 'ap-3', title: '语音合成 API', desc: '快速接入 TTS 语音能力。', detail: '这是演示功能：可配置音色、语速和情感风格。' }
+            ],
+            anime: [
+              { key: 'an-1', title: '二次元头像工坊', desc: '一键生成动漫头像。', detail: '这是演示功能：支持多种画风与角色设定组合。' },
+              { key: 'an-2', title: '漫画分镜生成', desc: '自动生成剧情分镜草稿。', detail: '这是演示功能：支持单页与多格分镜快速输出。' },
+              { key: 'an-3', title: '角色立绘助手', desc: '创建统一风格角色设定。', detail: '这是演示功能：支持角色模板管理和批量变体生成。' }
+            ],
+            more: [
+              { key: 'mr-1', title: '会议纪要总结', desc: '自动提炼重点与待办。', detail: '这是演示功能：可生成摘要、任务清单和负责人建议。' },
+              { key: 'mr-2', title: '知识库问答', desc: '基于资料做智能问答。', detail: '这是演示功能：支持上传文档并进行上下文检索。' },
+              { key: 'mr-3', title: '智能日报', desc: '自动生成团队工作日报。', detail: '这是演示功能：可按项目维度汇总进展与风险。' }
+            ]
+          }
         };
+      },
+      computed: {
+        currentFeatures() {
+          return this.mockFeaturesMap[this.activeTag] || [];
+        }
+      },
+      watch: {
+        activeTag(newTag) {
+          const list = this.mockFeaturesMap[newTag] || [];
+          this.selectedFeature = list.length ? list[0] : null;
+        }
       },
       methods: {
         openCanvas() {
           window.location.href = './workflow-canvas.html';
+        },
+        selectFeature(feature) {
+          this.selectedFeature = feature;
+        },
+        fakeAction(actionName) {
+          if (!this.selectedFeature) return;
+          alert(`【演示】${actionName}：${this.selectedFeature.title}\n这是假的交互展示，方便先看功能效果。`);
         }
+      },
+      mounted() {
+        const list = this.mockFeaturesMap[this.activeTag] || [];
+        this.selectedFeature = list.length ? list[0] : null;
       }
     }).mount('#app');
   </script>
