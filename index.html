@@ -156,10 +156,7 @@
       overflow: auto;
     }
 
-    .side-group {
-      display: grid;
-      gap: 6px;
-    }
+    .side-group { display: grid; gap: 6px; }
 
     .item {
       width: 100%;
@@ -198,12 +195,7 @@
       text-align: center;
     }
 
-    .main {
-      min-width: 0;
-      min-height: 0;
-      overflow: auto;
-      padding: 4px;
-    }
+    .main { min-width: 0; min-height: 0; overflow: auto; padding: 4px; }
 
     .section {
       margin-bottom: 14px;
@@ -216,23 +208,9 @@
       padding: 14px;
     }
 
-    .section-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      letter-spacing: 0.1px;
-    }
-
-    .apps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 10px;
-    }
-
-    .recommend-grid {
-      grid-template-columns: minmax(260px, 380px);
-      justify-content: start;
-    }
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.1px; }
+    .apps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+    .recommend-grid { grid-template-columns: minmax(260px, 380px); justify-content: start; }
 
     .mini-card {
       border: 1px solid rgba(123, 136, 162, 0.22);
@@ -259,20 +237,8 @@
       box-shadow: 0 10px 24px rgba(18, 44, 96, 0.14);
     }
 
-    .mini-card h4 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 700;
-      color: #101828;
-      line-height: 1.2;
-    }
-
-    .mini-card p {
-      margin: 6px 0 0;
-      font-size: 13px;
-      color: #667085;
-      line-height: 1.35;
-    }
+    .mini-card h4 { margin: 0; font-size: 18px; font-weight: 700; color: #101828; line-height: 1.2; }
+    .mini-card p { margin: 6px 0 0; font-size: 13px; color: #667085; line-height: 1.35; }
 
     .thumb {
       width: 86px;
@@ -283,20 +249,9 @@
       background: #edf2ff;
       flex-shrink: 0;
     }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 
     .tag {
       border: 1px solid rgba(123, 136, 162, 0.22);
@@ -318,11 +273,7 @@
       font-weight: 600;
     }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
-      gap: 10px;
-    }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; }
 
     .card {
       border: 1px solid rgba(123, 136, 162, 0.22);
@@ -332,26 +283,9 @@
       box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
     }
 
-    .cover {
-      aspect-ratio: 3 / 4;
-      background: #eef3ff;
-      overflow: hidden;
-    }
-
-    .cover img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .meta {
-      padding: 10px;
-      font-size: 13px;
-      color: #475467;
-      line-height: 1.3;
-      font-weight: 600;
-    }
+    .cover { aspect-ratio: 3 / 4; background: #eef3ff; overflow: hidden; }
+    .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .meta { padding: 10px; font-size: 13px; color: #475467; line-height: 1.3; font-weight: 600; }
 
     .empty-pane {
       min-height: 230px;
@@ -370,19 +304,11 @@
 
     @media (max-width: 860px) {
       .app { grid-template-rows: auto minmax(0, 1fr); }
-      .topbar {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
+      .topbar { grid-template-columns: 1fr; gap: 8px; }
       .hero-chip { justify-self: start; max-width: 100%; }
       .top-right { justify-self: start; }
       .layout { grid-template-columns: 1fr; }
-      .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 10px;
-        align-items: center;
-      }
+      .sidebar { flex-direction: row; overflow-x: auto; gap: 10px; align-items: center; }
       .side-group { display: flex; gap: 6px; }
       .workspace-btn { display: none; }
     }
@@ -395,11 +321,11 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <div id="app" class="app">
     <header class="topbar">
       <div class="top-left">
         <div class="brand">AIHub</div>
-        <input class="search" value="搜索应用 / 工作流 / 模型" />
+        <input class="search" v-model="searchText" />
       </div>
       <div class="hero-chip">全能图片 G2 已上线 · 体验更快更清爽</div>
       <div class="top-right">
@@ -412,19 +338,19 @@
     <div class="layout">
       <aside class="sidebar">
         <div class="side-group">
-          <button class="item">首页</button>
-          <button class="item">热门</button>
-          <button class="item active">AI 应用</button>
-          <button class="item">模型资产</button>
-          <button class="item">工作流</button>
-          <button class="item">视频</button>
-          <button class="item">创作中心</button>
+          <button class="item" :class="{active: nav==='首页'}" @click="nav='首页'">首页</button>
+          <button class="item" :class="{active: nav==='热门'}" @click="nav='热门'">热门</button>
+          <button class="item" :class="{active: nav==='AI 应用'}" @click="nav='AI 应用'">AI 应用</button>
+          <button class="item" :class="{active: nav==='模型资产'}" @click="nav='模型资产'">模型资产</button>
+          <button class="item" :class="{active: nav==='工作流'}" @click="nav='工作流'">工作流</button>
+          <button class="item" :class="{active: nav==='视频'}" @click="nav='视频'">视频</button>
+          <button class="item" :class="{active: nav==='创作中心'}" @click="nav='创作中心'">创作中心</button>
         </div>
 
         <div class="side-group" style="margin-top:10px;">
-          <button class="item">API</button>
-          <button class="item">会员中心</button>
-          <button class="item">个人中心</button>
+          <button class="item" :class="{active: nav==='API'}" @click="nav='API'">API</button>
+          <button class="item" :class="{active: nav==='会员中心'}" @click="nav='会员中心'">会员中心</button>
+          <button class="item" :class="{active: nav==='个人中心'}" @click="nav='个人中心'">个人中心</button>
         </div>
 
         <div class="workspace-btn">我的空间</div>
@@ -434,7 +360,7 @@
         <section class="section">
           <div class="section-title">推荐应用</div>
           <div class="apps-grid recommend-grid">
-            <article class="mini-card clickable" data-open-canvas="digital-human">
+            <article class="mini-card clickable" @click="openCanvas()">
               <div>
                 <h4>数字人</h4>
                 <p>真人 / 动漫口型同步，一键生成成片</p>
@@ -447,71 +373,52 @@
         <section class="section">
           <div class="section-title">全部应用</div>
           <div class="tags" id="all-tags">
-            <span class="tag active" data-key="workflow">工作流</span>
-            <span class="tag" data-key="new">新人必试</span>
-            <span class="tag" data-key="image">图片工具</span>
-            <span class="tag" data-key="video">视频工具</span>
-            <span class="tag" data-key="copy">文案</span>
-            <span class="tag" data-key="commerce">电商</span>
-            <span class="tag" data-key="training">模型训练</span>
-            <span class="tag" data-key="api">API</span>
-            <span class="tag" data-key="anime">动漫</span>
-            <span class="tag" data-key="more">更多</span>
+            <span class="tag" v-for="tag in tags" :key="tag.key" :class="{active: activeTag===tag.key}" @click="activeTag=tag.key">{{tag.label}}</span>
           </div>
 
-          <div class="cards" data-pane="workflow">
-            <article class="card clickable" data-open-canvas="digital-human">
+          <div class="cards" v-show="activeTag==='workflow'">
+            <article class="card clickable" @click="openCanvas()">
               <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人工作流封面" /></div>
               <div class="meta">数字人</div>
             </article>
           </div>
 
-          <div class="empty-pane hidden" data-pane="new"></div>
-          <div class="empty-pane hidden" data-pane="image"></div>
-          <div class="empty-pane hidden" data-pane="video"></div>
-          <div class="empty-pane hidden" data-pane="copy"></div>
-          <div class="empty-pane hidden" data-pane="commerce"></div>
-          <div class="empty-pane hidden" data-pane="training"></div>
-          <div class="empty-pane hidden" data-pane="api"></div>
-          <div class="empty-pane hidden" data-pane="anime"></div>
-          <div class="empty-pane hidden" data-pane="more"></div>
+          <div class="empty-pane" v-show="activeTag!=='workflow'"></div>
         </section>
       </main>
     </div>
   </div>
 
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script>
-    (function () {
-      const tagsWrap = document.getElementById('all-tags');
-      const openCards = Array.from(document.querySelectorAll('[data-open-canvas="digital-human"]'));
+    const { createApp } = Vue;
 
-      openCards.forEach((card) => {
-        card.addEventListener('click', () => {
+    createApp({
+      data() {
+        return {
+          searchText: '搜索应用 / 工作流 / 模型',
+          nav: 'AI 应用',
+          activeTag: 'workflow',
+          tags: [
+            { key: 'workflow', label: '工作流' },
+            { key: 'new', label: '新人必试' },
+            { key: 'image', label: '图片工具' },
+            { key: 'video', label: '视频工具' },
+            { key: 'copy', label: '文案' },
+            { key: 'commerce', label: '电商' },
+            { key: 'training', label: '模型训练' },
+            { key: 'api', label: 'API' },
+            { key: 'anime', label: '动漫' },
+            { key: 'more', label: '更多' }
+          ]
+        };
+      },
+      methods: {
+        openCanvas() {
           window.location.href = './workflow-canvas.html';
-        });
-      });
-
-      if (!tagsWrap) return;
-
-      const tags = Array.from(tagsWrap.querySelectorAll('.tag'));
-      const panes = Array.from(document.querySelectorAll('[data-pane]'));
-
-      function showPane(key) {
-        tags.forEach((tag) => {
-          tag.classList.toggle('active', tag.dataset.key === key);
-        });
-
-        panes.forEach((pane) => {
-          pane.classList.toggle('hidden', pane.dataset.pane !== key);
-        });
+        }
       }
-
-      tags.forEach((tag) => {
-        tag.addEventListener('click', () => showPane(tag.dataset.key));
-      });
-
-      showPane('workflow');
-    })();
+    }).mount('#app');
   </script>
 </body>
 </html>

@@ -6,18 +6,22 @@
   <title>简洁工作流 - 文生图/文生音频/图+音频生视频</title>
   <style>
     :root {
-      --bg-1: #f4f7ff;
-      --bg-2: #e8eefb;
-      --glass: rgba(255, 255, 255, 0.58);
-      --glass-strong: rgba(255, 255, 255, 0.76);
-      --line: rgba(107, 123, 152, 0.16);
-      --text: #0f1728;
-      --muted: #677489;
-      --primary: #3a7bff;
-      --shadow: 0 14px 34px rgba(28, 40, 68, 0.10);
-      --radius-xl: 22px;
-      --radius-lg: 16px;
-      --radius-md: 12px;
+      --bg-1: #dfe9ff;
+      --bg-2: #eef3ff;
+      --bg-3: #f7f9ff;
+      --glass: rgba(255, 255, 255, 0.52);
+      --glass-strong: rgba(255, 255, 255, 0.64);
+      --line: rgba(255, 255, 255, 0.52);
+      --line-soft: rgba(91, 111, 145, 0.16);
+      --text: #0f172a;
+      --muted: #5f6f86;
+      --primary: #0a84ff;
+      --primary-press: #006adc;
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 13px;
+      --shadow: 0 10px 30px rgba(44, 63, 102, 0.14), 0 2px 10px rgba(44, 63, 102, 0.06);
+      --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
     }
     * { box-sizing: border-box; }
     body {
@@ -25,102 +29,186 @@
       color: var(--text);
       font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
       background:
-        radial-gradient(1200px 620px at -8% -10%, rgba(158, 196, 255, 0.42), transparent 56%),
-        radial-gradient(980px 560px at 105% -18%, rgba(204, 182, 255, 0.30), transparent 58%),
-        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+        radial-gradient(900px 560px at -10% -16%, rgba(69, 132, 255, 0.28), transparent 62%),
+        radial-gradient(840px 500px at 110% -20%, rgba(188, 137, 255, 0.26), transparent 62%),
+        radial-gradient(1000px 620px at 50% 125%, rgba(115, 214, 255, 0.20), transparent 65%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 45%, var(--bg-3) 100%);
+      min-height: 100vh;
     }
-    .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; gap: 12px; padding: 12px; }
-    .side {
+    .app {
+      display: grid;
+      grid-template-columns: 228px 1fr;
+      min-height: 100vh;
+      gap: 14px;
+      padding: 14px;
+    }
+    .side,
+    .card {
+      position: relative;
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
-      background: var(--glass);
-      backdrop-filter: blur(18px) saturate(130%);
-      -webkit-backdrop-filter: blur(18px) saturate(130%);
-      box-shadow: var(--shadow);
-      padding: 14px 12px;
+      background: linear-gradient(145deg, rgba(255,255,255,.58), rgba(255,255,255,.42));
+      backdrop-filter: blur(28px) saturate(165%);
+      -webkit-backdrop-filter: blur(28px) saturate(165%);
+      box-shadow: var(--inner-highlight), var(--shadow);
+      overflow: hidden;
     }
-    .menu { display: grid; gap: 6px; }
+    .side::before,
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(160deg, rgba(255,255,255,.42), rgba(255,255,255,0) 42%);
+    }
+    .side { padding: 14px 12px; }
+    .menu { display: grid; gap: 8px; }
     .menu button {
       border: 1px solid transparent;
-      background: transparent;
+      background: rgba(255,255,255,.26);
       text-align: left;
-      padding: 10px 12px;
+      padding: 11px 13px;
       border-radius: var(--radius-md);
       cursor: pointer;
-      color: #475467;
+      color: #3f4f67;
       font-size: 14px;
-      transition: .15s ease;
+      font-weight: 560;
+      transition: transform .16s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
     }
-    .menu button:hover { background: rgba(255,255,255,.72); border-color: rgba(123,136,162,.18); }
+    .menu button:hover {
+      background: rgba(255,255,255,.48);
+      border-color: rgba(255,255,255,.7);
+      transform: translateY(-1px);
+    }
     .menu button.active {
-      color: #12358f;
-      border-color: rgba(47,107,255,.24);
-      background: linear-gradient(145deg, rgba(210,227,255,.82), rgba(233,240,255,.92));
-      font-weight: 600;
+      color: #053979;
+      border-color: rgba(10,132,255,.34);
+      background: linear-gradient(145deg, rgba(197,224,255,.92), rgba(232,244,255,.86));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.78), 0 8px 18px rgba(22, 98, 190, 0.15);
     }
-    .main { padding: 6px; }
-    .title { font-size: 30px; font-weight: 700; margin: 6px 4px; }
-    .sub { color: var(--muted); margin: 0 4px 14px; }
-    .card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-xl);
-      background: var(--glass-strong);
-      backdrop-filter: blur(16px) saturate(128%);
-      -webkit-backdrop-filter: blur(16px) saturate(128%);
-      box-shadow: var(--shadow);
-      padding: 16px;
-    }
+    .main { padding: 4px; }
+    .title { font-size: 32px; line-height: 1.15; font-weight: 760; letter-spacing: -0.02em; margin: 8px 6px; }
+    .sub { color: var(--muted); margin: 0 6px 14px; }
+    .card { padding: 18px; }
     .panel { display: none; }
     .panel.active { display: block; }
-    .step { font-size: 12px; color: #565f6b; font-weight: 700; margin-bottom: 10px; }
+    .step { font-size: 12px; color: #4e6078; font-weight: 700; letter-spacing: .04em; margin-bottom: 10px; }
     .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
     .drop {
       min-height: 220px;
-      border: 1px dashed #d9dde4;
-      border-radius: 14px;
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
       display: grid;
       place-items: center;
       text-align: center;
-      color: #8b93a1;
+      color: #6f7f95;
       padding: 14px;
-      background: #fafbfc;
+      background: linear-gradient(180deg, rgba(255,255,255,.58), rgba(246,250,255,.44));
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.85), inset 0 -1px 0 rgba(139, 163, 201, 0.12);
       cursor: zoom-in;
     }
-    .drop b { color: #404854; display: block; margin-top: 6px; }
+    .drop b { color: #3d4d63; display: block; margin-top: 6px; }
     .ctrl-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
-    .pill { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: #555d69; background: #fff; }
+    .pill {
+      padding: 6px 12px;
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      font-size: 12px;
+      color: #506078;
+      background: rgba(255,255,255,.68);
+    }
     .right { margin-left: auto; }
     .btn {
-      border: 1px solid #000;
-      background: #000;
+      border: 1px solid rgba(0, 93, 194, 0.35);
+      background: linear-gradient(180deg, #3ea1ff 0%, #0a84ff 100%);
       color: #fff;
-      border-radius: 10px;
-      padding: 10px 14px;
+      border-radius: 12px;
+      padding: 10px 15px;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 600;
     }
-    .btn.light { background: #fff; color: #111; border-color: #d8dce3; }
+    .btn:disabled { opacity: .64; cursor: not-allowed; }
+    .btn.light {
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(245,248,255,.7));
+      color: #233149;
+      border-color: rgba(129, 149, 179, 0.30);
+    }
     .file { display: none; }
     textarea {
       width: 100%;
       min-height: 120px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px;
-      outline: none;
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 12px;
       resize: vertical;
     }
-    .muted { color: #7e8796; font-size: 13px; }
-    .status { margin-top: 10px; font-size: 13px; color: #4a5360; }
-    audio { width: 100%; margin-top: 8px; }
+    .muted { color: #6d7e94; font-size: 13px; }
+    .status { margin-top: 10px; font-size: 13px; color: #495a72; }
+    audio { width: 100%; margin-top: 8px; border-radius: 12px; }
+
+    .history-grid {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .history-item {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,.7);
+      cursor: pointer;
+    }
+    .history-item img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+    }
+    .history-item.loading {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 146px;
+      gap: 8px;
+      cursor: default;
+    }
+    .history-loading-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 3px solid rgba(10,132,255,.2);
+      border-top-color: rgba(10,132,255,.9);
+      animation: spin 1s linear infinite;
+    }
+    .history-loading-text {
+      font-size: 12px;
+      color: #5f6f86;
+    }
+    .history-meta {
+      font-size: 11px;
+      color: #5f6f86;
+      padding: 6px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
 
     .preview-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.82);
+      background: rgba(10,12,20,.68);
+      backdrop-filter: blur(7px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -132,23 +220,25 @@
       max-width: min(96vw, 1600px);
       max-height: 92vh;
       object-fit: contain;
-      border-radius: 10px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      border-radius: 14px;
+      box-shadow: 0 24px 66px rgba(0,0,0,.48);
       background: #111;
     }
     @media (max-width: 900px) {
-      .app { grid-template-columns: 1fr; }
+      .app { grid-template-columns: 1fr; padding: 10px; gap: 10px; }
       .upload-grid { grid-template-columns: 1fr; }
+      .title { font-size: 27px; }
+      .card { padding: 14px; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
+  <div id="app" class="app">
     <aside class="side">
       <div class="menu">
-        <button class="active" data-panel="p-image">文生图</button>
-        <button data-panel="p-audio">文生音频</button>
-        <button data-panel="p-video">图+音频生视频</button>
+        <button :class="{active: activePanel==='p-image'}" @click="activePanel='p-image'">文生图</button>
+        <button :class="{active: activePanel==='p-audio'}" @click="activePanel='p-audio'">文生音频</button>
+        <button :class="{active: activePanel==='p-video'}" @click="activePanel='p-video'">图+音频生视频</button>
       </div>
     </aside>
 
@@ -156,376 +246,430 @@
       <div class="title">一站式高品质数字人</div>
       <div class="sub">先生成图和音频，再一键合成视频。若已有上游结果，会自动填充到视频节点。</div>
 
-      <section class="card panel active" id="p-image">
+      <section class="card panel" :class="{active: activePanel==='p-image'}" id="p-image">
         <div class="step">01 文生图</div>
-        <textarea id="imgPrompt" placeholder="输入文生图提示词"></textarea>
+        <textarea v-model="imgPrompt" placeholder="输入文生图提示词"></textarea>
         <div class="ctrl-row">
-          <span class="pill" id="imgState">未生成</span>
-          <button class="btn right" id="imgGenBtn">生成图片</button>
+          <span class="pill">{{ imgState }}</span>
+          <button class="btn right" @click="generateImage">生成图片</button>
         </div>
-        <div class="drop" id="imgResultBox">🖼<b>生成结果会显示在这里</b></div>
-        <div class="status" id="imgStatus">状态：READY</div>
+        <div class="status">{{ imgStatus }}</div>
+
+        <div class="step" style="margin-top:12px;">我的历史作品</div>
+        <div class="muted" v-if="!imageHistory.length">当前账号还没有历史作品，生成后会自动保存。</div>
+        <div class="history-grid" v-else>
+          <div
+            class="history-item"
+            v-for="item in imageHistory"
+            :key="item.id"
+            :class="{ loading: item.status === 'loading' }"
+            @dblclick="item.status === 'done' && openPreviewFromUrl(item.url)"
+          >
+            <template v-if="item.status === 'loading'">
+              <div class="history-loading-dot"></div>
+              <div class="history-loading-text">生成中...</div>
+            </template>
+            <template v-else>
+              <img :src="item.url" alt="历史作品" />
+              <div class="history-meta">{{ formatTime(item.createdAt) }}</div>
+            </template>
+          </div>
+        </div>
       </section>
 
-      <section class="card panel" id="p-audio">
+      <section class="card panel" :class="{active: activePanel==='p-audio'}" id="p-audio">
         <div class="step">02 文生音频</div>
-        <textarea id="audioPrompt" placeholder="输入文生音频文案"></textarea>
+        <textarea v-model="audioPrompt" placeholder="输入文生音频文案"></textarea>
         <div class="ctrl-row" style="margin-top:8px;">
           <label class="btn light" for="refAudio">上传参考音频(可选)</label>
-          <input class="file" id="refAudio" type="file" accept="audio/*,.mp3,.wav,.flac" />
-          <span class="muted" id="refAudioName">未选择参考音频</span>
+          <input class="file" id="refAudio" type="file" accept="audio/*,.mp3,.wav,.flac" @change="onRefAudioChange" />
+          <span class="muted">{{ refAudioName }}</span>
         </div>
         <div class="ctrl-row">
-          <span class="pill" id="audioState">未生成</span>
-          <button class="btn right" id="audioGenBtn">生成音频</button>
+          <span class="pill">{{ audioState }}</span>
+          <button class="btn right" @click="generateAudio" :disabled="audioLoading">生成音频</button>
         </div>
-        <audio id="audioPreview" controls></audio>
-        <div class="status" id="audioStatus">状态：READY</div>
+        <audio controls :src="generatedAudioUrl"></audio>
+        <div class="status">{{ audioStatus }}</div>
       </section>
 
-      <section class="card panel" id="p-video">
+      <section class="card panel" :class="{active: activePanel==='p-video'}" id="p-video">
         <div class="step">03 图+音频生视频</div>
         <div class="upload-grid">
           <div>
-            <div class="drop" id="videoImageBox">🖼<b>上传商品图 / 或自动使用文生图结果</b></div>
+            <div class="drop" :style="boxBg(videoImagePreview)" @click="openPreviewFromUrl(videoImagePreview)"><template v-if="!videoImagePreview">🖼<b>上传商品图 / 或自动使用文生图结果</b></template></div>
             <div class="ctrl-row">
               <label class="btn light" for="videoImage">上传图片</label>
-              <input class="file" id="videoImage" type="file" accept="image/*" />
-              <span class="muted" id="videoImageName">未选择图片</span>
+              <input class="file" id="videoImage" type="file" accept="image/*" @change="onVideoImageChange" />
+              <span class="muted">{{ videoImageName }}</span>
             </div>
           </div>
           <div>
-            <div class="drop" id="videoAudioBox">🎵<b>上传音频 / 或自动使用文生音频结果</b></div>
+            <div class="drop">🎵<b>{{ videoAudioTip }}</b></div>
             <div class="ctrl-row">
               <label class="btn light" for="videoAudio">上传音频</label>
-              <input class="file" id="videoAudio" type="file" accept="audio/*,.mp3,.wav,.flac" />
-              <span class="muted" id="videoAudioName">未选择音频</span>
+              <input class="file" id="videoAudio" type="file" accept="audio/*,.mp3,.wav,.flac" @change="onVideoAudioChange" />
+              <span class="muted">{{ videoAudioName }}</span>
             </div>
           </div>
         </div>
         <div class="ctrl-row">
-          <span class="pill" id="videoState">等待生成</span>
-          <button class="btn right" id="videoGenBtn">生成视频</button>
+          <span class="pill">{{ videoState }}</span>
+          <button class="btn right" @click="generateVideo" :disabled="videoLoading">生成视频</button>
         </div>
-        <div class="status" id="videoStatus">taskId: -</div>
+        <div class="status">{{ videoStatus }}</div>
+
+        <div style="margin-top:12px;">
+          <div class="step" style="margin-bottom:8px;">视频结果</div>
+          <div class="drop" style="min-height:220px;cursor:default;">
+            <template v-if="firstVideoUrl">
+              <video :src="firstVideoUrl" controls style="width:100%;max-height:220px;border-radius:10px;background:#0b0c0f;"></video>
+            </template>
+            <template v-else>🎬<b>生成后视频会显示在这里</b></template>
+          </div>
+        </div>
       </section>
     </main>
   </div>
 
-  <div class="preview-modal" id="previewModal">
-    <img id="previewModalImg" alt="预览大图" />
+  <div class="preview-modal" :class="{open: previewOpen}" @click="closePreview">
+    <img :src="previewUrl" alt="预览大图" @click.stop />
   </div>
 
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script>
-    (function () {
-      const RH = {
-        baseUrl: 'https://www.runninghub.cn',
-        uploadPath: '/task/openapi/upload',
-        createPath: '/task/openapi/create',
-        outputsPath: '/task/openapi/outputs',
+    const { createApp } = Vue;
 
-        workflowId: '2044669894783934465',
-        imageNodeId: '133',
-        imageFieldName: 'image',
-        audioNodeId: '125',
-        audioFieldName: 'audio',
-
-        imageWorkflowId: '2047014805009080321',
-        imagePromptNodeId: '100',
-        imagePromptFieldName: 'text',
-
-        ttsWorkflowId: '2046420823195525122',
-        ttsPromptNodeId: '47',
-        ttsPromptFieldName: 'prompt',
-        ttsRefAudioNodeId: '46',
-        ttsRefAudioFieldName: 'audio',
-
-        apiKey: '6b0b6ac3b887416992eed10fe8b77d65'
-      };
-
-      let generatedImageUrl = '';
-      let generatedAudioUrl = '';
-
-      const panelBtns = Array.from(document.querySelectorAll('.menu button'));
-      const panels = Array.from(document.querySelectorAll('.panel'));
-      panelBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          panelBtns.forEach((x) => x.classList.toggle('active', x === btn));
-          const id = btn.dataset.panel;
-          panels.forEach((p) => p.classList.toggle('active', p.id === id));
-        });
-      });
-
-      const imgPrompt = document.getElementById('imgPrompt');
-      const imgGenBtn = document.getElementById('imgGenBtn');
-      const imgResultBox = document.getElementById('imgResultBox');
-      const imgState = document.getElementById('imgState');
-      const imgStatus = document.getElementById('imgStatus');
-
-      const audioPrompt = document.getElementById('audioPrompt');
-      const refAudio = document.getElementById('refAudio');
-      const refAudioName = document.getElementById('refAudioName');
-      const audioGenBtn = document.getElementById('audioGenBtn');
-      const audioPreview = document.getElementById('audioPreview');
-      const audioState = document.getElementById('audioState');
-      const audioStatus = document.getElementById('audioStatus');
-
-      const videoImage = document.getElementById('videoImage');
-      const videoAudio = document.getElementById('videoAudio');
-      const videoImageName = document.getElementById('videoImageName');
-      const videoAudioName = document.getElementById('videoAudioName');
-      const videoImageBox = document.getElementById('videoImageBox');
-      const videoAudioBox = document.getElementById('videoAudioBox');
-      const videoGenBtn = document.getElementById('videoGenBtn');
-      const previewModal = document.getElementById('previewModal');
-      const previewModalImg = document.getElementById('previewModalImg');
-      const videoState = document.getElementById('videoState');
-      const videoStatus = document.getElementById('videoStatus');
-      let latestVideoUrls = [];
-
-      function getApiKey() {
-        return (localStorage.getItem('runninghub_api_key') || RH.apiKey || '').trim();
-      }
-
-      function openPreview(src) {
-        if (!src || !previewModal || !previewModalImg) return;
-        previewModalImg.src = src;
-        previewModal.classList.add('open');
-      }
-
-      function closePreview() {
-        if (!previewModal || !previewModalImg) return;
-        previewModal.classList.remove('open');
-        previewModalImg.removeAttribute('src');
-      }
-
-      async function parseJsonSafe(resp) {
-        const text = await resp.text();
-        try { return JSON.parse(text); } catch (_) { return { raw: text }; }
-      }
-
-      async function uploadFileToRunningHub(file) {
-        const key = getApiKey();
-        if (!key) throw new Error('缺少 API Key');
-        const form = new FormData();
-        form.append('file', file);
-        form.append('apiKey', key);
-        form.append('fileType', 'input');
-        const res = await fetch(`${RH.baseUrl}${RH.uploadPath}`, {
-          method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form
-        });
-        const data = await parseJsonSafe(res);
-        if (!res.ok) throw new Error(`上传失败(${res.status}) ${JSON.stringify(data)}`);
-        return data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
-      }
-
-      async function createTaskOnRunningHub({ workflowId, nodeInfoList }) {
-        const key = getApiKey();
-        const res = await fetch(`${RH.baseUrl}${RH.createPath}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({ apiKey: key, workflowId, nodeInfoList })
-        });
-        const data = await parseJsonSafe(res);
-        if (!res.ok || data?.code !== 0) throw new Error(`创建任务失败: ${JSON.stringify(data)}`);
-        return data?.data?.taskId || data?.taskId || '';
-      }
-
-      async function pollOutputs(taskId) {
-        const key = getApiKey();
-        for (let i = 0; i < 120; i++) {
-          const res = await fetch(`${RH.baseUrl}${RH.outputsPath}`, {
+    createApp({
+      data() {
+        return {
+          RH: {
+            baseUrl: 'https://www.runninghub.cn',
+            uploadPath: '/task/openapi/upload',
+            createPath: '/task/openapi/create',
+            outputsPath: '/task/openapi/outputs',
+            workflowId: '2044669894783934465',
+            imageNodeId: '133',
+            imageFieldName: 'image',
+            audioNodeId: '125',
+            audioFieldName: 'audio',
+            imageWorkflowId: '2047014805009080321',
+            imagePromptNodeId: '100',
+            imagePromptFieldName: 'text',
+            ttsWorkflowId: '2046420823195525122',
+            ttsPromptNodeId: '47',
+            ttsPromptFieldName: 'prompt',
+            ttsRefAudioNodeId: '46',
+            ttsRefAudioFieldName: 'audio',
+            apiKey: '397d32954e194d75893a011dc0dcaf36'
+          },
+          activePanel: 'p-image',
+          imgPrompt: '',
+          audioPrompt: '',
+          imgState: '未生成',
+          audioState: '未生成',
+          videoState: '等待生成',
+          imgStatus: '状态：READY',
+          audioStatus: '状态：READY',
+          videoStatus: 'taskId: -',
+          generatedImageUrl: '',
+          generatedAudioUrl: '',
+          latestVideoUrls: [],
+          firstVideoUrl: '',
+          imageHistory: [],
+          refAudioFile: null,
+          refAudioName: '未选择参考音频',
+          videoImageFile: null,
+          videoAudioFile: null,
+          videoImageName: '未选择图片',
+          videoAudioName: '未选择音频',
+          videoAudioTip: '上传音频 / 或自动使用文生音频结果',
+          imgLoading: false,
+          imgPendingMap: {},
+          audioLoading: false,
+          videoLoading: false,
+          previewOpen: false,
+          previewUrl: ''
+        };
+      },
+      computed: {
+        videoImagePreview() {
+          return this.generatedImageUrl || '';
+        }
+      },
+      methods: {
+        boxBg(url) {
+          return url ? { backgroundImage: `url(${url})` } : {};
+        },
+        getApiKey() {
+          return (localStorage.getItem('runninghub_api_key') || this.RH.apiKey || '').trim();
+        },
+        getAccountStorageKey() {
+          const accountKey = this.getApiKey() || 'anonymous';
+          return `rh_image_history_${accountKey}`;
+        },
+        loadImageHistory() {
+          try {
+            const raw = localStorage.getItem(this.getAccountStorageKey());
+            const list = raw ? JSON.parse(raw) : [];
+            this.imageHistory = Array.isArray(list)
+              ? list.map((x) => ({ ...x, status: x.status || 'done' })).filter((x) => x.status !== 'loading')
+              : [];
+          } catch (_) {
+            this.imageHistory = [];
+          }
+        },
+        saveImageHistory() {
+          localStorage.setItem(this.getAccountStorageKey(), JSON.stringify(this.imageHistory));
+        },
+        addImageHistory(url) {
+          if (!url) return;
+          const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const item = { id, url, createdAt: Date.now(), status: 'done' };
+          this.imageHistory = [item, ...this.imageHistory.filter((x) => x.url !== url)].slice(0, 60);
+          this.saveImageHistory();
+        },
+        addImageLoadingHistory() {
+          const id = `loading_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const item = { id, url: '', createdAt: Date.now(), status: 'loading' };
+          this.imageHistory = [item, ...this.imageHistory].slice(0, 60);
+          this.imgPendingMap[id] = true;
+          this.saveImageHistory();
+          return id;
+        },
+        resolveImageLoadingHistory(loadingId, url) {
+          if (!loadingId) return;
+          const idx = this.imageHistory.findIndex((x) => x.id === loadingId);
+          if (idx === -1) return;
+          if (url) {
+            this.imageHistory[idx] = {
+              ...this.imageHistory[idx],
+              url,
+              status: 'done',
+              createdAt: Date.now()
+            };
+            const current = this.imageHistory[idx];
+            this.imageHistory = [
+              current,
+              ...this.imageHistory.filter((x, i) => i !== idx && x.url !== url)
+            ].slice(0, 60);
+          } else {
+            this.imageHistory.splice(idx, 1);
+          }
+          delete this.imgPendingMap[loadingId];
+          this.saveImageHistory();
+        },
+        formatTime(ts) {
+          if (!ts) return '';
+          const d = new Date(ts);
+          const pad = (n) => String(n).padStart(2, '0');
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        },
+        async parseJsonSafe(resp) {
+          const text = await resp.text();
+          try { return JSON.parse(text); } catch (_) { return { raw: text }; }
+        },
+        async uploadFileToRunningHub(file) {
+          const key = this.getApiKey();
+          if (!key) throw new Error('缺少 API Key');
+          const form = new FormData();
+          form.append('file', file);
+          form.append('apiKey', key);
+          form.append('fileType', 'input');
+          const res = await fetch(`${this.RH.baseUrl}${this.RH.uploadPath}`, {
+            method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form
+          });
+          const data = await this.parseJsonSafe(res);
+          if (!res.ok) throw new Error(`上传失败(${res.status}) ${JSON.stringify(data)}`);
+          return data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
+        },
+        async createTaskOnRunningHub({ workflowId, nodeInfoList }) {
+          const key = this.getApiKey();
+          const res = await fetch(`${this.RH.baseUrl}${this.RH.createPath}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-            body: JSON.stringify({ apiKey: key, taskId })
+            body: JSON.stringify({ apiKey: key, workflowId, nodeInfoList })
           });
-          const data = await parseJsonSafe(res);
-          if (!res.ok) throw new Error(`查询失败(${res.status})`);
-          if (data?.code === 0 && Array.isArray(data?.data) && data.data.length > 0) {
-            const urls = [];
-            (function walk(x) {
-              if (!x) return;
-              if (typeof x === 'string' && /^https?:\/\//i.test(x)) { urls.push(x); return; }
-              if (Array.isArray(x)) x.forEach(walk);
-              else if (typeof x === 'object') Object.values(x).forEach(walk);
-            })(data);
+          const data = await this.parseJsonSafe(res);
+          if (!res.ok || data?.code !== 0) throw new Error(`创建任务失败: ${JSON.stringify(data)}`);
+          return data?.data?.taskId || data?.taskId || '';
+        },
+        async pollOutputs(taskId) {
+          const key = this.getApiKey();
+          for (let i = 0; i < 120; i++) {
+            const res = await fetch(`${this.RH.baseUrl}${this.RH.outputsPath}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+              body: JSON.stringify({ apiKey: key, taskId })
+            });
+            const data = await this.parseJsonSafe(res);
+            if (!res.ok) throw new Error(`查询失败(${res.status})`);
+            if (data?.code === 0 && Array.isArray(data?.data) && data.data.length > 0) {
+              const urls = [];
+              (function walk(x) {
+                if (!x) return;
+                if (typeof x === 'string' && /^https?:\/\//i.test(x)) { urls.push(x); return; }
+                if (Array.isArray(x)) x.forEach(walk);
+                else if (typeof x === 'object') Object.values(x).forEach(walk);
+              })(data);
 
-            const videos = urls.filter((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
-            const list = videos.length ? videos : urls;
-            return { raw: data, urls: list };
+              const videos = urls.filter((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
+              return { raw: data, urls: videos.length ? videos : urls };
+            }
+            if (data?.code === 805) throw new Error(`任务失败: ${JSON.stringify(data)}`);
+            await new Promise((r) => setTimeout(r, 3000));
           }
-          if (data?.code === 805) throw new Error(`任务失败: ${JSON.stringify(data)}`);
-          await new Promise((r) => setTimeout(r, 3000));
-        }
-        throw new Error('轮询超时');
-      }
-
-      async function runWorkflowV2(workflowId, nodeInfoList = []) {
-        const key = getApiKey();
-        const res = await fetch(`${RH.baseUrl}/openapi/v2/run/workflow/${encodeURIComponent(workflowId)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({ addMetadata: true, nodeInfoList, instanceType: 'default', usePersonalQueue: false })
-        });
-        const data = await parseJsonSafe(res);
-        if (!res.ok || !data?.taskId) throw new Error(`v2创建失败: ${JSON.stringify(data)}`);
-        return data.taskId;
-      }
-
-      async function pollOutputsV2(taskId) {
-        const key = getApiKey();
-        for (let i = 0; i < 120; i++) {
-          const res = await fetch(`${RH.baseUrl}/openapi/v2/query`, {
+          throw new Error('轮询超时');
+        },
+        async runWorkflowV2(workflowId, nodeInfoList = []) {
+          const key = this.getApiKey();
+          const res = await fetch(`${this.RH.baseUrl}/openapi/v2/run/workflow/${encodeURIComponent(workflowId)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-            body: JSON.stringify({ taskId })
+            body: JSON.stringify({ addMetadata: true, nodeInfoList, instanceType: 'default', usePersonalQueue: false })
           });
-          const data = await parseJsonSafe(res);
-          if (!res.ok) throw new Error(`v2查询失败(${res.status})`);
-          const status = String(data?.status || '').toUpperCase();
-          if (status === 'SUCCESS') return (data?.results || []).map((r) => r?.url).filter(Boolean);
-          if (status === 'FAILED') throw new Error(`v2任务失败: ${data?.errorMessage || JSON.stringify(data)}`);
-          await new Promise((r) => setTimeout(r, 3000));
-        }
-        throw new Error('v2轮询超时');
-      }
-
-      refAudio.addEventListener('change', () => {
-        const f = refAudio.files && refAudio.files[0];
-        refAudioName.textContent = f ? f.name : '未选择参考音频';
-      });
-
-      videoImage.addEventListener('change', () => {
-        const f = videoImage.files && videoImage.files[0];
-        videoImageName.textContent = f ? f.name : '未选择图片';
-        if (!f) return;
-        const url = URL.createObjectURL(f);
-        videoImageBox.style.backgroundImage = `url(${url})`;
-        videoImageBox.innerHTML = '';
-      });
-
-      videoAudio.addEventListener('change', () => {
-        const f = videoAudio.files && videoAudio.files[0];
-        videoAudioName.textContent = f ? f.name : '未选择音频';
-      });
-
-      [imgResultBox, videoImageBox].forEach((box) => {
-        box.addEventListener('dblclick', () => {
-          const bg = box.style.backgroundImage || '';
-          const m = bg.match(/url\(["']?(.*?)["']?\)/);
-          if (m && m[1]) openPreview(m[1]);
-        });
-      });
-
-      if (previewModal) {
-        previewModal.addEventListener('click', (e) => {
-          if (e.target === previewModal) closePreview();
-        });
-      }
-
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closePreview();
-      });
-
-      imgGenBtn.addEventListener('click', async () => {
-        const prompt = (imgPrompt.value || '').trim();
-        if (!prompt) return alert('请先输入文生图提示词');
-        imgGenBtn.disabled = true;
-        imgState.textContent = '生成中';
-        imgStatus.textContent = '状态：RUNNING';
-        try {
-          const taskId = await runWorkflowV2(RH.imageWorkflowId, [{ nodeId: RH.imagePromptNodeId, fieldName: RH.imagePromptFieldName, fieldValue: prompt }]);
-          const urls = await pollOutputsV2(taskId);
-          const imageUrl = urls.find((u) => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u)) || urls[0] || '';
-          if (!imageUrl) throw new Error('未获取到图片URL');
-          generatedImageUrl = imageUrl;
-          imgResultBox.style.backgroundImage = `url(${imageUrl})`;
-          imgResultBox.innerHTML = '';
-          imgState.textContent = '已生成';
-          imgStatus.textContent = `状态：SUCCESS，taskId=${taskId}`;
-          videoImageName.textContent = '已自动填充(来自文生图)';
-          videoImageBox.style.backgroundImage = `url(${imageUrl})`;
-          videoImageBox.innerHTML = '';
-        } catch (e) {
-          alert(`文生图失败：${e.message || e}`);
-          imgState.textContent = '失败';
-          imgStatus.textContent = '状态：FAILED';
-        } finally {
-          imgGenBtn.disabled = false;
-        }
-      });
-
-      audioGenBtn.addEventListener('click', async () => {
-        const prompt = (audioPrompt.value || '').trim();
-        if (!prompt) return alert('请先输入文生音频文案');
-        audioGenBtn.disabled = true;
-        audioState.textContent = '生成中';
-        audioStatus.textContent = '状态：RUNNING';
-        try {
-          let refValue = '';
-          const f = refAudio.files && refAudio.files[0];
-          if (f) refValue = await uploadFileToRunningHub(f);
-          const nodeInfoList = [
-            { nodeId: RH.ttsPromptNodeId, fieldName: RH.ttsPromptFieldName, fieldValue: prompt },
-            ...(refValue ? [{ nodeId: RH.ttsRefAudioNodeId, fieldName: RH.ttsRefAudioFieldName, fieldValue: refValue }] : [])
-          ];
-          const taskId = await runWorkflowV2(RH.ttsWorkflowId, nodeInfoList);
-          const urls = await pollOutputsV2(taskId);
-          const audioUrl = urls.find((u) => /\.(mp3|wav|flac|m4a|aac|ogg)(\?|$)/i.test(u)) || urls[0] || '';
-          if (!audioUrl) throw new Error('未获取到音频URL');
-          generatedAudioUrl = audioUrl;
-          audioPreview.src = audioUrl;
-          audioState.textContent = '已生成';
-          audioStatus.textContent = `状态：SUCCESS，taskId=${taskId}`;
-          videoAudioName.textContent = '已自动填充(来自文生音频)';
-          videoAudioBox.innerHTML = '🎵<b>已自动填充音频，可直接生成视频</b>';
-        } catch (e) {
-          alert(`文生音频失败：${e.message || e}`);
-          audioState.textContent = '失败';
-          audioStatus.textContent = '状态：FAILED';
-        } finally {
-          audioGenBtn.disabled = false;
-        }
-      });
-
-      videoGenBtn.addEventListener('click', async () => {
-        videoGenBtn.disabled = true;
-        videoState.textContent = '处理中';
-        try {
-          let imageUrl = generatedImageUrl;
-          let audioUrl = generatedAudioUrl;
-
-          const imgFile = videoImage.files && videoImage.files[0];
-          const audFile = videoAudio.files && videoAudio.files[0];
-
-          if (!imageUrl && imgFile) imageUrl = await uploadFileToRunningHub(imgFile);
-          if (!audioUrl && audFile) audioUrl = await uploadFileToRunningHub(audFile);
-
-          if (!imageUrl) throw new Error('请上传图片，或先生成文生图');
-
-          const taskId = await createTaskOnRunningHub({
-            workflowId: RH.workflowId,
-            nodeInfoList: [
-              { nodeId: RH.imageNodeId, fieldName: RH.imageFieldName, fieldValue: imageUrl },
-              ...(audioUrl ? [{ nodeId: RH.audioNodeId, fieldName: RH.audioFieldName, fieldValue: audioUrl }] : [])
-            ]
-          });
-          videoStatus.textContent = `taskId: ${taskId}`;
-          const out = await pollOutputs(taskId);
-          latestVideoUrls = out?.urls || [];
-          const firstVideo = latestVideoUrls.find((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u));
-          if (firstVideo) {
-            videoAudioBox.innerHTML = `<video src="${firstVideo}" controls style="width:100%;max-height:220px;border-radius:10px;background:#0b0c0f;"></video>`;
+          const data = await this.parseJsonSafe(res);
+          if (!res.ok || !data?.taskId) throw new Error(`v2创建失败: ${JSON.stringify(data)}`);
+          return data.taskId;
+        },
+        async pollOutputsV2(taskId) {
+          const key = this.getApiKey();
+          for (let i = 0; i < 120; i++) {
+            const res = await fetch(`${this.RH.baseUrl}/openapi/v2/query`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+              body: JSON.stringify({ taskId })
+            });
+            const data = await this.parseJsonSafe(res);
+            if (!res.ok) throw new Error(`v2查询失败(${res.status})`);
+            const status = String(data?.status || '').toUpperCase();
+            if (status === 'SUCCESS') return (data?.results || []).map((r) => r?.url).filter(Boolean);
+            if (status === 'FAILED') throw new Error(`v2任务失败: ${data?.errorMessage || JSON.stringify(data)}`);
+            await new Promise((r) => setTimeout(r, 3000));
           }
-          videoState.textContent = '已完成';
-        } catch (e) {
-          alert(`图+音频生视频失败：${e.message || e}`);
-          videoState.textContent = '失败';
-        } finally {
-          videoGenBtn.disabled = false;
+          throw new Error('v2轮询超时');
+        },
+        onRefAudioChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.refAudioFile = f || null;
+          this.refAudioName = f ? f.name : '未选择参考音频';
+        },
+        onVideoImageChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.videoImageFile = f || null;
+          this.videoImageName = f ? f.name : '未选择图片';
+          if (f) {
+            this.generatedImageUrl = URL.createObjectURL(f);
+          }
+        },
+        onVideoAudioChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.videoAudioFile = f || null;
+          this.videoAudioName = f ? f.name : '未选择音频';
+        },
+        openPreviewFromUrl(src) {
+          if (!src) return;
+          this.previewUrl = src;
+          this.previewOpen = true;
+        },
+        closePreview() {
+          this.previewOpen = false;
+          this.previewUrl = '';
+        },
+        async generateImage() {
+          const prompt = (this.imgPrompt || '').trim();
+          if (!prompt) return alert('请先输入文生图提示词');
+          const loadingId = this.addImageLoadingHistory();
+          this.imgLoading = true;
+          this.imgState = '生成中';
+          this.imgStatus = '状态：RUNNING';
+          try {
+            const taskId = await this.runWorkflowV2(this.RH.imageWorkflowId, [{ nodeId: this.RH.imagePromptNodeId, fieldName: this.RH.imagePromptFieldName, fieldValue: prompt }]);
+            const urls = await this.pollOutputsV2(taskId);
+            const imageUrl = urls.find((u) => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u)) || urls[0] || '';
+            if (!imageUrl) throw new Error('未获取到图片URL');
+            this.generatedImageUrl = imageUrl;
+            this.resolveImageLoadingHistory(loadingId, imageUrl);
+            this.imgState = '已生成';
+            this.imgStatus = `状态：SUCCESS，taskId=${taskId}`;
+            this.videoImageName = '已自动填充(来自文生图)';
+          } catch (e) {
+            this.resolveImageLoadingHistory(loadingId, '');
+            alert(`文生图失败：${e.message || e}`);
+            this.imgState = '失败';
+            this.imgStatus = '状态：FAILED';
+          } finally {
+            this.imgLoading = false;
+          }
+        },
+        async generateAudio() {
+          const prompt = (this.audioPrompt || '').trim();
+          if (!prompt) return alert('请先输入文生音频文案');
+          this.audioLoading = true;
+          this.audioState = '生成中';
+          this.audioStatus = '状态：RUNNING';
+          try {
+            let refValue = '';
+            if (this.refAudioFile) refValue = await this.uploadFileToRunningHub(this.refAudioFile);
+            const nodeInfoList = [
+              { nodeId: this.RH.ttsPromptNodeId, fieldName: this.RH.ttsPromptFieldName, fieldValue: prompt },
+              ...(refValue ? [{ nodeId: this.RH.ttsRefAudioNodeId, fieldName: this.RH.ttsRefAudioFieldName, fieldValue: refValue }] : [])
+            ];
+            const taskId = await this.runWorkflowV2(this.RH.ttsWorkflowId, nodeInfoList);
+            const urls = await this.pollOutputsV2(taskId);
+            const audioUrl = urls.find((u) => /\.(mp3|wav|flac|m4a|aac|ogg)(\?|$)/i.test(u)) || urls[0] || '';
+            if (!audioUrl) throw new Error('未获取到音频URL');
+            this.generatedAudioUrl = audioUrl;
+            this.audioState = '已生成';
+            this.audioStatus = `状态：SUCCESS，taskId=${taskId}`;
+            this.videoAudioName = '已自动填充(来自文生音频)';
+            this.videoAudioTip = '已自动填充音频，可直接生成视频';
+          } catch (e) {
+            alert(`文生音频失败：${e.message || e}`);
+            this.audioState = '失败';
+            this.audioStatus = '状态：FAILED';
+          } finally {
+            this.audioLoading = false;
+          }
+        },
+        async generateVideo() {
+          this.videoLoading = true;
+          this.videoState = '处理中';
+          try {
+            let imageUrl = this.generatedImageUrl;
+            let audioUrl = this.generatedAudioUrl;
+
+            if (!imageUrl && this.videoImageFile) imageUrl = await this.uploadFileToRunningHub(this.videoImageFile);
+            if (!audioUrl && this.videoAudioFile) audioUrl = await this.uploadFileToRunningHub(this.videoAudioFile);
+            if (!imageUrl) throw new Error('请上传图片，或先生成文生图');
+
+            const taskId = await this.createTaskOnRunningHub({
+              workflowId: this.RH.workflowId,
+              nodeInfoList: [
+                { nodeId: this.RH.imageNodeId, fieldName: this.RH.imageFieldName, fieldValue: imageUrl },
+                ...(audioUrl ? [{ nodeId: this.RH.audioNodeId, fieldName: this.RH.audioFieldName, fieldValue: audioUrl }] : [])
+              ]
+            });
+            this.videoStatus = `taskId: ${taskId}`;
+            const out = await this.pollOutputs(taskId);
+            this.latestVideoUrls = out?.urls || [];
+            this.firstVideoUrl = this.latestVideoUrls.find((u) => /\.(mp4|mov|mkv|webm)(\?|$)/i.test(u)) || '';
+            this.videoState = '已完成';
+          } catch (e) {
+            alert(`图+音频生视频失败：${e.message || e}`);
+            this.videoState = '失败';
+          } finally {
+            this.videoLoading = false;
+          }
         }
-      });
-    })();
+      },
+      mounted() {
+        this.loadImageHistory();
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') this.closePreview();
+        });
+      }
+    }).mount('#app');
   </script>
 </body>
 </html>
