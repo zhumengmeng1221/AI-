@@ -54,6 +54,10 @@
     .left { padding: 14px; max-height: calc(100vh - 28px); overflow: auto; }
     .right { padding: 16px; }
 
+    .preset-card {
+      min-height: 306px;
+    }
+
     h1 { margin: 0; font-size: 24px; }
     .sub { color: var(--muted); font-size: 13px; margin: 8px 0 0; line-height: 1.45; }
 
@@ -63,7 +67,7 @@
     .preset-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: 12px;
     }
 
     .preset-card {
@@ -89,20 +93,24 @@
 
     .preset-cover {
       width: 100%;
-      aspect-ratio: 16 / 10;
+      aspect-ratio: 4 / 5;
+      min-height: 240px;
       background-size: cover;
-      background-position: center;
+      background-position: center top;
       background-color: #e8efff;
     }
 
     .preset-meta {
-      padding: 8px;
+      padding: 10px 10px 12px;
       font-size: 12px;
       color: #34435c;
       font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
     }
 
     .upload {
