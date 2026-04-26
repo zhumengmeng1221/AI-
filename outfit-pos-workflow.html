@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>穿搭大师 POS 工作流</title>
+  <style>
+    :root {
+      --bg-1: #eaf0ff;
+      --bg-2: #f5f8ff;
+      --line: rgba(103, 122, 156, 0.24);
+      --text: #111827;
+      --muted: #5b667a;
+      --primary: #2b6dff;
+      --ok: #12b76a;
+      --danger: #ef4444;
+      --shadow: 0 14px 34px rgba(17, 27, 52, 0.12);
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(900px 520px at -8% -8%, rgba(110, 153, 255, 0.24), transparent 60%),
+        radial-gradient(900px 520px at 110% -14%, rgba(180, 139, 255, 0.22), transparent 62%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      padding: 14px;
+    }
+
+    .app {
+      max-width: 1500px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 430px minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(18px) saturate(130%);
+      -webkit-backdrop-filter: blur(18px) saturate(130%);
+      box-shadow: var(--shadow);
+    }
+
+    .left { padding: 14px; max-height: calc(100vh - 28px); overflow: auto; }
+    .right { padding: 16px; }
+
+    h1 { margin: 0; font-size: 24px; }
+    .sub { color: var(--muted); font-size: 13px; margin: 8px 0 0; line-height: 1.45; }
+
+    .sec { margin-top: 14px; }
+    .sec-title { font-size: 13px; color: #3b4a64; font-weight: 700; margin-bottom: 8px; }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .preset-card {
+      border: 1px solid rgba(118,133,161,.32);
+      border-radius: 12px;
+      background: rgba(255,255,255,.82);
+      overflow: hidden;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+
+    .preset-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(18, 33, 65, 0.12);
+      border-color: rgba(43,109,255,.34);
+    }
+
+    .preset-card.active {
+      border-color: rgba(43,109,255,.52);
+      box-shadow: 0 0 0 2px rgba(43,109,255,.16);
+      background: rgba(227, 237, 255, .95);
+    }
+
+    .preset-cover {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      background-size: cover;
+      background-position: center;
+      background-color: #e8efff;
+    }
+
+    .preset-meta {
+      padding: 8px;
+      font-size: 12px;
+      color: #34435c;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .upload {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      gap: 10px;
+    }
+
+    .u-box {
+      border: 1px dashed rgba(118,133,161,.55);
+      border-radius: 14px;
+      min-height: 200px;
+      background: rgba(255,255,255,.62);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 12px;
+      color: #556581;
+      background-size: cover;
+      background-position: center;
+      cursor: zoom-in;
+    }
+
+    .row { margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      border: 1px solid rgba(43,109,255,.34);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(180deg,#4093ff,#2b6dff);
+      color: #fff;
+    }
+    .btn.light {
+      color: #24324b;
+      background: rgba(255,255,255,.9);
+      border-color: rgba(118,133,161,.35);
+      font-weight: 600;
+    }
+
+    .file { display: none; }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      resize: vertical;
+      font-size: 13px;
+      color: #23314a;
+      background: rgba(255,255,255,.85);
+    }
+
+    .status {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.7);
+      padding: 10px;
+      font-size: 13px;
+      color: #475871;
+    }
+
+    .ok { color: var(--ok); font-weight: 700; }
+    .danger { color: var(--danger); font-weight: 700; }
+
+    .result-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+    .result-item { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+    .result-item img { width: 100%; display: block; aspect-ratio: 1 / 1; object-fit: cover; }
+    .result-time { padding: 6px 8px; font-size: 11px; color: #64748b; }
+
+    .preview-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,8,14,.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+      padding: 14px;
+    }
+    .preview-modal.open { display: flex; }
+    .preview-modal img { max-width: min(96vw, 1400px); max-height: 92vh; border-radius: 12px; }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .left { max-height: none; }
+      .upload { grid-template-columns: 1fr; }
+      .preset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 700px) {
+      .preset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="panel left">
+      <h1>穿搭大师 POS 工作流</h1>
+      <div class="sub">预设已改成“图片卡片模式”，和工作流里看图选预设的方式一致。点击图片即可切换。</div>
+
+      <section class="sec">
+        <div class="sec-title">人物预设</div>
+        <div class="preset-grid">
+          <article class="preset-card" v-for="item in peoplePresets" :key="item.key" :class="{active: selectedPeople===item.key}" @click="selectedPeople=item.key">
+            <div class="preset-cover" :style="boxBg(item.cover)"></div>
+            <div class="preset-meta">{{ item.label }}</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title">背景预设（13）</div>
+        <div class="preset-grid">
+          <article class="preset-card" v-for="item in backgroundPresets" :key="item.key" :class="{active: selectedBackground===item.key}" @click="selectedBackground=item.key">
+            <div class="preset-cover" :style="boxBg(item.cover)"></div>
+            <div class="preset-meta">{{ item.label }}</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title">镜头预设</div>
+        <div class="preset-grid">
+          <article class="preset-card" v-for="item in cameraPresets" :key="item.key" :class="{active: selectedCamera===item.key}" @click="selectedCamera=item.key">
+            <div class="preset-cover" :style="boxBg(item.cover)"></div>
+            <div class="preset-meta">{{ item.label }}</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title">风格预设</div>
+        <div class="preset-grid">
+          <article class="preset-card" v-for="item in stylePresets" :key="item.key" :class="{active: selectedStyle===item.key}" @click="selectedStyle=item.key">
+            <div class="preset-cover" :style="boxBg(item.cover)"></div>
+            <div class="preset-meta">{{ item.label }}</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title">姿势文本预设</div>
+        <div class="preset-grid">
+          <article class="preset-card" v-for="item in poseTextPresets" :key="item.key" :class="{active: selectedPoseText===item.key}" @click="selectedPoseText=item.key">
+            <div class="preset-cover" :style="boxBg(item.cover)"></div>
+            <div class="preset-meta">{{ item.label }}</div>
+          </article>
+        </div>
+      </section>
+    </aside>
+
+    <main class="panel right">
+      <section class="sec" style="margin-top:0;">
+        <div class="sec-title">上传素材</div>
+        <div class="upload">
+          <div>
+            <div class="u-box" :style="boxBg(personPreview)" @click="openPreview(personPreview)">
+              <template v-if="!personPreview">上传人物图（建议半身/全身）</template>
+            </div>
+            <div class="row">
+              <label class="btn light" for="personFile">上传人物图</label>
+              <input class="file" id="personFile" type="file" accept="image/*" @change="onPersonChange" />
+              <span>{{ personName }}</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="u-box" :style="boxBg(posePreview)" @click="openPreview(posePreview)">
+              <template v-if="!posePreview">上传姿势图（用于 pose 控制）</template>
+            </div>
+            <div class="row">
+              <label class="btn light" for="poseFile">上传姿势图</label>
+              <input class="file" id="poseFile" type="file" accept="image/*" @change="onPoseChange" />
+              <span>{{ poseName }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title">服装与细节描述</div>
+        <textarea v-model="clothPrompt" placeholder="例如：黑色西装外套+白色内搭，突出材质纹理，保留LOGO细节"></textarea>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title">最终 Prompt（自动拼装，可手工微调）</div>
+        <textarea v-model="finalPrompt"></textarea>
+        <div class="row">
+          <button class="btn light" type="button" @click="composePrompt">重新生成 Prompt</button>
+          <button class="btn" type="button" @click="runWorkflow">开始生成</button>
+          <button class="btn light" type="button" @click="window.location.href='./index.html'">返回首页</button>
+        </div>
+        <div class="status">
+          <div>状态：<span :class="statusClass">{{ statusText }}</span></div>
+          <div style="margin-top:4px;">taskId：{{ taskId || '-' }}</div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title">生成历史</div>
+        <div class="result-grid" v-if="history.length">
+          <div class="result-item" v-for="item in history" :key="item.id" @click="openPreview(item.url)">
+            <img :src="item.url" alt="result" />
+            <div class="result-time">{{ formatTime(item.createdAt) }}</div>
+          </div>
+        </div>
+        <div v-else class="sub">暂无结果，先生成一组吧。</div>
+      </section>
+    </main>
+
+    <div class="preview-modal" :class="{open: previewOpen}" @click="closePreview">
+      <img :src="previewUrl" alt="预览" @click.stop />
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          RH: {
+            baseUrl: 'https://www.runninghub.cn',
+            uploadPath: '/task/openapi/upload',
+            createPath: '/task/openapi/create',
+            outputsPath: '/task/openapi/outputs',
+            workflowId: '2047703658967601153',
+            apiKey: '397d32954e194d75893a011dc0dcaf36'
+          },
+
+          peoplePresets: [
+            { key: 'cn-young', label: '国风年轻女模', text: '女模特是中国人，白皙皮肤，看向画面。黑色长发，年龄20岁，正面视角。', cover: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=700&q=80' },
+            { key: 'street-cool', label: '都市酷感', text: '女模特气质干练，姿态自信，目光坚定，时尚街头感。', cover: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=700&q=80' },
+            { key: 'sweet', label: '清甜亲和', text: '女模特神态自然，面部柔和，微笑亲和，干净通透肤感。', cover: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=700&q=80' },
+            { key: 'luxury', label: '轻奢商务', text: '模特高级感表达，五官立体，镜头表现稳重，适合高客单商品。', cover: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&w=700&q=80' },
+            { key: 'minimal', label: '极简电商', text: '人物姿态简洁，主体突出，适合展示服装版型与面料。', cover: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80' }
+          ],
+          backgroundPresets: [
+            { key: 'bg-1', label: '卧室内景', text: '背景是室内卧室，摄影灯光，高对比度画面，背景清晰细节可见。', cover: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-2', label: '客厅家居', text: '背景是室内客厅，有沙发和椅子等家具，暖色灯光。', cover: 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-3', label: '海边沙滩', text: '背景是蓝天白云与海岸岩层，沙滩细腻，光线清透。', cover: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-4', label: '湖边风景', text: '背景是湖岸与山林交界，天空湛蓝，整体自然宁静。', cover: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-5', label: '泳池建筑', text: '背景是现代建筑与户外泳池，都市清爽风。', cover: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-6', label: '室内影棚', text: '背景是摄影工作室，浅灰色，温暖柔光，背景干净。', cover: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-7', label: '都市CBD', text: '背景是现代化都市，玻璃幕墙大厦，城市天际线清晰。', cover: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-8', label: '上海外滩', text: '背景是上海陆家嘴城市景观，现代化与地标建筑并存。', cover: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-9', label: '户外高山', text: '背景是宽广群山和绿草，晴朗天空，景深自然。', cover: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-10', label: 'T台走秀', text: '背景是时尚秀场，明亮T台，观众两侧就坐。', cover: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-11', label: '花卉墙', text: '背景是满天星与玫瑰花墙，浪漫优雅。', cover: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-12', label: '城市街拍', text: '背景是繁华城市街道，商店橱窗整齐，生活感强。', cover: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=700&q=80' },
+            { key: 'bg-13', label: '自定义场景', text: '背景是', cover: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=700&q=80' }
+          ],
+          cameraPresets: [
+            { key: 'cam-a', label: '前右1/4 高角度 广角', text: '<sks> front-right quarter view elevated shot wide shot', cover: 'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=700&q=80' },
+            { key: 'cam-b', label: '前左1/4 平视 广角', text: '<sks> front-left quarter view eye-level shot wide shot', cover: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=700&q=80' },
+            { key: 'cam-c', label: '正面 低角度 中景', text: '<sks> front view low-angle shot medium shot', cover: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=700&q=80' },
+            { key: 'cam-d', label: '背面 平视 中景', text: '<sks> back view eye-level shot medium shot', cover: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=700&q=80' },
+            { key: 'cam-e', label: '右侧 平视 中景', text: '<sks> right side view eye-level shot medium shot', cover: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=80' },
+            { key: 'cam-f', label: '正面 平视 近景', text: '<sks> front view eye-level shot close-up', cover: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=700&q=80' }
+          ],
+          stylePresets: [
+            { key: 'sty-1', label: '电影写实', text: '画面弥漫浓郁电影氛围，以写实笔触呈现超真实质感。', cover: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=700&q=80' },
+            { key: 'sty-2', label: '8K商拍', text: '色彩鲜明饱满，宛如8K单反拍摄的商业大片。', cover: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=700&q=80' },
+            { key: 'sty-3', label: '高清细节', text: '强调服装褶皱、纹理、配饰细节，清晰锐利。', cover: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=700&q=80' },
+            { key: 'sty-4', label: '柔光人像', text: '柔和肤质光影，人物自然，观感高级。', cover: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=700&q=80' },
+            { key: 'sty-5', label: '高对比时尚', text: '高对比灯光塑形，突出轮廓和材质层次。', cover: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=700&q=80' }
+          ],
+          poseTextPresets: [
+            { key: 'pose-1', label: '站立叉腰', text: '姿势为站立，单手叉腰，身形挺拔，视线看向镜头。', cover: './src/选择姿势/00.png' },
+            { key: 'pose-2', label: '行走动势', text: '姿势为步行动态，手臂自然摆动，保持服装流动感。', cover: './src/选择姿势/01.png' },
+            { key: 'pose-3', label: '侧身回眸', text: '姿势为侧身回眸，突出肩颈线条与服装廓形。', cover: './src/选择姿势/02.png' },
+            { key: 'pose-4', label: '双手自然下垂', text: '姿势自然站立，双手下垂，便于展示整体搭配。', cover: './src/选择姿势/03.png' },
+            { key: 'pose-5', label: '半身特写姿态', text: '姿势以半身构图为主，动作克制，突出上装细节。', cover: './src/选择姿势/04.png' },
+            { key: 'pose-6', label: '轻转体展示', text: '姿势轻微转体，表现多角度轮廓变化。', cover: './src/选择姿势/05.png' }
+          ],
+
+          selectedPeople: 'cn-young',
+          selectedBackground: 'bg-7',
+          selectedCamera: 'cam-a',
+          selectedStyle: 'sty-1',
+          selectedPoseText: 'pose-1',
+
+          clothPrompt: '',
+          finalPrompt: '',
+
+          personFile: null,
+          poseFile: null,
+          personPreview: '',
+          posePreview: '',
+          personName: '未选择人物图',
+          poseName: '未选择姿势图',
+
+          status: 'ready',
+          statusText: 'READY',
+          taskId: '',
+
+          history: [],
+          previewOpen: false,
+          previewUrl: ''
+        };
+      },
+      computed: {
+        statusClass() {
+          if (this.status === 'success') return 'ok';
+          if (this.status === 'failed') return 'danger';
+          return '';
+        }
+      },
+      methods: {
+        boxBg(url) {
+          return url ? { backgroundImage: `url(${url})` } : {};
+        },
+        getPresetText(list, key) {
+          const hit = list.find((x) => x.key === key);
+          return hit ? hit.text : '';
+        },
+        composePrompt() {
+          const blocks = [
+            '让图片1中的人物穿上服装，严格按照图片2中的姿势。',
+            this.getPresetText(this.stylePresets, this.selectedStyle),
+            this.getPresetText(this.peoplePresets, this.selectedPeople),
+            this.getPresetText(this.backgroundPresets, this.selectedBackground),
+            this.getPresetText(this.cameraPresets, this.selectedCamera),
+            this.getPresetText(this.poseTextPresets, this.selectedPoseText),
+            this.clothPrompt ? `服装要求：${this.clothPrompt}` : ''
+          ].filter(Boolean);
+          this.finalPrompt = blocks.join('，');
+        },
+        getApiKey() {
+          return (localStorage.getItem('runninghub_api_key') || this.RH.apiKey || '').trim();
+        },
+        async parseJsonSafe(resp) {
+          const text = await resp.text();
+          try { return JSON.parse(text); } catch (_) { return { raw: text }; }
+        },
+        async uploadFileToRunningHub(file) {
+          const key = this.getApiKey();
+          if (!key) throw new Error('缺少 API Key');
+          const form = new FormData();
+          form.append('file', file);
+          form.append('apiKey', key);
+          form.append('fileType', 'input');
+          const res = await fetch(`${this.RH.baseUrl}${this.RH.uploadPath}`, {
+            method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form
+          });
+          const data = await this.parseJsonSafe(res);
+          if (!res.ok) throw new Error(`上传失败(${res.status}) ${JSON.stringify(data)}`);
+          return data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
+        },
+        async createTask(nodeInfoList) {
+          const key = this.getApiKey();
+          const res = await fetch(`${this.RH.baseUrl}${this.RH.createPath}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+            body: JSON.stringify({ apiKey: key, workflowId: this.RH.workflowId, nodeInfoList })
+          });
+          const data = await this.parseJsonSafe(res);
+          if (!res.ok || data?.code !== 0) throw new Error(`创建任务失败: ${JSON.stringify(data)}`);
+          return data?.data?.taskId || '';
+        },
+        async pollOutputs(taskId) {
+          const key = this.getApiKey();
+          for (let i = 0; i < 1200; i++) {
+            const res = await fetch(`${this.RH.baseUrl}${this.RH.outputsPath}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+              body: JSON.stringify({ apiKey: key, taskId })
+            });
+            const data = await this.parseJsonSafe(res);
+            if (!res.ok) throw new Error(`查询失败(${res.status})`);
+            if (data?.code === 0 && Array.isArray(data?.data) && data.data.length > 0) {
+              const urls = [];
+              (function walk(x) {
+                if (!x) return;
+                if (typeof x === 'string' && /^https?:\/\//i.test(x)) { urls.push(x); return; }
+                if (Array.isArray(x)) x.forEach(walk);
+                else if (typeof x === 'object') Object.values(x).forEach(walk);
+              })(data);
+              return urls;
+            }
+            if (data?.code === 805) throw new Error(`任务失败: ${JSON.stringify(data)}`);
+            await new Promise((r) => setTimeout(r, 3000));
+          }
+          throw new Error('轮询超时');
+        },
+        onPersonChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.personFile = f || null;
+          this.personName = f ? f.name : '未选择人物图';
+          if (!f) return;
+          if (this.personPreview && this.personPreview.startsWith('blob:')) URL.revokeObjectURL(this.personPreview);
+          this.personPreview = URL.createObjectURL(f);
+        },
+        onPoseChange(e) {
+          const f = e.target.files && e.target.files[0];
+          this.poseFile = f || null;
+          this.poseName = f ? f.name : '未选择姿势图';
+          if (!f) return;
+          if (this.posePreview && this.posePreview.startsWith('blob:')) URL.revokeObjectURL(this.posePreview);
+          this.posePreview = URL.createObjectURL(f);
+        },
+        async runWorkflow() {
+          try {
+            if (!this.personFile) throw new Error('请先上传人物图');
+            if (!this.poseFile) throw new Error('请先上传姿势图');
+            if (!this.finalPrompt.trim()) this.composePrompt();
+
+            this.status = 'running';
+            this.statusText = 'RUNNING';
+            this.taskId = '';
+
+            const personRef = await this.uploadFileToRunningHub(this.personFile);
+            const poseRef = await this.uploadFileToRunningHub(this.poseFile);
+
+            const nodeInfoList = [
+              { nodeId: '1158', fieldName: 'image1_2', fieldValue: personRef },
+              { nodeId: '1158', fieldName: 'image_1', fieldValue: poseRef },
+              { nodeId: '1158', fieldName: 'prompt_3', fieldValue: this.finalPrompt.trim() }
+            ];
+
+            const taskId = await this.createTask(nodeInfoList);
+            this.taskId = taskId;
+            const urls = await this.pollOutputs(taskId);
+            const imageUrls = urls.filter((u) => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u));
+            const first = imageUrls[0] || urls[0];
+            if (!first) throw new Error('未返回图片结果');
+
+            this.history = [
+              { id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, url: first, createdAt: Date.now() },
+              ...this.history.filter((x) => x.url !== first)
+            ].slice(0, 60);
+            this.status = 'success';
+            this.statusText = 'SUCCESS';
+          } catch (e) {
+            this.status = 'failed';
+            this.statusText = e.message || String(e);
+          }
+        },
+        openPreview(url) {
+          if (!url) return;
+          this.previewUrl = url;
+          this.previewOpen = true;
+        },
+        closePreview() {
+          this.previewOpen = false;
+          this.previewUrl = '';
+        },
+        formatTime(ts) {
+          const d = new Date(ts);
+          const p = (n) => String(n).padStart(2, '0');
+          return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+      },
+      mounted() {
+        this.composePrompt();
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') this.closePreview();
+        });
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
