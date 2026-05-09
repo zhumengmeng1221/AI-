@@ -210,7 +210,7 @@
 
     .section-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.1px; }
     .apps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
-    .recommend-grid { grid-template-columns: minmax(260px, 380px); justify-content: start; }
+    .recommend-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 
     .mini-card {
       border: 1px solid rgba(123, 136, 162, 0.22);
@@ -452,6 +452,27 @@
               </div>
               <div class="thumb"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人应用封面" /></div>
             </article>
+            <article class="mini-card clickable" @click="openSketchNote()">
+              <div>
+                <h4>手绘注解</h4>
+                <p>上传照片，AI 自动添加手绘风注解与可爱文字</p>
+              </div>
+              <div class="thumb"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" alt="手绘注解封面" /></div>
+            </article>
+            <article class="mini-card clickable" @click="openBgChange()">
+              <div>
+                <h4>换背景加强版</h4>
+                <p>人物/产品换背景，直出4K高清</p>
+              </div>
+              <div class="thumb"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" alt="换背景封面" /></div>
+            </article>
+            <article class="mini-card clickable" @click="openStoryboard()">
+              <div>
+                <h4>影视分镜</h4>
+                <p>一键生成专业电影级分镜脚本与关键帧</p>
+              </div>
+              <div class="thumb"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" alt="影视分镜封面" /></div>
+            </article>
           </div>
         </section>
 
@@ -470,6 +491,18 @@
               <article class="card clickable" @click="openPosWorkflow()">
                 <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/c2d9dec685f25fab12df85d62cfcdc31/output/ComfyUI_00001_obkeh_1776322552.png?imageMogr2/format/webp/rquality/60/ignore-error/1/minisize/1" alt="穿搭大师POS工作流封面" /></div>
                 <div class="meta">穿搭大师POS工作流</div>
+              </article>
+              <article class="card clickable" @click="openSketchNote()">
+                <div class="cover"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" alt="手绘注解工作流封面" /></div>
+                <div class="meta">手绘注解</div>
+              </article>
+              <article class="card clickable" @click="openBgChange()">
+                <div class="cover"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" alt="换背景工作流封面" /></div>
+                <div class="meta">换背景加强版</div>
+              </article>
+              <article class="card clickable" @click="openStoryboard()">
+                <div class="cover"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" alt="影视分镜工作流封面" /></div>
+                <div class="meta">影视分镜</div>
               </article>
             </div>
           </template>
@@ -593,6 +626,15 @@
         },
         openPosWorkflow() {
           window.location.href = './outfit-pos-workflow.html';
+        },
+        openSketchNote() {
+          window.location.href = './sketch-note-workflow.html';
+        },
+        openBgChange() {
+          window.location.href = './bg-change-workflow.html';
+        },
+        openStoryboard() {
+          window.location.href = './storyboard-workflow.html';
         },
         selectFeature(feature) {
           this.selectedFeature = feature;
