@@ -333,8 +333,8 @@
         const res = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: formData });
         const data = await res.json();
 
-        if (data.code === 0 && data.data && data.data.fileUrl) {
-          uploadedFiles[key] = data.data.fileUrl;
+        if (data.code === 0 && data.data && (data.data.fileUrl || data.data.fileName)) {
+          uploadedFiles[key] = data.data.fileUrl || data.data.fileName;
           zone.className = 'upload-zone uploaded';
           if (textEl) textEl.textContent = '已上传 ✓';
 
