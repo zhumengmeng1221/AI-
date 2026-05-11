@@ -338,12 +338,12 @@
       data() {
         return {
           RH: {
-            baseUrl: 'https://www.runninghub.cn',
-            uploadPath: '/task/openapi/upload',
-            createPath: '/task/openapi/create',
-            outputsPath: '/task/openapi/outputs',
+            baseUrl: '',
+            uploadPath: '/api/upload',
+            createPath: '/api/create',
+            outputsPath: '/api/outputs',
             workflowId: '2047703658967601153',
-            apiKey: '397d32954e194d75893a011dc0dcaf36'
+            apiKey: ''
           },
 
           peoplePresets: [
@@ -444,45 +444,36 @@
           ].filter(Boolean);
           this.finalPrompt = blocks.join('，');
         },
-        getApiKey() {
-          return (localStorage.getItem('runninghub_api_key') || this.RH.apiKey || '').trim();
-        },
+        getApiKey() { return ''; },
         async parseJsonSafe(resp) {
           const text = await resp.text();
           try { return JSON.parse(text); } catch (_) { return { raw: text }; }
         },
         async uploadFileToRunningHub(file) {
-          const key = this.getApiKey();
-          if (!key) throw new Error('缺少 API Key');
           const form = new FormData();
           form.append('file', file);
-          form.append('apiKey', key);
           form.append('fileType', 'input');
           const res = await fetch(`${this.RH.baseUrl}${this.RH.uploadPath}`, {
-            method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form
+            method: 'POST', body: form
           });
           const data = await this.parseJsonSafe(res);
           if (!res.ok) throw new Error(`上传失败(${res.status}) ${JSON.stringify(data)}`);
-          return data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
+          return data?.data?.fileUrl || data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
         },
         async createTask(nodeInfoList) {
-          const key = this.getApiKey();
           const res = await fetch(`${this.RH.baseUrl}${this.RH.createPath}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-            body: JSON.stringify({ apiKey: key, workflowId: this.RH.workflowId, nodeInfoList })
+            headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflowId: this.RH.workflowId, nodeInfoList })
           });
           const data = await this.parseJsonSafe(res);
           if (!res.ok || data?.code !== 0) throw new Error(`创建任务失败: ${JSON.stringify(data)}`);
           return data?.data?.taskId || '';
         },
         async pollOutputs(taskId) {
-          const key = this.getApiKey();
           for (let i = 0; i < 1200; i++) {
             const res = await fetch(`${this.RH.baseUrl}${this.RH.outputsPath}`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-              body: JSON.stringify({ apiKey: key, taskId })
+              headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })
             });
             const data = await this.parseJsonSafe(res);
             if (!res.ok) throw new Error(`查询失败(${res.status})`);

@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIHub - 工作流</title>
+  <style>
+    :root {
+      --bg-1: #f4f7ff;
+      --bg-2: #e8eefb;
+      --glass: rgba(255, 255, 255, 0.58);
+      --glass-strong: rgba(255, 255, 255, 0.76);
+      --line: rgba(107, 123, 152, 0.16);
+      --text: #0f1728;
+      --muted: #677489;
+      --primary: #3a7bff;
+      --primary-light: rgba(58, 123, 255, 0.12);
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --shadow: 0 14px 34px rgba(28, 40, 68, 0.10);
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; min-height: 100vh;
+      font-family: "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 620px at -8% -10%, rgba(158, 196, 255, 0.42), transparent 56%),
+        radial-gradient(980px 560px at 105% -18%, rgba(204, 182, 255, 0.30), transparent 58%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+    .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 12px;
+      border: 1px solid var(--line); background: var(--glass);
+      backdrop-filter: blur(18px);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px; color: var(--muted); transition: .15s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.8); color: var(--primary); }
+    .page-title { font-size: 22px; font-weight: 700; }
+
+    .template-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px; margin-bottom: 24px;
+    }
+    .template-card {
+      border: 1px solid var(--line); border-radius: var(--radius-lg);
+      background: var(--glass-strong); backdrop-filter: blur(16px);
+      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+      padding: 14px; cursor: pointer;
+      transition: transform .15s, border-color .15s, box-shadow .15s;
+    }
+    .template-card:hover { transform: translateY(-2px); border-color: rgba(58, 123, 255, 0.3); box-shadow: 0 10px 24px rgba(18, 44, 96, 0.12); }
+    .template-card.active { border-color: var(--primary); background: linear-gradient(145deg, rgba(214, 229, 255, 0.88), rgba(238, 244, 255, 0.95)); box-shadow: 0 0 0 3px var(--primary-light); }
+    .template-card .cover { width: 100%; aspect-ratio: 16/9; border-radius: 10px; background: #eef3ff; overflow: hidden; margin-bottom: 10px; }
+    .template-card .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .template-card .name { font-size: 15px; font-weight: 700; color: #101828; margin-bottom: 4px; }
+    .template-card .desc { font-size: 12px; color: #667085; line-height: 1.4; }
+
+    .work-panel {
+      border: 1px solid var(--line); border-radius: var(--radius-xl);
+      background: var(--glass-strong); backdrop-filter: blur(16px);
+      box-shadow: var(--shadow); padding: 24px;
+    }
+    .panel-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 14px; font-weight: 600; color: #344054; margin-bottom: 6px; }
+    .form-label .required { color: var(--error); margin-left: 2px; }
+    .form-input {
+      width: 100%; height: 44px;
+      border: 1px solid rgba(124, 138, 164, 0.28); border-radius: 10px;
+      background: rgba(255, 255, 255, 0.82); padding: 0 14px;
+      font-size: 14px; color: var(--text); outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    textarea.form-input { height: 100px; padding: 12px 14px; resize: vertical; }
+
+    .upload-zone {
+      border: 2px dashed rgba(124, 138, 164, 0.3); border-radius: 12px;
+      background: rgba(255, 255, 255, 0.5); padding: 24px;
+      text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
+    .upload-zone.uploading { border-color: var(--warning); background: rgba(245, 158, 11, 0.06); }
+    .upload-zone.uploaded { border-color: var(--success); background: rgba(34, 197, 94, 0.06); }
+    .upload-icon { font-size: 28px; margin-bottom: 8px; }
+    .upload-text { font-size: 14px; color: var(--muted); }
+    .upload-hint { font-size: 12px; color: #98a2b3; margin-top: 4px; }
+    .upload-preview { margin-top: 10px; }
+    .upload-preview img { max-width: 200px; max-height: 120px; border-radius: 8px; border: 1px solid var(--line); }
+    .upload-preview audio { width: 100%; max-width: 300px; margin-top: 8px; }
+
+    .submit-btn {
+      width: 100%; height: 48px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #3a7bff, #6366f1);
+      color: #fff; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: transform .15s, box-shadow .15s; margin-top: 8px;
+    }
+    .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(58, 123, 255, 0.35); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .task-status { margin-top: 20px; padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.6); }
+    .task-status .status-line { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .status-dot.pending { background: var(--warning); }
+    .status-dot.running { background: var(--primary); animation: pulse 1.5s infinite; }
+    .status-dot.success { background: var(--success); }
+    .status-dot.failed { background: var(--error); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .status-text { font-size: 14px; font-weight: 600; }
+    .progress-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #3a7bff, #6366f1); transition: width .5s ease; }
+    .progress-text { font-size: 12px; color: var(--muted); }
+
+    .result-area { margin-top: 16px; }
+    .result-area h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .result-item { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.8); }
+    .result-item img, .result-item video { width: 100%; display: block; }
+    .result-item audio { width: 100%; padding: 12px; }
+    .result-item .download { display: block; padding: 10px 14px; font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none; border-top: 1px solid var(--line); }
+    .result-item .download:hover { background: var(--primary-light); }
+
+    .error-msg { margin-top: 12px; padding: 12px 16px; border-radius: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--error); font-size: 14px; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      .template-grid { grid-template-columns: repeat(2, 1fr); }
+      .work-panel { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <div class="topbar">
+      <button class="back-btn" onclick="location.href='/'" title="返回首页">&#8592;</button>
+      <div class="page-title">AI 工作流</div>
+    </div>
+    <div class="template-grid" id="template-grid"></div>
+    <div class="work-panel hidden" id="work-panel">
+      <div class="panel-title" id="panel-title"></div>
+      <form id="workflow-form" onsubmit="return handleSubmit(event)"></form>
+      <div id="task-status-area"></div>
+      <div id="result-area"></div>
+    </div>
+    <div class="empty-state" id="empty-state">
+      <div class="icon">&#9734;</div>
+      <p>选择一个工作流开始创作</p>
+    </div>
+  </div>
+
+  <script>
+    // ── 全局状态 ──
+    let templates = [];
+    let selectedTemplate = null;
+    let uploadedFiles = {};
+    let currentTaskId = null;
+    let pollTimer = null;
+    const API_BASE = window.location.origin;
+
+    // ── 安全转义 ──
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // ── 初始化 ──
+    async function init() {
+      try {
+        const res = await fetch(`${API_BASE}/api/templates`);
+        const data = await res.json();
+        templates = data.templates || [];
+        renderTemplateGrid();
+      } catch (err) {
+        console.error('获取模板失败:', err);
+        document.getElementById('template-grid').textContent = '加载失败，请确认服务器已启动';
+      }
+    }
+
+    // ── 渲染模板网格 ──
+    function renderTemplateGrid() {
+      const grid = document.getElementById('template-grid');
+      grid.innerHTML = '';
+      templates.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'template-card' + (selectedTemplate && selectedTemplate.id === t.id ? ' active' : '');
+        card.onclick = () => selectTemplate(t.id);
+        const cover = document.createElement('div');
+        cover.className = 'cover';
+        const img = document.createElement('img');
+        img.src = t.cover;
+        img.alt = t.name;
+        img.onerror = function() { this.style.display = 'none'; };
+        cover.appendChild(img);
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = t.name;
+        const desc = document.createElement('div');
+        desc.className = 'desc';
+        desc.textContent = t.description;
+        card.appendChild(cover);
+        card.appendChild(name);
+        card.appendChild(desc);
+        grid.appendChild(card);
+      });
+    }
+
+    // ── 选择模板 ──
+    function selectTemplate(id) {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      selectedTemplate = templates.find(t => t.id === id);
+      uploadedFiles = {};
+      currentTaskId = null;
+      renderTemplateGrid();
+      renderForm();
+      document.getElementById('work-panel').classList.remove('hidden');
+      document.getElementById('empty-state').classList.add('hidden');
+      document.getElementById('task-status-area').innerHTML = '';
+      document.getElementById('result-area').innerHTML = '';
+    }
+
+    // ── 动态渲染表单 ──
+    function renderForm() {
+      const title = document.getElementById('panel-title');
+      const form = document.getElementById('workflow-form');
+      title.textContent = selectedTemplate.name;
+      form.innerHTML = '';
+
+      selectedTemplate.inputs.forEach(input => {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+
+        const label = document.createElement('label');
+        label.className = 'form-label';
+        label.textContent = input.label;
+        if (input.required) {
+          const req = document.createElement('span');
+          req.className = 'required';
+          req.textContent = '*';
+          label.appendChild(req);
+        }
+        group.appendChild(label);
+
+        if (input.type === 'image' || input.type === 'audio') {
+          // 上传区域
+          const zone = document.createElement('div');
+          zone.className = 'upload-zone';
+          zone.id = 'upload-' + input.key;
+          zone.onclick = () => document.getElementById('file-' + input.key).click();
+
+          const icon = document.createElement('div');
+          icon.className = 'upload-icon';
+          icon.textContent = input.type === 'image' ? '\u{1F4F7}' : '\u{1F3B5}';
+          zone.appendChild(icon);
+
+          const text = document.createElement('div');
+          text.className = 'upload-text';
+          text.textContent = '点击上传' + (input.type === 'image' ? '图片' : '音频');
+          zone.appendChild(text);
+
+          const hint = document.createElement('div');
+          hint.className = 'upload-hint';
+          hint.textContent = '支持 JPG/PNG/WEBP' + (input.type === 'audio' ? '/MP3/WAV' : '');
+          zone.appendChild(hint);
+
+          group.appendChild(zone);
+
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.id = 'file-' + input.key;
+          fileInput.className = 'hidden';
+          fileInput.accept = input.type === 'image' ? 'image/*' : 'audio/*';
+          fileInput.onchange = function() { handleUpload(input.key, this); };
+          group.appendChild(fileInput);
+
+          const preview = document.createElement('div');
+          preview.className = 'upload-preview';
+          preview.id = 'preview-' + input.key;
+          group.appendChild(preview);
+
+        } else {
+          // 文本输入
+          const textarea = document.createElement('textarea');
+          textarea.className = 'form-input';
+          textarea.id = 'input-' + input.key;
+          textarea.placeholder = '请输入' + input.label;
+          if (input.default) textarea.value = input.default;
+          group.appendChild(textarea);
+        }
+
+        form.appendChild(group);
+      });
+
+      const btn = document.createElement('button');
+      btn.type = 'submit';
+      btn.className = 'submit-btn';
+      btn.id = 'submit-btn';
+      btn.textContent = '开始生成';
+      form.appendChild(btn);
+    }
+
+    // ── 文件上传 ──
+    async function handleUpload(key, fileInput) {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const zone = document.getElementById('upload-' + key);
+      const preview = document.getElementById('preview-' + key);
+
+      zone.className = 'upload-zone uploading';
+      // 更新文字
+      const textEl = zone.querySelector('.upload-text');
+      if (textEl) textEl.textContent = '上传中...';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.code === 0 && data.data && data.data.fileUrl) {
+          uploadedFiles[key] = data.data.fileUrl;
+          zone.className = 'upload-zone uploaded';
+          if (textEl) textEl.textContent = '已上传 ✓';
+
+          preview.innerHTML = '';
+          if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = data.data.fileUrl;
+            img.alt = '预览';
+            preview.appendChild(img);
+          } else if (file.type.startsWith('audio/')) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = data.data.fileUrl;
+            preview.appendChild(audio);
+          }
+        } else {
+          throw new Error(data.msg || '上传失败');
+        }
+      } catch (err) {
+        zone.className = 'upload-zone';
+        if (textEl) textEl.textContent = '上传失败，点击重试';
+        const errMsg = document.createElement('div');
+        errMsg.className = 'error-msg';
+        errMsg.textContent = err.message;
+        preview.innerHTML = '';
+        preview.appendChild(errMsg);
+      }
+    }
+
+    // ── 提交任务 ──
+    async function handleSubmit(e) {
+      e.preventDefault();
+      if (!selectedTemplate) return false;
+
+      const params = {};
+      for (const input of selectedTemplate.inputs) {
+        if (input.type === 'image' || input.type === 'audio') {
+          if (uploadedFiles[input.key]) {
+            params[input.key] = uploadedFiles[input.key];
+          } else if (input.required) {
+            alert('请上传' + input.label);
+            return false;
+          }
+        } else {
+          const el = document.getElementById('input-' + input.key);
+          const val = el ? el.value.trim() : '';
+          if (!val && input.required) {
+            alert('请填写' + input.label);
+            return false;
+          }
+          if (val) params[input.key] = val;
+        }
+      }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = '提交中...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/task/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: selectedTemplate.id, params })
+        });
+        const data = await res.json();
+
+        if (data.taskId) {
+          currentTaskId = data.taskId;
+          renderTaskStatus({ status: 'running', progress: 0 });
+          startPolling(data.taskId);
+          btn.textContent = '生成中...';
+        } else {
+          throw new Error(data.error || '创建任务失败');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = '开始生成';
+        const area = document.getElementById('task-status-area');
+        const errMsg = document.createElement('div');
+        errMsg.className = 'error-msg';
+        errMsg.textContent = err.message;
+        area.innerHTML = '';
+        area.appendChild(errMsg);
+      }
+      return false;
+    }
+
+    // ── 渲染任务状态 ──
+    function renderTaskStatus(task) {
+      const area = document.getElementById('task-status-area');
+      area.innerHTML = '';
+
+      const statusMap = { pending: '排队中', running: '生成中', success: '已完成', failed: '失败' };
+
+      const box = document.createElement('div');
+      box.className = 'task-status';
+
+      const line = document.createElement('div');
+      line.className = 'status-line';
+
+      const dot = document.createElement('div');
+      dot.className = 'status-dot ' + task.status;
+      line.appendChild(dot);
+
+      const text = document.createElement('div');
+      text.className = 'status-text';
+      text.textContent = statusMap[task.status] || task.status;
+      line.appendChild(text);
+      box.appendChild(line);
+
+      const bar = document.createElement('div');
+      bar.className = 'progress-bar';
+      const fill = document.createElement('div');
+      fill.className = 'progress-fill';
+      fill.style.width = (task.progress || 0) + '%';
+      bar.appendChild(fill);
+      box.appendChild(bar);
+
+      const ptext = document.createElement('div');
+      ptext.className = 'progress-text';
+      ptext.textContent = '进度: ' + (task.progress || 0) + '%';
+      box.appendChild(ptext);
+
+      if (task.error) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'error-msg';
+        errDiv.textContent = task.error;
+        box.appendChild(errDiv);
+      }
+
+      area.appendChild(box);
+
+      if (task.status === 'success' || task.status === 'failed') {
+        const btn = document.getElementById('submit-btn');
+        if (btn) { btn.disabled = false; btn.textContent = '重新生成'; }
+      }
+
+      if (task.status === 'success' && task.result) {
+        renderResults(task.result);
+      }
+    }
+
+    // ── 渲染结果 ──
+    function renderResults(urls) {
+      const area = document.getElementById('result-area');
+      area.innerHTML = '';
+
+      const header = document.createElement('div');
+      header.className = 'result-area';
+      const h4 = document.createElement('h4');
+      h4.textContent = '生成结果';
+      header.appendChild(h4);
+
+      const grid = document.createElement('div');
+      grid.className = 'result-grid';
+
+      urls.forEach(url => {
+        const item = document.createElement('div');
+        item.className = 'result-item';
+
+        const isVideo = /\.mp4|\.webm/i.test(url);
+        const isAudio = /\.mp3|\.wav|\.ogg/i.test(url);
+
+        if (isVideo) {
+          const video = document.createElement('video');
+          video.controls = true;
+          video.src = url;
+          item.appendChild(video);
+        } else if (isAudio) {
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = url;
+          item.appendChild(audio);
+        } else {
+          const img = document.createElement('img');
+          img.src = url;
+          img.alt = '生成结果';
+          item.appendChild(img);
+        }
+
+        const dl = document.createElement('a');
+        dl.className = 'download';
+        dl.href = url;
+        dl.target = '_blank';
+        dl.download = '';
+        dl.textContent = isVideo ? '下载视频' : isAudio ? '下载音频' : '下载图片';
+        item.appendChild(dl);
+
+        grid.appendChild(item);
+      });
+
+      header.appendChild(grid);
+      area.appendChild(header);
+    }
+
+    // ── 轮询 ──
+    function startPolling(taskId) {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/task/${taskId}`);
+          const task = await res.json();
+          renderTaskStatus(task);
+          if (task.status === 'success' || task.status === 'failed') {
+            clearInterval(pollTimer);
+            pollTimer = null;
+          }
+        } catch (err) {
+          console.error('轮询失败:', err);
+        }
+      }, 3000);
+    }
+
+    init().then(() => {
+      // 支持 URL 参数自动选中模板 ?type=digitalHuman
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get('type');
+      if (type && templates.find(t => t.id === type)) {
+        selectTemplate(type);
+      }
+    });
+  </script>
+</body>
+</html>

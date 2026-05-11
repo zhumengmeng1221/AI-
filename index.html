@@ -6,378 +6,271 @@
   <title>AIHub - AI 应用</title>
   <style>
     :root {
-      --bg-1: #f4f7ff;
-      --bg-2: #e8eefb;
-      --glass: rgba(255, 255, 255, 0.58);
-      --glass-strong: rgba(255, 255, 255, 0.76);
+      --bg-1: #f4f7ff; --bg-2: #e8eefb;
+      --glass: rgba(255, 255, 255, 0.58); --glass-strong: rgba(255, 255, 255, 0.76);
       --line: rgba(107, 123, 152, 0.16);
-      --text: #0f1728;
-      --muted: #677489;
-      --primary: #3a7bff;
+      --text: #0f1728; --muted: #677489;
+      --primary: #3a7bff; --primary-light: rgba(58, 123, 255, 0.12);
+      --success: #22c55e; --error: #ef4444; --warning: #f59e0b;
       --shadow: 0 14px 34px rgba(28, 40, 68, 0.10);
-      --radius-xl: 22px;
-      --radius-lg: 16px;
-      --radius-md: 12px;
-      --top-h: 68px;
-      --left-w: 230px;
+      --radius-xl: 22px; --radius-lg: 16px; --radius-md: 12px;
+      --top-h: 68px; --left-w: 230px;
     }
-
     * { box-sizing: border-box; }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      color: var(--text);
-      font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
-      background:
-        radial-gradient(1200px 620px at -8% -10%, rgba(158, 196, 255, 0.42), transparent 56%),
+    html, body { width: 100%; height: 100%; margin: 0; color: var(--text);
+      font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(1200px 620px at -8% -10%, rgba(158, 196, 255, 0.42), transparent 56%),
         radial-gradient(980px 560px at 105% -18%, rgba(204, 182, 255, 0.30), transparent 58%),
         linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
     }
+    .app { width: 100%; height: 100%; display: grid; grid-template-rows: var(--top-h) minmax(0, 1fr); gap: 14px; padding: 12px; }
 
-    .app {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-rows: var(--top-h) minmax(0, 1fr);
-      gap: 14px;
-      padding: 12px;
-    }
+    /* 顶栏 */
+    .topbar { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; min-width: 0;
+      border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--glass);
+      backdrop-filter: blur(18px) saturate(130%); box-shadow: var(--shadow); padding: 10px 14px; }
+    .top-left { min-width: 0; display: flex; align-items: center; gap: 10px; }
+    .brand { font-size: 18px; font-weight: 700; letter-spacing: 0.2px; white-space: nowrap; cursor: pointer; }
+    .search { width: min(420px, 45vw); min-width: 140px; height: 40px; border-radius: 999px;
+      border: 1px solid rgba(124, 138, 164, 0.22); background: rgba(255, 255, 255, 0.72);
+      color: #344054; font-size: 14px; padding: 0 14px; outline: none; }
+    .search:focus { border-color: rgba(47, 107, 255, 0.36); box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.12); }
+    .hero-chip { justify-self: center; border: 1px solid rgba(99, 115, 142, 0.2);
+      background: rgba(255, 255, 255, 0.78); border-radius: 999px; padding: 8px 14px;
+      font-size: 13px; color: #344054; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 46vw; }
+    .top-right { justify-self: end; display: flex; align-items: center; gap: 8px; }
+    .pill { border: 1px solid rgba(47, 107, 255, 0.26); border-radius: 999px; height: 34px; padding: 0 12px;
+      display: inline-flex; align-items: center; font-size: 13px; color: #1f4fd1;
+      background: rgba(255, 255, 255, 0.85); font-weight: 600; cursor: pointer; }
+    .icon-dot { width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid rgba(123, 136, 162, 0.24); background: rgba(255, 255, 255, 0.85); cursor: pointer; }
 
-    .topbar {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-xl);
-      background: var(--glass);
-      backdrop-filter: blur(18px) saturate(130%);
-      -webkit-backdrop-filter: blur(18px) saturate(130%);
-      box-shadow: var(--shadow);
-      padding: 10px 14px;
-    }
-
-    .top-left {
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .brand {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      white-space: nowrap;
-    }
-
-    .search {
-      width: min(420px, 45vw);
-      min-width: 140px;
-      height: 40px;
-      border-radius: 999px;
-      border: 1px solid rgba(124, 138, 164, 0.22);
-      background: rgba(255, 255, 255, 0.72);
-      color: #344054;
-      font-size: 14px;
-      padding: 0 14px;
-      outline: none;
-    }
-
-    .search:focus {
-      border-color: rgba(47, 107, 255, 0.36);
-      box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.12);
-    }
-
-    .hero-chip {
-      justify-self: center;
-      border: 1px solid rgba(99, 115, 142, 0.2);
-      background: rgba(255, 255, 255, 0.78);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 13px;
-      color: #344054;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 46vw;
-    }
-
-    .top-right {
-      justify-self: end;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pill {
-      border: 1px solid rgba(47, 107, 255, 0.26);
-      border-radius: 999px;
-      height: 34px;
-      padding: 0 12px;
-      display: inline-flex;
-      align-items: center;
-      font-size: 13px;
-      color: #1f4fd1;
-      background: rgba(255, 255, 255, 0.85);
-      font-weight: 600;
-    }
-
-    .icon-dot {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      border: 1px solid rgba(123, 136, 162, 0.24);
-      background: rgba(255, 255, 255, 0.85);
-    }
-
-    .layout {
-      min-height: 0;
-      display: grid;
-      grid-template-columns: var(--left-w) minmax(0, 1fr);
-      gap: 14px;
-    }
-
-    .sidebar {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-xl);
-      background: var(--glass);
-      backdrop-filter: blur(18px) saturate(130%);
-      -webkit-backdrop-filter: blur(18px) saturate(130%);
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 12px;
-      min-height: 0;
-      overflow: auto;
-    }
-
+    /* 布局 */
+    .layout { min-height: 0; display: grid; grid-template-columns: var(--left-w) minmax(0, 1fr); gap: 14px; }
+    .sidebar { border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--glass);
+      backdrop-filter: blur(18px) saturate(130%); box-shadow: var(--shadow);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 12px; min-height: 0; overflow: auto; }
     .side-group { display: grid; gap: 6px; }
+    .item { width: 100%; border: 1px solid transparent; background: transparent; color: #475467;
+      font-size: 14px; border-radius: 12px; padding: 10px 12px; text-align: left;
+      cursor: pointer; white-space: nowrap; transition: .15s ease; }
+    .item:hover { background: rgba(255, 255, 255, 0.72); border-color: rgba(123, 136, 162, 0.18); }
+    .item.active { color: #12358f; border-color: rgba(47, 107, 255, 0.24);
+      background: linear-gradient(145deg, rgba(210, 227, 255, 0.82), rgba(233, 240, 255, 0.92)); font-weight: 600; }
+    .workspace-btn { margin-top: 10px; border: 1px solid rgba(123, 136, 162, 0.22); border-radius: 12px;
+      background: rgba(255, 255, 255, 0.78); color: #475467; font-size: 13px; padding: 10px 0; text-align: center; cursor: pointer; }
 
-    .item {
-      width: 100%;
-      border: 1px solid transparent;
-      background: transparent;
-      color: #475467;
-      font-size: 14px;
-      border-radius: 12px;
-      padding: 10px 12px;
-      text-align: left;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: .15s ease;
-    }
-
-    .item:hover {
-      background: rgba(255, 255, 255, 0.72);
-      border-color: rgba(123, 136, 162, 0.18);
-    }
-
-    .item.active {
-      color: #12358f;
-      border-color: rgba(47, 107, 255, 0.24);
-      background: linear-gradient(145deg, rgba(210, 227, 255, 0.82), rgba(233, 240, 255, 0.92));
-      font-weight: 600;
-    }
-
-    .workspace-btn {
-      margin-top: 10px;
-      border: 1px solid rgba(123, 136, 162, 0.22);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.78);
-      color: #475467;
-      font-size: 13px;
-      padding: 10px 0;
-      text-align: center;
-    }
-
+    /* 主内容 */
     .main { min-width: 0; min-height: 0; overflow: auto; padding: 4px; }
-
-    .section {
-      margin-bottom: 14px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-xl);
-      background: var(--glass-strong);
-      backdrop-filter: blur(16px) saturate(128%);
-      -webkit-backdrop-filter: blur(16px) saturate(128%);
-      box-shadow: var(--shadow);
-      padding: 14px;
-    }
-
+    .section { margin-bottom: 14px; border: 1px solid var(--line); border-radius: var(--radius-xl);
+      background: var(--glass-strong); backdrop-filter: blur(16px) saturate(128%);
+      box-shadow: var(--shadow); padding: 14px; }
     .section-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.1px; }
+    .section-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+
+    /* 卡片通用 */
     .apps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
-    .recommend-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-
-    .mini-card {
-      border: 1px solid rgba(123, 136, 162, 0.22);
-      border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.82);
-      min-height: 94px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: center;
-      overflow: hidden;
-      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
-      padding: 12px 12px 12px 14px;
-    }
-
-    .clickable {
-      cursor: pointer;
-      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-    }
-
-    .clickable:hover {
-      transform: translateY(-1px);
-      border-color: rgba(47, 107, 255, 0.25);
-      box-shadow: 0 10px 24px rgba(18, 44, 96, 0.14);
-    }
-
+    .mini-card { border: 1px solid rgba(123, 136, 162, 0.22); border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.82); min-height: 94px; display: grid;
+      grid-template-columns: 1fr auto; gap: 12px; align-items: center; overflow: hidden;
+      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08); padding: 12px 12px 12px 14px; }
+    .clickable { cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+    .clickable:hover { transform: translateY(-1px); border-color: rgba(47, 107, 255, 0.25); box-shadow: 0 10px 24px rgba(18, 44, 96, 0.14); }
     .mini-card h4 { margin: 0; font-size: 18px; font-weight: 700; color: #101828; line-height: 1.2; }
     .mini-card p { margin: 6px 0 0; font-size: 13px; color: #667085; line-height: 1.35; }
-
-    .thumb {
-      width: 86px;
-      height: 62px;
-      border-radius: 12px;
-      border: 1px solid rgba(123, 136, 162, 0.2);
-      overflow: hidden;
-      background: #edf2ff;
-      flex-shrink: 0;
-    }
+    .thumb { width: 86px; height: 62px; border-radius: 12px;
+      border: 1px solid rgba(123, 136, 162, 0.2); overflow: hidden; background: #edf2ff; flex-shrink: 0; }
     .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+    /* 标签 */
     .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .tag { border: 1px solid rgba(123, 136, 162, 0.22); background: rgba(255, 255, 255, 0.8);
+      color: #667085; border-radius: 999px; padding: 7px 11px; font-size: 12px; line-height: 1;
+      cursor: pointer; user-select: none; transition: .15s ease; }
+    .tag.active { color: #1748bf; border-color: rgba(47, 107, 255, 0.28); background: rgba(222, 234, 255, 0.9); font-weight: 600; }
 
-    .tag {
-      border: 1px solid rgba(123, 136, 162, 0.22);
-      background: rgba(255, 255, 255, 0.8);
-      color: #667085;
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 12px;
-      line-height: 1;
-      cursor: pointer;
-      user-select: none;
-      transition: .15s ease;
-    }
-
-    .tag.active {
-      color: #1748bf;
-      border-color: rgba(47, 107, 255, 0.28);
-      background: rgba(222, 234, 255, 0.9);
-      font-weight: 600;
-    }
-
+    /* 工作流卡片 */
     .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; }
-
-    .card {
-      border: 1px solid rgba(123, 136, 162, 0.22);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.84);
-      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
-    }
-
+    .card { border: 1px solid rgba(123, 136, 162, 0.22); border-radius: var(--radius-lg); overflow: hidden;
+      background: rgba(255, 255, 255, 0.84); box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08); }
     .cover { aspect-ratio: 3 / 4; background: #eef3ff; overflow: hidden; }
     .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .meta { padding: 10px; font-size: 13px; color: #475467; line-height: 1.3; font-weight: 600; }
 
-    .empty-pane {
-      min-height: 230px;
-      border: 1px dashed rgba(123, 136, 162, 0.32);
-      border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.5);
-    }
+    /* Mock 特性卡片 */
+    .mock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+    .mock-card { border: 1px solid rgba(123, 136, 162, 0.22); border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.84); box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
+      padding: 14px; min-height: 120px; display: flex; flex-direction: column;
+      justify-content: space-between; gap: 8px; cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+    .mock-card:hover { transform: translateY(-1px); border-color: rgba(47, 107, 255, 0.24); box-shadow: 0 10px 24px rgba(18, 44, 96, 0.14); }
+    .mock-card.active { border-color: rgba(47, 107, 255, 0.34);
+      background: linear-gradient(145deg, rgba(214, 229, 255, 0.88), rgba(238, 244, 255, 0.95)); }
+    .mock-card-title { font-size: 15px; font-weight: 700; color: #101828; }
+    .mock-card-desc { font-size: 13px; color: #667085; line-height: 1.4; }
+    .mock-panel { border: 1px solid rgba(123, 136, 162, 0.22); border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.84); box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08); padding: 14px; }
+    .mock-panel h4 { margin: 0 0 6px; font-size: 18px; }
+    .mock-panel p { margin: 0; font-size: 14px; color: #475467; line-height: 1.45; }
+    .mock-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .mock-btn { border: 1px solid rgba(47, 107, 255, 0.26); border-radius: 999px; height: 34px;
+      padding: 0 12px; display: inline-flex; align-items: center; font-size: 13px;
+      color: #1f4fd1; background: rgba(255, 255, 255, 0.9); font-weight: 600; cursor: pointer; }
+    .empty-pane { min-height: 230px; border: 1px dashed rgba(123, 136, 162, 0.32);
+      border-radius: var(--radius-lg); background: rgba(255, 255, 255, 0.5); }
 
-    .mock-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 10px;
-    }
+    /* ====== 新增页面样式 ====== */
 
-    .mock-card {
-      border: 1px solid rgba(123, 136, 162, 0.22);
-      border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.84);
-      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
-      padding: 14px;
-      min-height: 120px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-      cursor: pointer;
-      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    }
+    /* 欢迎横幅 */
+    .welcome-banner { display: flex; align-items: center; gap: 16px; padding: 20px;
+      border: 1px solid var(--line); border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(58, 123, 255, 0.08), rgba(99, 102, 241, 0.08));
+      margin-bottom: 14px; }
+    .welcome-avatar { width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, #3a7bff, #6366f1); display: flex;
+      align-items: center; justify-content: center; color: #fff; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+    .welcome-text h3 { margin: 0; font-size: 18px; font-weight: 700; }
+    .welcome-text p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
 
-    .mock-card:hover {
-      transform: translateY(-1px);
-      border-color: rgba(47, 107, 255, 0.24);
-      box-shadow: 0 10px 24px rgba(18, 44, 96, 0.14);
-    }
+    /* 统计卡片 */
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-card { border: 1px solid var(--line); border-radius: var(--radius-lg);
+      background: var(--glass-strong); padding: 14px; text-align: center; }
+    .stat-num { font-size: 28px; font-weight: 800; color: var(--primary); }
+    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-    .mock-card.active {
-      border-color: rgba(47, 107, 255, 0.34);
-      background: linear-gradient(145deg, rgba(214, 229, 255, 0.88), rgba(238, 244, 255, 0.95));
-    }
+    /* 任务列表 */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+      border: 1px solid rgba(123, 136, 162, 0.18); border-radius: 10px;
+      background: rgba(255, 255, 255, 0.7); transition: .15s; }
+    .task-item:hover { background: rgba(255, 255, 255, 0.9); }
+    .task-thumb { width: 48px; height: 48px; border-radius: 8px; background: #eef3ff;
+      overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: #a0aec0; }
+    .task-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .task-info { flex: 1; min-width: 0; }
+    .task-info .name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-info .time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .task-badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .task-badge.success { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
+    .task-badge.running { background: rgba(58, 123, 255, 0.12); color: #3a7bff; }
+    .task-badge.failed { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+    .task-badge.pending { background: rgba(245, 158, 11, 0.12); color: #d97706; }
 
-    .mock-card-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #101828;
-    }
+    /* 排行榜 */
+    .rank-list { display: flex; flex-direction: column; gap: 8px; }
+    .rank-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border: 1px solid rgba(123, 136, 162, 0.18); border-radius: 10px;
+      background: rgba(255, 255, 255, 0.7); cursor: pointer; transition: .15s; }
+    .rank-item:hover { background: rgba(255, 255, 255, 0.9); border-color: rgba(47, 107, 255, 0.2); }
+    .rank-num { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+    .rank-num.gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; }
+    .rank-num.silver { background: linear-gradient(135deg, #d1d5db, #9ca3af); color: #fff; }
+    .rank-num.bronze { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; }
+    .rank-num.normal { background: rgba(0,0,0,0.04); color: var(--muted); }
+    .rank-info { flex: 1; }
+    .rank-info .name { font-size: 14px; font-weight: 600; }
+    .rank-info .desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .rank-uses { font-size: 12px; color: var(--muted); }
 
-    .mock-card-desc {
-      font-size: 13px;
-      color: #667085;
-      line-height: 1.4;
-    }
+    /* 套餐卡片 */
+    .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .plan-card { border: 1px solid var(--line); border-radius: var(--radius-lg);
+      background: var(--glass-strong); padding: 20px; text-align: center; position: relative; }
+    .plan-card.current { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .plan-card.current::after { content: '当前'; position: absolute; top: 10px; right: 10px;
+      background: var(--primary); color: #fff; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; }
+    .plan-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .plan-price { font-size: 32px; font-weight: 800; color: var(--primary); }
+    .plan-price span { font-size: 14px; font-weight: 400; color: var(--muted); }
+    .plan-features { margin-top: 14px; text-align: left; }
+    .plan-features li { font-size: 13px; color: #475467; padding: 4px 0; list-style: none; }
+    .plan-features li::before { content: '\2713'; color: var(--success); font-weight: 700; margin-right: 6px; }
+    .plan-btn { margin-top: 14px; width: 100%; height: 40px; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer; }
+    .plan-btn.primary { background: linear-gradient(135deg, #3a7bff, #6366f1); color: #fff; }
+    .plan-btn.outline { background: transparent; border: 1px solid var(--line); color: var(--text); }
 
-    .mock-panel {
-      border: 1px solid rgba(123, 136, 162, 0.22);
-      border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.84);
-      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
-      padding: 14px;
-    }
+    /* 个人中心 */
+    .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .profile-avatar { width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, #3a7bff, #6366f1); display: flex;
+      align-items: center; justify-content: center; color: #fff; font-size: 28px; font-weight: 700; }
+    .profile-name { font-size: 22px; font-weight: 700; }
+    .profile-email { font-size: 14px; color: var(--muted); }
+    .form-row { margin-bottom: 14px; }
+    .form-row label { display: block; font-size: 13px; font-weight: 600; color: #475467; margin-bottom: 4px; }
+    .form-row input, .form-row select { width: 100%; height: 40px; border: 1px solid rgba(124, 138, 164, 0.28);
+      border-radius: 10px; background: rgba(255, 255, 255, 0.82); padding: 0 12px;
+      font-size: 14px; color: var(--text); outline: none; }
+    .form-row input:focus, .form-row select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .form-row textarea { width: 100%; height: 80px; border: 1px solid rgba(124, 138, 164, 0.28);
+      border-radius: 10px; background: rgba(255, 255, 255, 0.82); padding: 10px 12px;
+      font-size: 14px; color: var(--text); outline: none; resize: vertical; }
+    .save-btn { height: 40px; padding: 0 24px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, #3a7bff, #6366f1); color: #fff;
+      font-size: 14px; font-weight: 700; cursor: pointer; }
+    .danger-btn { height: 40px; padding: 0 24px; border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px; background: rgba(239, 68, 68, 0.06); color: var(--error);
+      font-size: 14px; font-weight: 600; cursor: pointer; margin-left: 10px; }
 
-    .mock-panel h4 {
-      margin: 0 0 6px;
-      font-size: 18px;
-    }
+    /* API 代码块 */
+    .code-block { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 14px;
+      font-family: "Fira Code", "SF Mono", monospace; font-size: 13px; line-height: 1.6;
+      overflow-x: auto; white-space: pre; margin: 10px 0; }
+    .code-block .kw { color: #c084fc; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #64748b; }
 
-    .mock-panel p {
-      margin: 0;
-      font-size: 14px;
-      color: #475467;
-      line-height: 1.45;
-    }
+    /* 公告 */
+    .notice { padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2);
+      background: rgba(245, 158, 11, 0.06); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .notice-icon { font-size: 16px; }
+    .notice-text { font-size: 13px; color: #475467; flex: 1; }
+    .notice-time { font-size: 11px; color: #98a2b3; white-space: nowrap; }
 
-    .mock-actions {
-      margin-top: 12px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    /* 登录弹窗 */
+    .login-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(6px);
+      z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .login-modal { width: min(420px, 90vw); border: 1px solid var(--line); border-radius: var(--radius-xl);
+      background: var(--glass-strong); backdrop-filter: blur(20px); box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+      padding: 32px; text-align: center; }
+    .login-modal h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .login-modal .login-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+    .wechat-qr-area { width: 200px; height: 200px; margin: 0 auto 20px; border: 1px solid var(--line);
+      border-radius: var(--radius-lg); background: #fff; display: flex; align-items: center;
+      justify-content: center; overflow: hidden; }
+    .wechat-qr-area iframe { border: none; width: 100%; height: 100%; }
+    .wechat-qr-area .qr-placeholder { color: #07c160; font-size: 48px; }
+    .login-btn { width: 100%; height: 48px; border: none; border-radius: 12px; font-size: 16px;
+      font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: .15s; }
+    .login-btn:hover { transform: translateY(-1px); }
+    .login-btn.wechat { background: #07c160; color: #fff; }
+    .login-btn.dev { background: rgba(0,0,0,0.04); color: var(--muted); border: 1px solid var(--line); font-weight: 600; font-size: 14px; }
+    .login-close { position: absolute; top: 12px; right: 16px; font-size: 20px; color: var(--muted);
+      cursor: pointer; border: none; background: none; }
+    .login-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #98a2b3; font-size: 12px; }
+    .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.08); }
+    .login-dev-input { width: 100%; height: 40px; border: 1px solid rgba(124, 138, 164, 0.28);
+      border-radius: 10px; background: rgba(255, 255, 255, 0.82); padding: 0 12px;
+      font-size: 14px; color: var(--text); outline: none; margin-bottom: 10px; }
+    .login-dev-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
 
-    .mock-btn {
-      border: 1px solid rgba(47, 107, 255, 0.26);
-      border-radius: 999px;
-      height: 34px;
-      padding: 0 12px;
-      display: inline-flex;
-      align-items: center;
-      font-size: 13px;
-      color: #1f4fd1;
-      background: rgba(255, 255, 255, 0.9);
-      font-weight: 600;
-      cursor: pointer;
-    }
+    /* 顶栏用户状态 */
+    .user-chip { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px;
+      border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.7);
+      font-size: 13px; font-weight: 600; color: #344054; transition: .15s; }
+    .user-chip:hover { background: rgba(255,255,255,0.9); }
+    .user-chip .avatar { width: 24px; height: 24px; border-radius: 50%;
+      background: linear-gradient(135deg, #3a7bff, #6366f1); display: flex;
+      align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; }
+    .user-chip .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 
     .hidden { display: none !important; }
 
@@ -386,7 +279,6 @@
       .item { font-size: 12px; padding: 10px 8px; }
       .workspace-btn { font-size: 12px; }
     }
-
     @media (max-width: 860px) {
       .app { grid-template-rows: auto minmax(0, 1fr); }
       .topbar { grid-template-columns: 1fr; gap: 8px; }
@@ -397,7 +289,6 @@
       .side-group { display: flex; gap: 6px; }
       .workspace-btn { display: none; }
     }
-
     @media (max-width: 520px) {
       .brand { display: none; }
       .search { width: 100%; }
@@ -409,14 +300,21 @@
   <div id="app" class="app">
     <header class="topbar">
       <div class="top-left">
-        <div class="brand">AIHub</div>
-        <input class="search" v-model="searchText" />
+        <div class="brand" @click="nav='首页'">AIHub</div>
+        <input class="search" v-model="searchText" placeholder="搜索应用 / 工作流 / 模型" />
       </div>
       <div class="hero-chip">全能图片 G2 已上线 · 体验更快更清爽</div>
       <div class="top-right">
-        <div class="pill">开始创作</div>
-        <div class="icon-dot"></div>
-        <div class="icon-dot"></div>
+        <div class="pill" @click="nav='工作流'">开始创作</div>
+        <template v-if="loggedInUser">
+          <div class="user-chip" @click="nav='个人中心'">
+            <div class="avatar"><img v-if="loggedInUser.avatar" :src="loggedInUser.avatar" /><span v-else>{{ loggedInUser.nickname.charAt(0) }}</span></div>
+            <span>{{ loggedInUser.nickname }}</span>
+          </div>
+        </template>
+        <template v-else>
+          <div class="pill" @click="showLogin=true">登录</div>
+        </template>
       </div>
     </header>
 
@@ -431,222 +329,681 @@
           <button class="item" :class="{active: nav==='视频'}" @click="nav='视频'">视频</button>
           <button class="item" :class="{active: nav==='创作中心'}" @click="nav='创作中心'">创作中心</button>
         </div>
-
         <div class="side-group" style="margin-top:10px;">
           <button class="item" :class="{active: nav==='API'}" @click="nav='API'">API</button>
           <button class="item" :class="{active: nav==='会员中心'}" @click="nav='会员中心'">会员中心</button>
           <button class="item" :class="{active: nav==='个人中心'}" @click="nav='个人中心'">个人中心</button>
         </div>
-
-        <div class="workspace-btn">我的空间</div>
+        <div class="workspace-btn" @click="nav='创作中心'">我的空间</div>
       </aside>
 
       <main class="main">
-        <section class="section">
-          <div class="section-title">推荐应用</div>
-          <div class="apps-grid recommend-grid">
-            <article class="mini-card clickable" @click="openCanvas()">
-              <div>
-                <h4>数字人</h4>
-                <p>真人 / 动漫口型同步，一键生成成片</p>
-              </div>
-              <div class="thumb"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人应用封面" /></div>
-            </article>
-            <article class="mini-card clickable" @click="openSketchNote()">
-              <div>
-                <h4>手绘注解</h4>
-                <p>上传照片，AI 自动添加手绘风注解与可爱文字</p>
-              </div>
-              <div class="thumb"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" alt="手绘注解封面" /></div>
-            </article>
-            <article class="mini-card clickable" @click="openBgChange()">
-              <div>
-                <h4>换背景加强版</h4>
-                <p>人物/产品换背景，直出4K高清</p>
-              </div>
-              <div class="thumb"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" alt="换背景封面" /></div>
-            </article>
-            <article class="mini-card clickable" @click="openStoryboard()">
-              <div>
-                <h4>影视分镜</h4>
-                <p>一键生成专业电影级分镜脚本与关键帧</p>
-              </div>
-              <div class="thumb"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" alt="影视分镜封面" /></div>
-            </article>
-          </div>
-        </section>
 
-        <section class="section">
-          <div class="section-title">全部应用</div>
-          <div class="tags" id="all-tags">
-            <span class="tag" v-for="tag in tags" :key="tag.key" :class="{active: activeTag===tag.key}" @click="activeTag=tag.key">{{tag.label}}</span>
+        <!-- ═══════ 首页 ═══════ -->
+        <template v-if="nav==='首页'">
+          <div class="welcome-banner">
+            <div class="welcome-avatar">{{ userName.charAt(0) }}</div>
+            <div class="welcome-text">
+              <h3>{{ greeting }}，{{ userName }}</h3>
+              <p>今天已创作 {{ todayCount }} 次，继续加油</p>
+            </div>
           </div>
 
-          <template v-if="activeTag==='workflow'">
+          <div class="stat-row">
+            <div class="stat-card"><div class="stat-num">{{ todayCount }}</div><div class="stat-label">今日创作</div></div>
+            <div class="stat-card"><div class="stat-num">{{ monthCount }}</div><div class="stat-label">本月创作</div></div>
+            <div class="stat-card"><div class="stat-num">{{ totalTasks }}</div><div class="stat-label">累计任务</div></div>
+            <div class="stat-card"><div class="stat-num">{{ successRate }}%</div><div class="stat-label">成功率</div></div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">快捷入口</div>
+            <div class="apps-grid">
+              <article class="mini-card clickable" @click="openCanvas()"><div><h4>数字人</h4><p>真人/动漫口型同步</p></div><div class="thumb"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" /></div></article>
+              <article class="mini-card clickable" @click="openBgChange()"><div><h4>换背景</h4><p>人物/产品换背景4K</p></div><div class="thumb"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" /></div></article>
+              <article class="mini-card clickable" @click="openSketchNote()"><div><h4>手绘注解</h4><p>AI手绘风注解文字</p></div><div class="thumb"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" /></div></article>
+              <article class="mini-card clickable" @click="openStoryboard()"><div><h4>影视分镜</h4><p>电影级分镜脚本</p></div><div class="thumb"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" /></div></article>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">最近任务</div>
+            <div class="task-list" v-if="recentTasks.length">
+              <div class="task-item" v-for="task in recentTasks" :key="task.id">
+                <div class="task-thumb">
+                  <img v-if="task.result && task.result[0]" :src="task.result[0]" @error="$event.target.style.display='none'" />
+                  <span v-else>&#9881;</span>
+                </div>
+                <div class="task-info">
+                  <div class="name">{{ templateName(task.type) }}</div>
+                  <div class="time">{{ formatTime(task.createdAt) }}</div>
+                </div>
+                <span class="task-badge" :class="task.status">{{ statusLabel(task.status) }}</span>
+              </div>
+            </div>
+            <div v-else class="empty-pane" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">暂无任务，开始你的第一次创作吧</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">平台公告</div>
+            <div class="notice"><span class="notice-icon">&#128227;</span><span class="notice-text">数字人长视频工作流已上线，支持7段InfiniteTalk串联生成</span><span class="notice-time">2026-05-10</span></div>
+            <div class="notice"><span class="notice-icon">&#127881;</span><span class="notice-text">API v2 接口开放公测，支持更高并发和更快的响应速度</span><span class="notice-time">2026-05-08</span></div>
+          </div>
+        </template>
+
+        <!-- ═══════ 热门 ═══════ -->
+        <template v-if="nav==='热门'">
+          <div class="section">
+            <div class="section-title">今日推荐</div>
+            <div class="mini-card clickable" style="padding:20px;" @click="openCanvas()">
+              <div><h4 style="font-size:22px;">数字人</h4><p style="font-size:14px;">真人/动漫口型同步，一键生成成片。本周最受欢迎的工作流，日均使用 500+</p></div>
+              <div class="thumb" style="width:120px;height:86px;"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" /></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">热门排行榜</div>
+            <div class="rank-list">
+              <div class="rank-item" v-for="(app, i) in hotApps" :key="app.key" @click="openWorkflow(app.key)">
+                <div class="rank-num" :class="i===0?'gold':i===1?'silver':i===2?'bronze':'normal'">{{ i+1 }}</div>
+                <div class="rank-info"><div class="name">{{ app.name }}</div><div class="desc">{{ app.desc }}</div></div>
+                <div class="rank-uses">{{ app.uses }} 次使用</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">分类浏览</div>
+            <div class="tags">
+              <span class="tag" :class="{active: hotTag==='all'}" @click="hotTag='all'">全部</span>
+              <span class="tag" :class="{active: hotTag==='image'}" @click="hotTag='image'">图片</span>
+              <span class="tag" :class="{active: hotTag==='video'}" @click="hotTag='video'">视频</span>
+              <span class="tag" :class="{active: hotTag==='audio'}" @click="hotTag='audio'">音频</span>
+            </div>
             <div class="cards">
-              <article class="card clickable" @click="openCanvas()">
-                <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" alt="数字人工作流封面" /></div>
-                <div class="meta">数字人</div>
-              </article>
-              <article class="card clickable" @click="openPosWorkflow()">
-                <div class="cover"><img src="https://rh-images.xiaoyaoyou.com/c2d9dec685f25fab12df85d62cfcdc31/output/ComfyUI_00001_obkeh_1776322552.png?imageMogr2/format/webp/rquality/60/ignore-error/1/minisize/1" alt="穿搭大师POS工作流封面" /></div>
-                <div class="meta">穿搭大师POS工作流</div>
-              </article>
-              <article class="card clickable" @click="openSketchNote()">
-                <div class="cover"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" alt="手绘注解工作流封面" /></div>
-                <div class="meta">手绘注解</div>
-              </article>
-              <article class="card clickable" @click="openBgChange()">
-                <div class="cover"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" alt="换背景工作流封面" /></div>
-                <div class="meta">换背景加强版</div>
-              </article>
-              <article class="card clickable" @click="openStoryboard()">
-                <div class="cover"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" alt="影视分镜工作流封面" /></div>
-                <div class="meta">影视分镜</div>
+              <article class="card clickable" v-for="app in filteredHotApps" :key="app.key" @click="openWorkflow(app.key)">
+                <div class="cover"><img :src="app.cover" /></div>
+                <div class="meta">{{ app.name }}</div>
               </article>
             </div>
-          </template>
+          </div>
+        </template>
 
-          <template v-else>
-            <div class="mock-grid">
-              <article
-                class="mock-card"
-                v-for="feature in currentFeatures"
-                :key="feature.key"
-                :class="{active: selectedFeature && selectedFeature.key===feature.key}"
-                @click="selectFeature(feature)">
-                <div class="mock-card-title">{{ feature.title }}</div>
-                <div class="mock-card-desc">{{ feature.desc }}</div>
+        <!-- ═══════ AI 应用（保持原有） ═══════ -->
+        <template v-if="nav==='AI 应用'">
+          <div class="section">
+            <div class="section-title">推荐应用</div>
+            <div class="apps-grid">
+              <article class="mini-card clickable" @click="openCanvas()"><div><h4>数字人</h4><p>真人 / 动漫口型同步，一键生成成片</p></div><div class="thumb"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" /></div></article>
+              <article class="mini-card clickable" @click="openSketchNote()"><div><h4>手绘注解</h4><p>上传照片，AI 自动添加手绘风注解与可爱文字</p></div><div class="thumb"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" /></div></article>
+              <article class="mini-card clickable" @click="openBgChange()"><div><h4>换背景加强版</h4><p>人物/产品换背景，直出4K高清</p></div><div class="thumb"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" /></div></article>
+              <article class="mini-card clickable" @click="openStoryboard()"><div><h4>影视分镜</h4><p>一键生成专业电影级分镜脚本与关键帧</p></div><div class="thumb"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" /></div></article>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">全部应用</div>
+            <div class="tags"><span class="tag" v-for="tag in tags" :key="tag.key" :class="{active: activeTag===tag.key}" @click="activeTag=tag.key">{{tag.label}}</span></div>
+            <template v-if="activeTag==='workflow'">
+              <div class="cards">
+                <article class="card clickable" @click="openCanvas()"><div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" /></div><div class="meta">数字人</div></article>
+                <article class="card clickable" @click="openPosWorkflow()"><div class="cover"><img src="https://rh-images.xiaoyaoyou.com/c2d9dec685f25fab12df85d62cfcdc31/output/ComfyUI_00001_obkeh_1776322552.png?imageMogr2/format/webp/rquality/60/ignore-error/1/minisize/1" /></div><div class="meta">穿搭大师POS工作流</div></article>
+                <article class="card clickable" @click="openSketchNote()"><div class="cover"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" /></div><div class="meta">手绘注解</div></article>
+                <article class="card clickable" @click="openBgChange()"><div class="cover"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" /></div><div class="meta">换背景加强版</div></article>
+                <article class="card clickable" @click="openStoryboard()"><div class="cover"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" /></div><div class="meta">影视分镜</div></article>
+              </div>
+            </template>
+            <template v-else>
+              <div class="mock-grid"><article class="mock-card" v-for="feature in currentFeatures" :key="feature.key" :class="{active: selectedFeature && selectedFeature.key===feature.key}" @click="selectFeature(feature)"><div class="mock-card-title">{{ feature.title }}</div><div class="mock-card-desc">{{ feature.desc }}</div></article></div>
+              <div class="mock-panel" v-if="selectedFeature"><h4>{{ selectedFeature.title }}</h4><p>{{ selectedFeature.detail }}</p><div class="mock-actions"><button class="mock-btn" type="button" @click="fakeAction('预览')">预览</button><button class="mock-btn" type="button" @click="fakeAction('立即使用')">立即使用</button><button class="mock-btn" type="button" @click="fakeAction('收藏')">收藏</button></div></div>
+              <div class="empty-pane" v-else></div>
+            </template>
+          </div>
+        </template>
+
+        <!-- ═══════ 模型资产 ═══════ -->
+        <template v-if="nav==='模型资产'">
+          <div class="section">
+            <div class="section-title">模型资产</div>
+            <div class="section-subtitle">浏览和使用平台上的 AI 模型资源</div>
+            <div class="tags">
+              <span class="tag" :class="{active: modelTag==='all'}" @click="modelTag='all'">全部</span>
+              <span class="tag" :class="{active: modelTag==='style'}" @click="modelTag='style'">风格模型</span>
+              <span class="tag" :class="{active: modelTag==='lora'}" @click="modelTag='lora'">LoRA</span>
+              <span class="tag" :class="{active: modelTag==='base'}" @click="modelTag='base'">底模</span>
+            </div>
+            <div class="cards">
+              <article class="card" v-for="model in filteredModels" :key="model.key">
+                <div class="cover"><img :src="model.cover" /></div>
+                <div class="meta"><div>{{ model.name }}</div><div style="font-size:11px;color:var(--muted);font-weight:400;margin-top:2px;">{{ model.type }} · {{ model.uses }} 次使用</div></div>
               </article>
             </div>
+          </div>
+        </template>
 
-            <div class="mock-panel" v-if="selectedFeature">
-              <h4>{{ selectedFeature.title }}</h4>
-              <p>{{ selectedFeature.detail }}</p>
-              <div class="mock-actions">
-                <button class="mock-btn" type="button" @click="fakeAction('预览')">预览</button>
-                <button class="mock-btn" type="button" @click="fakeAction('立即使用')">立即使用</button>
-                <button class="mock-btn" type="button" @click="fakeAction('收藏')">收藏</button>
+        <!-- ═══════ 工作流 ═══════ -->
+        <template v-if="nav==='工作流'">
+          <div class="section">
+            <div class="section-title">推荐工作流</div>
+            <div class="apps-grid">
+              <article class="mini-card clickable" @click="openCanvas()"><div><h4>数字人</h4><p>真人 / 动漫口型同步，一键生成成片</p></div><div class="thumb"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" /></div></article>
+              <article class="mini-card clickable" @click="openSketchNote()"><div><h4>手绘注解</h4><p>上传照片，AI 自动添加手绘风注解与可爱文字</p></div><div class="thumb"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" /></div></article>
+              <article class="mini-card clickable" @click="openBgChange()"><div><h4>换背景加强版</h4><p>人物/产品换背景，直出4K高清</p></div><div class="thumb"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" /></div></article>
+              <article class="mini-card clickable" @click="openStoryboard()"><div><h4>影视分镜</h4><p>一键生成专业电影级分镜脚本与关键帧</p></div><div class="thumb"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" /></div></article>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">全部工作流</div>
+            <div class="cards">
+              <article class="card clickable" @click="openCanvas()"><div class="cover"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" /></div><div class="meta">数字人</div></article>
+              <article class="card clickable" @click="openPosWorkflow()"><div class="cover"><img src="https://rh-images.xiaoyaoyou.com/c2d9dec685f25fab12df85d62cfcdc31/output/ComfyUI_00001_obkeh_1776322552.png?imageMogr2/format/webp/rquality/60/ignore-error/1/minisize/1" /></div><div class="meta">穿搭大师POS工作流</div></article>
+              <article class="card clickable" @click="openSketchNote()"><div class="cover"><img src="./工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp" /></div><div class="meta">手绘注解</div></article>
+              <article class="card clickable" @click="openBgChange()"><div class="cover"><img src="./工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png" /></div><div class="meta">换背景加强版</div></article>
+              <article class="card clickable" @click="openStoryboard()"><div class="cover"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" /></div><div class="meta">影视分镜</div></article>
+            </div>
+          </div>
+        </template>
+
+        <!-- ═══════ 视频 ═══════ -->
+        <template v-if="nav==='视频'">
+          <div class="section">
+            <div class="section-title">视频工具</div>
+            <div class="section-subtitle">AI 驱动的视频创作工具</div>
+            <div class="apps-grid">
+              <article class="mini-card clickable" @click="openCanvas()"><div><h4>数字人</h4><p>真人/动漫口型同步，一键生成成片</p></div><div class="thumb"><img src="https://rh-images.xiaoyaoyou.com/system/144386_8.png" /></div></article>
+              <article class="mini-card clickable" @click="openStoryboard()"><div><h4>影视分镜</h4><p>一键生成专业电影级分镜脚本与关键帧</p></div><div class="thumb"><img src="./工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp" /></div></article>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">最近生成的视频</div>
+            <div class="task-list" v-if="videoTasks.length">
+              <div class="task-item" v-for="task in videoTasks" :key="task.id">
+                <div class="task-thumb"><span>&#127909;</span></div>
+                <div class="task-info"><div class="name">{{ templateName(task.type) }}</div><div class="time">{{ formatTime(task.createdAt) }}</div></div>
+                <a v-if="task.result && task.result[0]" :href="task.result[0]" target="_blank" class="pill" style="font-size:12px;height:28px;">查看</a>
+                <span v-else class="task-badge" :class="task.status">{{ statusLabel(task.status) }}</span>
               </div>
             </div>
+            <div v-else class="empty-pane" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">暂无视频，试试数字人工作流</div>
+          </div>
+        </template>
 
-            <div class="empty-pane" v-else></div>
-          </template>
-        </section>
+        <!-- ═══════ 创作中心 ═══════ -->
+        <template v-if="nav==='创作中心'">
+          <div class="stat-row">
+            <div class="stat-card"><div class="stat-num">{{ todayCount }}</div><div class="stat-label">今日创作</div></div>
+            <div class="stat-card"><div class="stat-num">{{ monthCount }}</div><div class="stat-label">本月创作</div></div>
+            <div class="stat-card"><div class="stat-num">{{ successCount }}</div><div class="stat-label">成功作品</div></div>
+          </div>
+          <div class="section">
+            <div class="section-title">我的作品</div>
+            <div class="task-list" v-if="myWorks.length">
+              <div class="task-item" v-for="task in myWorks" :key="task.id">
+                <div class="task-thumb">
+                  <img v-if="task.result && task.result[0]" :src="task.result[0]" @error="$event.target.style.display='none'" />
+                  <span v-else>&#127912;</span>
+                </div>
+                <div class="task-info"><div class="name">{{ templateName(task.type) }}</div><div class="time">{{ formatTime(task.createdAt) }}</div></div>
+                <a v-if="task.result && task.result[0]" :href="task.result[0]" target="_blank" class="pill" style="font-size:12px;height:28px;">下载</a>
+              </div>
+            </div>
+            <div v-else class="empty-pane" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">还没有作品，去创作吧</div>
+          </div>
+        </template>
+
+        <!-- ═══════ API ═══════ -->
+        <template v-if="nav==='API'">
+          <div class="section">
+            <div class="section-title">API 管理</div>
+            <div class="stat-row">
+              <div class="stat-card"><div class="stat-num">{{ totalTasks }}</div><div class="stat-label">总调用次数</div></div>
+              <div class="stat-card"><div class="stat-num">{{ todayCount }}</div><div class="stat-label">今日调用</div></div>
+              <div class="stat-card"><div class="stat-num">{{ successRate }}%</div><div class="stat-label">成功率</div></div>
+            </div>
+            <div class="form-row">
+              <label>API Key</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input :type="showApiKey ? 'text' : 'password'" :value="apiKeyValue" readonly style="font-family:monospace;flex:1;" />
+                <button class="pill" @click="showApiKey=!showApiKey" style="height:40px;">{{ showApiKey ? '隐藏' : '显示' }}</button>
+                <button class="pill" @click="copyApiKey" style="height:40px;">复制</button>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">快速接入</div>
+            <div class="section-subtitle">复制以下代码，修改参数即可调用</div>
+            <div class="code-block"><span class="cm">// 创建任务</span>
+<span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">'/api/task/create'</span>, {
+  method: <span class="str">'POST'</span>,
+  headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+  body: JSON.stringify({
+    <span class="str">type</span>: <span class="str">'bgChange'</span>,
+    <span class="str">params</span>: {
+      <span class="str">image</span>: <span class="str">'https://example.com/photo.jpg'</span>,
+      <span class="str">text</span>: <span class="str">'海边沙滩背景'</span>
+    }
+  })
+});
+
+<span class="cm">// 查询任务状态</span>
+<span class="kw">const</span> task = <span class="kw">await</span> fetch(<span class="str">'/api/task/'</span> + taskId).then(r => r.json());</div>
+          </div>
+        </template>
+
+        <!-- ═══════ 会员中心 ═══════ -->
+        <template v-if="nav==='会员中心'">
+          <div class="section">
+            <div class="section-title">会员中心</div>
+            <div class="plan-grid">
+              <div class="plan-card current">
+                <div class="plan-name">免费版</div>
+                <div class="plan-price">&#165;0<span>/月</span></div>
+                <ul class="plan-features">
+                  <li>每日 10 次创作</li>
+                  <li>最大并发 1</li>
+                  <li>标准队列优先级</li>
+                  <li>720p 输出</li>
+                </ul>
+                <button class="plan-btn outline">当前套餐</button>
+              </div>
+              <div class="plan-card">
+                <div class="plan-name">专业版</div>
+                <div class="plan-price">&#165;99<span>/月</span></div>
+                <ul class="plan-features">
+                  <li>每日 200 次创作</li>
+                  <li>最大并发 5</li>
+                  <li>优先队列</li>
+                  <li>4K 输出</li>
+                  <li>API 高级接口</li>
+                </ul>
+                <button class="plan-btn primary" @click="alert('即将开放，敬请期待')">立即升级</button>
+              </div>
+              <div class="plan-card">
+                <div class="plan-name">企业版</div>
+                <div class="plan-price">&#165;999<span>/月</span></div>
+                <ul class="plan-features">
+                  <li>无限创作次数</li>
+                  <li>最大并发 20</li>
+                  <li>最高优先级</li>
+                  <li>8K 输出</li>
+                  <li>私有部署支持</li>
+                  <li>专属客服</li>
+                </ul>
+                <button class="plan-btn primary" @click="alert('即将开放，敬请期待')">联系销售</button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- ═══════ 个人中心 ═══════ -->
+        <template v-if="nav==='个人中心'">
+          <div class="section" v-if="!loggedInUser">
+            <div class="section-title">个人中心</div>
+            <div style="text-align:center;padding:40px 0;">
+              <div style="font-size:48px;color:#a0aec0;margin-bottom:12px;">&#128100;</div>
+              <p style="color:var(--muted);margin-bottom:16px;">登录后查看个人信息</p>
+              <button class="save-btn" @click="showLogin=true">登录 / 注册</button>
+            </div>
+          </div>
+          <div class="section" v-if="loggedInUser">
+            <div class="section-title">个人中心</div>
+            <div class="profile-header">
+              <div class="profile-avatar"><img v-if="loggedInUser.avatar" :src="loggedInUser.avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /><span v-else>{{ loggedInUser.nickname.charAt(0) }}</span></div>
+              <div>
+                <div class="profile-name">{{ loggedInUser.nickname }}</div>
+                <div class="profile-email">ID: {{ loggedInUser.id.slice(0, 8) }}...</div>
+              </div>
+            </div>
+            <div class="form-row"><label>昵称</label><input v-model="userName" /></div>
+            <div class="form-row"><label>邮箱</label><input v-model="userEmail" type="email" /></div>
+            <div class="form-row"><label>默认输出格式</label>
+              <select v-model="defaultFormat"><option value="auto">自动</option><option value="png">PNG</option><option value="jpg">JPG</option><option value="mp4">MP4</option></select>
+            </div>
+            <div style="margin-top:16px;">
+              <button class="save-btn" @click="saveProfile">保存修改</button>
+              <button class="danger-btn" @click="logout">退出登录</button>
+            </div>
+          </div>
+        </template>
+
       </main>
+    </div>
+
+    <!-- 登录弹窗 -->
+    <div class="login-overlay" v-if="showLogin" @click.self="showLogin=false">
+      <div class="login-modal" style="position:relative;">
+        <button class="login-close" @click="showLogin=false">&times;</button>
+        <h2>登录 AIHub</h2>
+        <p class="login-sub">微信扫码登录，即刻开始创作</p>
+
+        <!-- 微信扫码区域 -->
+        <div class="wechat-qr-area" id="wechat-qr-area">
+          <div class="qr-placeholder" v-if="!wechatQrUrl" @click="loadWechatQr">&#128247;</div>
+          <iframe v-else :src="wechatQrUrl" sandbox="allow-scripts allow-same-origin allow-top-navigation"></iframe>
+        </div>
+
+        <button class="login-btn wechat" @click="loadWechatQr">微信扫码登录</button>
+
+        <div class="login-divider">或</div>
+
+        <!-- 本地开发快速登录 -->
+        <input class="login-dev-input" v-model="devNickname" placeholder="输入昵称（开发模式）" />
+        <button class="login-btn dev" @click="devLogin">开发模式快速登录</button>
+      </div>
     </div>
   </div>
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script>
     const { createApp } = Vue;
+    const API = window.location.origin;
 
     createApp({
       data() {
         return {
-          searchText: '搜索应用 / 工作流 / 模型',
-          nav: 'AI 应用',
+          searchText: '',
+          nav: '首页',
           activeTag: 'workflow',
           selectedFeature: null,
+          showApiKey: false,
+          showLogin: false,
+          wechatQrUrl: '',
+          devNickname: '',
+          loggedInUser: null,
+          hotTag: 'all',
+          modelTag: 'all',
+
+          // 用户信息（localStorage 持久化）
+          userName: localStorage.getItem('aihub_username') || '创作者',
+          userEmail: localStorage.getItem('aihub_email') || 'user@aihub.com',
+          defaultFormat: localStorage.getItem('aihub_format') || 'auto',
+
+          // 任务数据
+          recentTasks: [],
+          allTasks: [],
+
           tags: [
-            { key: 'workflow', label: '工作流' },
-            { key: 'new', label: '新人必试' },
-            { key: 'image', label: '图片工具' },
-            { key: 'video', label: '视频工具' },
-            { key: 'copy', label: '文案' },
-            { key: 'commerce', label: '电商' },
-            { key: 'training', label: '模型训练' },
-            { key: 'api', label: 'API' },
-            { key: 'anime', label: '动漫' },
-            { key: 'more', label: '更多' }
+            { key: 'workflow', label: '工作流' }, { key: 'new', label: '新人必试' },
+            { key: 'image', label: '图片工具' }, { key: 'video', label: '视频工具' },
+            { key: 'copy', label: '文案' }, { key: 'commerce', label: '电商' },
+            { key: 'training', label: '模型训练' }, { key: 'api', label: 'API' },
+            { key: 'anime', label: '动漫' }, { key: 'more', label: '更多' }
           ],
+
           mockFeaturesMap: {
             new: [
-              { key: 'new-1', title: '一键口播', desc: '输入文案，自动生成口播视频。', detail: '这是演示功能：可快速体验文案到口播的视频生成流程。' },
-              { key: 'new-2', title: '智能抠图', desc: '上传图片，秒级完成抠图。', detail: '这是演示功能：支持人像与商品图抠图，结果可直接下载。' },
-              { key: 'new-3', title: '图文转短视频', desc: '图文素材自动拼接成片。', detail: '这是演示功能：系统会自动匹配转场、字幕与背景音乐。' }
+              { key: 'new-1', title: '一键口播', desc: '输入文案，自动生成口播视频。', detail: '可快速体验文案到口播的视频生成流程。' },
+              { key: 'new-2', title: '智能抠图', desc: '上传图片，秒级完成抠图。', detail: '支持人像与商品图抠图，结果可直接下载。' },
+              { key: 'new-3', title: '图文转短视频', desc: '图文素材自动拼接成片。', detail: '系统会自动匹配转场、字幕与背景音乐。' }
             ],
             image: [
-              { key: 'img-1', title: '海报生成器', desc: '多风格电商海报一键生成。', detail: '这是演示功能：支持简约、科技、节日等多种视觉模板。' },
-              { key: 'img-2', title: '图片增强', desc: '模糊图像自动修复清晰。', detail: '这是演示功能：可进行降噪、超分辨率和色彩增强。' },
-              { key: 'img-3', title: 'AI 商品换背景', desc: '自动生成高质量商品场景。', detail: '这是演示功能：可快速替换纯色背景与生活化场景。' }
+              { key: 'img-1', title: '海报生成器', desc: '多风格电商海报一键生成。', detail: '支持简约、科技、节日等多种视觉模板。' },
+              { key: 'img-2', title: '图片增强', desc: '模糊图像自动修复清晰。', detail: '可进行降噪、超分辨率和色彩增强。' },
+              { key: 'img-3', title: 'AI 商品换背景', desc: '自动生成高质量商品场景。', detail: '可快速替换纯色背景与生活化场景。' }
             ],
             video: [
-              { key: 'vd-1', title: '爆款剪辑助手', desc: '自动识别高光片段并剪辑。', detail: '这是演示功能：可智能识别停顿、口误并自动裁切。' },
-              { key: 'vd-2', title: 'AI 字幕精修', desc: '一键生成并优化字幕样式。', detail: '这是演示功能：支持双语字幕、关键字高亮和模板套用。' },
-              { key: 'vd-3', title: '数字人播报', desc: '输入稿件即可生成播报视频。', detail: '这是演示功能：包含多形象、多语速和表情动作模板。' }
+              { key: 'vd-1', title: '爆款剪辑助手', desc: '自动识别高光片段并剪辑。', detail: '可智能识别停顿、口误并自动裁切。' },
+              { key: 'vd-2', title: 'AI 字幕精修', desc: '一键生成并优化字幕样式。', detail: '支持双语字幕、关键字高亮和模板套用。' },
+              { key: 'vd-3', title: '数字人播报', desc: '输入稿件即可生成播报视频。', detail: '包含多形象、多语速和表情动作模板。' }
             ],
             copy: [
-              { key: 'cp-1', title: '标题生成器', desc: '自动生成高点击标题。', detail: '这是演示功能：支持小红书、抖音、电商等场景标题。' },
-              { key: 'cp-2', title: '脚本助手', desc: '生成短视频分镜和旁白。', detail: '这是演示功能：可按时长自动拆分镜头与台词节奏。' },
-              { key: 'cp-3', title: '营销文案优化', desc: '强化转化率与表达力。', detail: '这是演示功能：可输出不同语气和人群定向版本。' }
+              { key: 'cp-1', title: '标题生成器', desc: '自动生成高点击标题。', detail: '支持小红书、抖音、电商等场景标题。' },
+              { key: 'cp-2', title: '脚本助手', desc: '生成短视频分镜和旁白。', detail: '可按时长自动拆分镜头与台词节奏。' },
+              { key: 'cp-3', title: '营销文案优化', desc: '强化转化率与表达力。', detail: '可输出不同语气和人群定向版本。' }
             ],
             commerce: [
-              { key: 'ec-1', title: '商品详情页助手', desc: '自动生成卖点与排版结构。', detail: '这是演示功能：支持 3C、美妆、服饰等常见电商类目。' },
-              { key: 'ec-2', title: '客服回复机器人', desc: '自动回复常见售前售后问题。', detail: '这是演示功能：可按店铺话术风格统一回复口径。' },
-              { key: 'ec-3', title: '活动页快速搭建', desc: '快速生成大促活动页面。', detail: '这是演示功能：可一键套用模板并自动填充商品信息。' }
+              { key: 'ec-1', title: '商品详情页助手', desc: '自动生成卖点与排版结构。', detail: '支持 3C、美妆、服饰等常见电商类目。' },
+              { key: 'ec-2', title: '客服回复机器人', desc: '自动回复常见售前售后问题。', detail: '可按店铺话术风格统一回复口径。' },
+              { key: 'ec-3', title: '活动页快速搭建', desc: '快速生成大促活动页面。', detail: '可一键套用模板并自动填充商品信息。' }
             ],
             training: [
-              { key: 'tr-1', title: '风格模型训练', desc: '上传素材训练专属风格。', detail: '这是演示功能：支持插画、产品渲染和人物风格训练。' },
-              { key: 'tr-2', title: 'LoRA 管理台', desc: '管理与测试你的模型资产。', detail: '这是演示功能：支持模型版本管理与效果对比。' },
-              { key: 'tr-3', title: '数据集清洗', desc: '自动打标与筛除低质样本。', detail: '这是演示功能：可批量执行质量检测与标签修正。' }
+              { key: 'tr-1', title: '风格模型训练', desc: '上传素材训练专属风格。', detail: '支持插画、产品渲染和人物风格训练。' },
+              { key: 'tr-2', title: 'LoRA 管理台', desc: '管理与测试你的模型资产。', detail: '支持模型版本管理与效果对比。' },
+              { key: 'tr-3', title: '数据集清洗', desc: '自动打标与筛除低质样本。', detail: '可批量执行质量检测与标签修正。' }
             ],
             api: [
-              { key: 'ap-1', title: '文本生成 API', desc: '提供标准化文案生成接口。', detail: '这是演示功能：支持参数配置、速率限制和调用统计展示。' },
-              { key: 'ap-2', title: '图像生成 API', desc: '将生图能力接入业务系统。', detail: '这是演示功能：支持同步/异步调用与任务状态查询。' },
-              { key: 'ap-3', title: '语音合成 API', desc: '快速接入 TTS 语音能力。', detail: '这是演示功能：可配置音色、语速和情感风格。' }
+              { key: 'ap-1', title: '文本生成 API', desc: '提供标准化文案生成接口。', detail: '支持参数配置、速率限制和调用统计展示。' },
+              { key: 'ap-2', title: '图像生成 API', desc: '将生图能力接入业务系统。', detail: '支持同步/异步调用与任务状态查询。' },
+              { key: 'ap-3', title: '语音合成 API', desc: '快速接入 TTS 语音能力。', detail: '可配置音色、语速和情感风格。' }
             ],
             anime: [
-              { key: 'an-1', title: '二次元头像工坊', desc: '一键生成动漫头像。', detail: '这是演示功能：支持多种画风与角色设定组合。' },
-              { key: 'an-2', title: '漫画分镜生成', desc: '自动生成剧情分镜草稿。', detail: '这是演示功能：支持单页与多格分镜快速输出。' },
-              { key: 'an-3', title: '角色立绘助手', desc: '创建统一风格角色设定。', detail: '这是演示功能：支持角色模板管理和批量变体生成。' }
+              { key: 'an-1', title: '二次元头像工坊', desc: '一键生成动漫头像。', detail: '支持多种画风与角色设定组合。' },
+              { key: 'an-2', title: '漫画分镜生成', desc: '自动生成剧情分镜草稿。', detail: '支持单页与多格分镜快速输出。' },
+              { key: 'an-3', title: '角色立绘助手', desc: '创建统一风格角色设定。', detail: '支持角色模板管理和批量变体生成。' }
             ],
             more: [
-              { key: 'mr-1', title: '会议纪要总结', desc: '自动提炼重点与待办。', detail: '这是演示功能：可生成摘要、任务清单和负责人建议。' },
-              { key: 'mr-2', title: '知识库问答', desc: '基于资料做智能问答。', detail: '这是演示功能：支持上传文档并进行上下文检索。' },
-              { key: 'mr-3', title: '智能日报', desc: '自动生成团队工作日报。', detail: '这是演示功能：可按项目维度汇总进展与风险。' }
+              { key: 'mr-1', title: '会议纪要总结', desc: '自动提炼重点与待办。', detail: '可生成摘要、任务清单和负责人建议。' },
+              { key: 'mr-2', title: '知识库问答', desc: '基于资料做智能问答。', detail: '支持上传文档并进行上下文检索。' },
+              { key: 'mr-3', title: '智能日报', desc: '自动生成团队工作日报。', detail: '可按项目维度汇总进展与风险。' }
             ]
-          }
+          },
+
+          // 热门应用数据
+          hotApps: [
+            { key: 'digitalHuman', name: '数字人', desc: '真人/动漫口型同步', uses: 5230, cover: 'https://rh-images.xiaoyaoyou.com/system/144386_8.png', cat: 'video' },
+            { key: 'bgChange', name: '换背景加强版', desc: '人物/产品换背景4K', uses: 3870, cover: './工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png', cat: 'image' },
+            { key: 'sketchNote', name: '手绘注解', desc: 'AI手绘风注解文字', uses: 2650, cover: './工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp', cat: 'image' },
+            { key: 'storyboard', name: '影视分镜', desc: '电影级分镜脚本', uses: 1980, cover: './工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp', cat: 'video' },
+            { key: 'outfitPos', name: '穿搭大师POS', desc: 'AI生成穿搭效果', uses: 1420, cover: 'https://rh-images.xiaoyaoyou.com/c2d9dec685f25fab12df85d62cfcdc31/output/ComfyUI_00001_obkeh_1776322552.png?imageMogr2/format/webp/rquality/60/ignore-error/1/minisize/1', cat: 'image' },
+            { key: 'tts', name: 'TTS 文生声音', desc: 'AI语音合成', uses: 890, cat: 'audio' },
+            { key: 'imageGen', name: '文生图', desc: '文字描述生成图片', uses: 760, cat: 'image' },
+            { key: 'digitalHumanLong', name: '数字人长视频', desc: '7段InfiniteTalk串联', uses: 540, cat: 'video' }
+          ],
+
+          // 模型资产
+          models: [
+            { key: 'm1', name: 'Flux.1 Dev', type: '底模', cat: 'base', uses: 12000, cover: '' },
+            { key: 'm2', name: 'SDXL Turbo', type: '底模', cat: 'base', uses: 8900, cover: '' },
+            { key: 'm3', name: 'Klein - 换背景', type: 'LoRA', cat: 'lora', uses: 5600, cover: './工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png' },
+            { key: 'm4', name: 'FireRed 图片编辑', type: 'LoRA', cat: 'lora', uses: 4300, cover: '' },
+            { key: 'm5', name: '日系可爱风格', type: '风格模型', cat: 'style', uses: 3200, cover: './工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp' },
+            { key: 'm6', name: '电影分镜风格', type: '风格模型', cat: 'style', uses: 2800, cover: './工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp' },
+            { key: 'm7', name: 'InfiniteTalk 数字人', type: 'LoRA', cat: 'lora', uses: 2100, cover: 'https://rh-images.xiaoyaoyou.com/system/144386_8.png' },
+            { key: 'm8', name: '产品摄影风格', type: '风格模型', cat: 'style', uses: 1800, cover: '' }
+          ],
+
+          // 全部工作流
+          allWorkflows: [
+            { key: 'digitalHuman', name: '数字人', desc: '真人/动漫口型同步，一键生成成片', cover: 'https://rh-images.xiaoyaoyou.com/system/144386_8.png' },
+            { key: 'digitalHumanLong', name: '数字人（长视频）', desc: '7段 InfiniteTalk 串联', cover: 'https://rh-images.xiaoyaoyou.com/system/144386_8.png' },
+            { key: 'imageGen', name: '文生图', desc: '输入文字描述，AI 生成图片', cover: 'https://rh-images.xiaoyaoyou.com/system/144386_8.png' },
+            { key: 'tts', name: 'TTS 文生声音', desc: '输入文案，AI 生成语音', cover: 'https://rh-images.xiaoyaoyou.com/system/144386_8.png' },
+            { key: 'bgChange', name: '换背景加强版', desc: '人物/产品换背景，直出4K高清', cover: './工作流/2052773619335479298/ComfyUI_00001_bgyta_1778256020.png' },
+            { key: 'sketchNote', name: '手绘注解', desc: '上传照片，AI 自动添加手绘风注解', cover: './工作流/2052783552210710530/c85d76452a14fbad99e19ce572099028.webp' },
+            { key: 'storyboard', name: '影视分镜', desc: '一键生成专业电影级分镜脚本与关键帧', cover: './工作流/2052770584093835266/05dc77698eea55a9c5f032d9258c677d.webp' },
+            { key: 'outfitPos', name: '穿搭大师POS', desc: '上传人物和姿势图片，AI 生成穿搭效果', cover: 'https://rh-images.xiaoyaoyou.com/c2d9dec685f25fab12df85d62cfcdc31/output/ComfyUI_00001_obkeh_1776322552.png?imageMogr2/format/webp/rquality/60/ignore-error/1/minisize/1' }
+          ]
         };
       },
+
       computed: {
-        currentFeatures() {
-          return this.mockFeaturesMap[this.activeTag] || [];
-        }
+        greeting() { const h = new Date().getHours(); return h < 6 ? '夜深了' : h < 12 ? '早上好' : h < 18 ? '下午好' : '晚上好'; },
+        currentFeatures() { return this.mockFeaturesMap[this.activeTag] || []; },
+        filteredHotApps() {
+          if (this.hotTag === 'all') return this.hotApps;
+          return this.hotApps.filter(a => a.cat === this.hotTag);
+        },
+        filteredModels() {
+          if (this.modelTag === 'all') return this.models;
+          return this.models.filter(m => m.cat === this.modelTag);
+        },
+        todayCount() {
+          const today = new Date().toISOString().slice(0, 10);
+          return this.allTasks.filter(t => t.createdAt && t.createdAt.startsWith(today)).length;
+        },
+        monthCount() {
+          const month = new Date().toISOString().slice(0, 7);
+          return this.allTasks.filter(t => t.createdAt && t.createdAt.startsWith(month)).length;
+        },
+        totalTasks() { return this.allTasks.length; },
+        successCount() { return this.allTasks.filter(t => t.status === 'success').length; },
+        successRate() {
+          if (this.allTasks.length === 0) return 0;
+          return Math.round(this.successCount / this.allTasks.length * 100);
+        },
+        videoTasks() {
+          return this.allTasks.filter(t => ['digitalHuman', 'digitalHumanLong', 'storyboard'].includes(t.type)).slice(0, 10);
+        },
+        myWorks() {
+          return this.allTasks.filter(t => t.status === 'success').slice(0, 20);
+        },
+        apiKeyValue() { return 'sk-****...****'; }
       },
+
       watch: {
-        activeTag(newTag) {
-          const list = this.mockFeaturesMap[newTag] || [];
-          this.selectedFeature = list.length ? list[0] : null;
-        }
+        activeTag(newTag) { const list = this.mockFeaturesMap[newTag] || []; this.selectedFeature = list.length ? list[0] : null; },
+        nav() { if (this.nav === '首页' || this.nav === '创作中心' || this.nav === '视频') this.fetchTasks(); }
       },
+
       methods: {
-        openCanvas() {
-          window.location.href = './workflow-canvas.html';
+        // 导航
+        openCanvas() { window.location.href = './workflow-canvas.html'; },
+        openPosWorkflow() { window.location.href = './outfit-pos-workflow.html'; },
+        openSketchNote() { window.location.href = './sketch-note-workflow.html'; },
+        openBgChange() { window.location.href = './bg-change-workflow.html'; },
+        openStoryboard() { window.location.href = './storyboard-workflow.html'; },
+
+        openWorkflow(key) {
+          const pageMap = {
+            digitalHuman: './workflow-canvas.html',
+            digitalHumanLong: './workflow-canvas.html',
+            imageGen: './workflow-canvas.html',
+            tts: './workflow-canvas.html',
+            bgChange: './bg-change-workflow.html',
+            sketchNote: './sketch-note-workflow.html',
+            storyboard: './storyboard-workflow.html',
+            outfitPos: './outfit-pos-workflow.html'
+          };
+          window.location.href = pageMap[key] || './workflow-canvas.html';
         },
-        openPosWorkflow() {
-          window.location.href = './outfit-pos-workflow.html';
-        },
-        openSketchNote() {
-          window.location.href = './sketch-note-workflow.html';
-        },
-        openBgChange() {
-          window.location.href = './bg-change-workflow.html';
-        },
-        openStoryboard() {
-          window.location.href = './storyboard-workflow.html';
-        },
-        selectFeature(feature) {
-          this.selectedFeature = feature;
-        },
+
+        selectFeature(feature) { this.selectedFeature = feature; },
         fakeAction(actionName) {
           if (!this.selectedFeature) return;
-          alert(`【演示】${actionName}：${this.selectedFeature.title}\n这是假的交互展示，方便先看功能效果。`);
+          alert('【' + actionName + '】' + this.selectedFeature.title + '\n功能开发中，敬请期待。');
+        },
+
+        // 任务数据
+        async fetchTasks() {
+          try {
+            const res = await fetch(`${API}/api/tasks?limit=50`);
+            const data = await res.json();
+            this.allTasks = data.tasks || [];
+            this.recentTasks = this.allTasks.slice(0, 5);
+          } catch (_) {
+            this.allTasks = [];
+            this.recentTasks = [];
+          }
+        },
+
+        templateName(type) {
+          const names = {
+            digitalHuman: '数字人', digitalHumanLong: '数字人（长视频）',
+            imageGen: '文生图', tts: 'TTS 文生声音',
+            bgChange: '换背景加强版', sketchNote: '手绘注解',
+            storyboard: '影视分镜', outfitPos: '穿搭大师POS'
+          };
+          return names[type] || type;
+        },
+
+        statusLabel(status) {
+          return { pending: '排队中', running: '生成中', success: '已完成', failed: '失败' }[status] || status;
+        },
+
+        formatTime(iso) {
+          if (!iso) return '';
+          const d = new Date(iso);
+          const now = new Date();
+          const diff = Math.floor((now - d) / 1000);
+          if (diff < 60) return '刚刚';
+          if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+          if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+          return d.getMonth() + 1 + '月' + d.getDate() + '日 ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        },
+
+        // 个人中心
+        saveProfile() {
+          localStorage.setItem('aihub_username', this.userName);
+          localStorage.setItem('aihub_email', this.userEmail);
+          localStorage.setItem('aihub_format', this.defaultFormat);
+          alert('保存成功');
+        },
+
+        clearData() {
+          if (!confirm('确定要清除所有本地数据吗？这将删除你的昵称、邮箱等偏好设置。')) return;
+          localStorage.removeItem('aihub_username');
+          localStorage.removeItem('aihub_email');
+          localStorage.removeItem('aihub_format');
+          this.userName = '创作者';
+          this.userEmail = 'user@aihub.com';
+          this.defaultFormat = 'auto';
+          alert('已清除');
+        },
+
+        copyApiKey() {
+          navigator.clipboard.writeText('sk-****...****').then(() => alert('已复制'));
+        },
+
+        // 登录相关
+        async checkLogin() {
+          try {
+            const res = await fetch(`${API}/api/auth/me`);
+            const data = await res.json();
+            this.loggedInUser = data.loggedIn ? data.user : null;
+            if (this.loggedInUser) {
+              this.userName = this.loggedInUser.nickname;
+            }
+          } catch (_) {
+            this.loggedInUser = null;
+          }
+        },
+
+        async loadWechatQr() {
+          try {
+            const res = await fetch(`${API}/api/auth/wechat/url`);
+            const data = await res.json();
+            if (data.url) {
+              this.wechatQrUrl = data.url;
+            }
+          } catch (err) {
+            alert('获取微信登录链接失败，请使用开发模式登录');
+          }
+        },
+
+        async devLogin() {
+          const nickname = this.devNickname.trim() || '开发测试用户';
+          try {
+            const res = await fetch(`${API}/api/auth/dev-login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ nickname })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              this.loggedInUser = data.user;
+              this.userName = data.user.nickname;
+              localStorage.setItem('aihub_username', data.user.nickname);
+              this.showLogin = false;
+            }
+          } catch (err) {
+            alert('登录失败: ' + err.message);
+          }
+        },
+
+        async logout() {
+          try {
+            await fetch(`${API}/api/auth/logout`, { method: 'POST' });
+          } catch (_) {}
+          this.loggedInUser = null;
+          this.userName = '创作者';
+          this.nav = '首页';
         }
       },
+
       mounted() {
         const list = this.mockFeaturesMap[this.activeTag] || [];
         this.selectedFeature = list.length ? list[0] : null;
+        this.fetchTasks();
+        this.checkLogin();
       }
     }).mount('#app');
   </script>

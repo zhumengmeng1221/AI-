@@ -2,3 +2,6 @@
 node_modules/
 .env
 .spartan/ai.env
+.runninghub_key
+.aihub_users.json
+.aihub_sessions.json

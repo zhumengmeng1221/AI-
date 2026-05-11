@@ -145,10 +145,10 @@
       data() {
         return {
           RH: {
-            baseUrl: 'https://www.runninghub.cn',
-            uploadPath: '/task/openapi/upload',
-            createPath: '/task/openapi/create',
-            outputsPath: '/task/openapi/outputs',
+            baseUrl: '',
+            uploadPath: '/api/upload',
+            createPath: '/api/create',
+            outputsPath: '/api/outputs',
             workflowId: '2052770584093835266',
             imageNodeId: '442',
             imageFieldName: 'image',
@@ -158,7 +158,7 @@
             sceneFieldName: 'text',
             durationNodeId: '413',
             durationFieldName: 'text',
-            apiKey: '397d32954e194d75893a011dc0dcaf36'
+            apiKey: ''
           },
           scenePresets: [
             { key: 'romantic', label: '浪漫爱情', theme: '浪漫爱情', scene: '男女主角在雨中的街角相遇，共撑一把伞', duration: 15, cover: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=700&q=80' },
@@ -188,25 +188,22 @@
           this.sceneDesc = preset.scene;
           this.duration = preset.duration;
         },
-        getApiKey() { return (localStorage.getItem('runninghub_api_key') || this.RH.apiKey || '').trim(); },
+        getApiKey() { return ''; },
         async parseJsonSafe(resp) { const t = await resp.text(); try { return JSON.parse(t); } catch(_) { return { raw: t }; } },
         async uploadFileToRunningHub(file) {
-          const key = this.getApiKey(); if (!key) throw new Error('缺少 API Key');
-          const form = new FormData(); form.append('file', file); form.append('apiKey', key); form.append('fileType', 'input');
-          const res = await fetch(`${this.RH.baseUrl}${this.RH.uploadPath}`, { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form });
+          const form = new FormData(); form.append('file', file); form.append('fileType', 'input');
+          const res = await fetch(`${this.RH.baseUrl}${this.RH.uploadPath}`, { method: 'POST', body: form });
           const data = await this.parseJsonSafe(res); if (!res.ok) throw new Error(`上传失败(${res.status})`);
-          return data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
+          return data?.data?.fileUrl || data?.data?.fileName || data?.data?.filename || data?.data?.download_url || data?.data?.downloadUrl || '';
         },
         async createTask(nodeInfoList) {
-          const key = this.getApiKey();
-          const res = await fetch(`${this.RH.baseUrl}${this.RH.createPath}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify({ apiKey: key, workflowId: this.RH.workflowId, nodeInfoList }) });
+          const res = await fetch(`${this.RH.baseUrl}${this.RH.createPath}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflowId: this.RH.workflowId, nodeInfoList }) });
           const data = await this.parseJsonSafe(res); if (!res.ok || data?.code !== 0) throw new Error(`创建任务失败: ${JSON.stringify(data)}`);
           return data?.data?.taskId || '';
         },
         async pollOutputs(taskId) {
-          const key = this.getApiKey();
           for (let i = 0; i < 1200; i++) {
-            const res = await fetch(`${this.RH.baseUrl}${this.RH.outputsPath}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify({ apiKey: key, taskId }) });
+            const res = await fetch(`${this.RH.baseUrl}${this.RH.outputsPath}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) });
             const data = await this.parseJsonSafe(res); if (!res.ok) throw new Error(`查询失败(${res.status})`);
             if (data?.code === 0 && Array.isArray(data?.data) && data.data.length > 0) { const urls = []; (function walk(x) { if (!x) return; if (typeof x === 'string' && /^https?:\/\//i.test(x)) { urls.push(x); return; } if (Array.isArray(x)) x.forEach(walk); else if (typeof x === 'object') Object.values(x).forEach(walk); })(data); return urls; }
             if (data?.code === 805) throw new Error(`任务失败: ${JSON.stringify(data)}`);
