@@ -1,0 +1,464 @@
+{
+  "52": {
+    "inputs": {
+      "vae_name": "wan_2.1_vae_Comfy-Org.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "VAE加载器"
+    }
+  },
+  "53": {
+    "inputs": {
+      "value": "a/2",
+      "a": [
+        "63",
+        0
+      ]
+    },
+    "class_type": "SimpleMath+",
+    "_meta": {
+      "title": "简易运算"
+    }
+  },
+  "54": {
+    "inputs": {
+      "shift": 8,
+      "model": [
+        "62",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "模型采样算法SD3"
+    }
+  },
+  "55": {
+    "inputs": {
+      "shift": 8,
+      "model": [
+        "58",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "模型采样算法SD3"
+    }
+  },
+  "56": {
+    "inputs": {
+      "model": "gimmvfi_r_arb_lpips_fp32.safetensors"
+    },
+    "class_type": "DownloadAndLoadGIMMVFIModel",
+    "_meta": {
+      "title": "(Down)Load GIMMVFI Model"
+    }
+  },
+  "57": {
+    "inputs": {
+      "ds_factor": 1,
+      "interpolation_factor": 2,
+      "seed": 666,
+      "gimmvfi_model": [
+        "56",
+        0
+      ],
+      "images": [
+        "59",
+        0
+      ]
+    },
+    "class_type": "GIMMVFI_interpolate",
+    "_meta": {
+      "title": "GIMM-VFI Interpolate"
+    }
+  },
+  "58": {
+    "inputs": {
+      "sage_attention": "auto",
+      "allow_compile": false,
+      "model": [
+        "75",
+        0
+      ]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "59": {
+    "inputs": {
+      "samples": [
+        "60",
+        0
+      ],
+      "vae": [
+        "52",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "60": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": [
+        "66",
+        0
+      ],
+      "steps": [
+        "63",
+        0
+      ],
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": [
+        "53",
+        0
+      ],
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "55",
+        0
+      ],
+      "positive": [
+        "70",
+        0
+      ],
+      "negative": [
+        "70",
+        1
+      ],
+      "latent_image": [
+        "67",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "K采样器(高级)"
+    }
+  },
+  "61": {
+    "inputs": {
+      "text": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "clip": [
+        "139",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码器"
+    }
+  },
+  "62": {
+    "inputs": {
+      "sage_attention": "auto",
+      "allow_compile": false,
+      "model": [
+        "72",
+        0
+      ]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "63": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "INTConstant",
+    "_meta": {
+      "title": "整数常量"
+    }
+  },
+  "65": {
+    "inputs": {
+      "clip_name": "nsfw_wan_umt5-xxl_fp8_scaled.safetensors",
+      "type": "wan",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "CLIP加载器"
+    }
+  },
+  "66": {
+    "inputs": {
+      "value": 1024
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int"
+    }
+  },
+  "67": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": [
+        "66",
+        0
+      ],
+      "steps": [
+        "63",
+        0
+      ],
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 0,
+      "end_at_step": [
+        "53",
+        0
+      ],
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "54",
+        0
+      ],
+      "positive": [
+        "70",
+        0
+      ],
+      "negative": [
+        "70",
+        1
+      ],
+      "latent_image": [
+        "70",
+        2
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "K采样器(高级)"
+    }
+  },
+  "70": {
+    "inputs": {
+      "width": [
+        "152",
+        3
+      ],
+      "height": [
+        "152",
+        4
+      ],
+      "length": [
+        "154",
+        0
+      ],
+      "batch_size": 1,
+      "positive": [
+        "76",
+        0
+      ],
+      "negative": [
+        "61",
+        0
+      ],
+      "vae": [
+        "52",
+        0
+      ],
+      "start_image": [
+        "150",
+        0
+      ]
+    },
+    "class_type": "WanImageToVideo",
+    "_meta": {
+      "title": "WanImageToVideo"
+    }
+  },
+  "71": {
+    "inputs": {
+      "frame_rate": 30,
+      "loop_count": 0,
+      "filename_prefix": "AnimateDiff",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true,
+      "no_preview": false,
+      "images": [
+        "57",
+        0
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "合并为视频"
+    }
+  },
+  "72": {
+    "inputs": {
+      "lora_name": "转身-high.safetensors",
+      "strength_model": 1,
+      "model": [
+        "74",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器(仅模型)"
+    }
+  },
+  "74": {
+    "inputs": {
+      "unet_name": "Wan2.2_Remix_NSFW_i2v_14b_high_lighting_fp8_e4m3fn_v2.1.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNET加载器"
+    }
+  },
+  "75": {
+    "inputs": {
+      "unet_name": "Wan2.2_Remix_NSFW_i2v_14b_low_lighting_fp8_e4m3fn_v2.1.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNET加载器"
+    }
+  },
+  "76": {
+    "inputs": {
+      "text": "xz360，人物旋转360度，然后向前走动",
+      "clip": [
+        "139",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码器"
+    }
+  },
+  "81": {
+    "inputs": {
+      "inputcount": 2,
+      "direction": "right",
+      "match_image_size": true,
+      "Update inputs": null,
+      "image_1": [
+        "152",
+        0
+      ],
+      "image_2": [
+        "57",
+        0
+      ]
+    },
+    "class_type": "ImageConcatMulti",
+    "_meta": {
+      "title": "图像联结（多个）"
+    }
+  },
+  "82": {
+    "inputs": {
+      "frame_rate": 30,
+      "loop_count": 0,
+      "filename_prefix": "AnimateDiff",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true,
+      "no_preview": false,
+      "images": [
+        "81",
+        0
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "合并为视频"
+    }
+  },
+  "139": {
+    "inputs": {
+      "reserved": 0.6,
+      "mode": "auto",
+      "clean_gpu_before": true,
+      "anything": [
+        "65",
+        0
+      ]
+    },
+    "class_type": "PainterVRAM",
+    "_meta": {
+      "title": "Painter VRAM "
+    }
+  },
+  "150": {
+    "inputs": {
+      "image": "5096307c1282f3b1a740ac3b0fdb2f34ebb8208099c2288153d5934109f68b4f.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "152": {
+    "inputs": {
+      "aspect_ratio": "original",
+      "proportional_width": 1,
+      "proportional_height": 1,
+      "fit": "letterbox",
+      "method": "lanczos",
+      "round_to_multiple": "8",
+      "scale_to_side": "longest",
+      "scale_to_length": [
+        "153",
+        0
+      ],
+      "background_color": "#000000",
+      "image": [
+        "150",
+        0
+      ]
+    },
+    "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
+    "_meta": {
+      "title": "按宽高比缩放_V2"
+    }
+  },
+  "153": {
+    "inputs": {
+      "value": 1536
+    },
+    "class_type": "Int",
+    "_meta": {
+      "title": "整数"
+    }
+  },
+  "154": {
+    "inputs": {
+      "value": 113
+    },
+    "class_type": "Int",
+    "_meta": {
+      "title": "整数"
+    }
+  }
+}

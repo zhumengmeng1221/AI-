@@ -265,6 +265,43 @@ const WORKFLOW_TEMPLATES = {
       { key: 'poseImage', label: '姿势参考图', type: 'image', nodeId: '1158', fieldName: 'image_1', required: true },
       { key: 'prompt', label: '穿搭描述', type: 'text', nodeId: '1158', fieldName: 'prompt_3', required: true }
     ]
+  },
+  productBgConsistent: {
+    id: 'productBgConsistent',
+    name: '电商产品一致性换背景',
+    description: '产品图+背景图，AI生成完美融合的产品场景图',
+    category: 'image',
+    cover: './工作流/2053846026372558850/02a0913a35ae5bbd6bbacaa44ffa450d.webp',
+    workflowId: '2053846026372558850',
+    inputs: [
+      { key: 'productImage', label: '产品图片', type: 'image', nodeId: '211', fieldName: 'image', required: true },
+      { key: 'bgImage', label: '背景参考图', type: 'image', nodeId: '212', fieldName: 'image', required: true },
+      { key: 'bgPrompt', label: '背景描述', type: 'text', nodeId: '209', fieldName: 'prompt', required: false }
+    ]
+  },
+  ecommerceRetouch: {
+    id: 'ecommerceRetouch',
+    name: '电商万能精修',
+    description: '上传任意图片，AI自动去除水印瑕疵、精修输出高清大图',
+    category: 'image',
+    cover: './工作流/2053847288795148290/7b2c0ac2b20a988cb15f6c3a3e14af71.webp',
+    workflowId: '2053847288795148290',
+    inputs: [
+      { key: 'image', label: '待精修图片', type: 'image', nodeId: '2', fieldName: 'image', required: true },
+      { key: 'retouchPrompt', label: '精修要求', type: 'text', nodeId: '60', fieldName: 'text', required: false, default: '精修，去除图片中的水印和瑕疵。' }
+    ]
+  },
+  fashionModelVideo: {
+    id: 'fashionModelVideo',
+    name: '电商服装模特视频',
+    description: '上传服装图片，AI生成模特展示旋转视频',
+    category: 'video',
+    cover: './工作流/2053847864337543169/1edd5bc46dee3b13e0828b425f151536.webp',
+    workflowId: '2053847864337543169',
+    inputs: [
+      { key: 'image', label: '服装图片', type: 'image', nodeId: '150', fieldName: 'image', required: true },
+      { key: 'prompt', label: '动作描述', type: 'text', nodeId: '76', fieldName: 'text', required: false, default: '人物旋转360度，然后向前走动' }
+    ]
   }
 };
 
