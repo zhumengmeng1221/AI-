@@ -302,6 +302,52 @@ const WORKFLOW_TEMPLATES = {
       { key: 'image', label: '服装图片', type: 'image', nodeId: '150', fieldName: 'image', required: true },
       { key: 'prompt', label: '动作描述', type: 'text', nodeId: '76', fieldName: 'text', required: false, default: '人物旋转360度，然后向前走动' }
     ]
+  },
+  emoji3d: {
+    id: 'emoji3d',
+    name: '9宫格3D软萌Q版表情包',
+    description: '上传人物图片，AI生成9宫格3D萌系Q版表情贴纸',
+    category: 'image',
+    cover: './工作流/2055119814208827394/9宫格3D软萌Q版表情包_主图.jpg',
+    workflowId: '2055119814208827394',
+    inputs: [
+      { key: 'image', label: '人物参考图', type: 'image', nodeId: '2', fieldName: 'image', required: true },
+      { key: 'prompt', label: '表情描述', type: 'text', nodeId: '9', fieldName: 'text', required: true, default: '一套可爱的 3D 萌系卡通贴纸，包含同一个角色，多种情绪和姿势' }
+    ]
+  },
+  retouchPro: {
+    id: 'retouchPro',
+    name: '极致写实精修',
+    description: '输入详细描述，AI生成极致写实级精修大图',
+    category: 'image',
+    cover: './工作流/2055127486521987073/Z-Image+EngineerV4提示词优化+fdpo光影优化+Kook极致写实+Seedvr放大_主图.jpg',
+    workflowId: '2055127486521987073',
+    inputs: [
+      { key: 'prompt', label: '详细描述', type: 'text', nodeId: '29', fieldName: 'text', required: true },
+      { key: 'stylePrompt', label: '风格词', type: 'text', nodeId: '30', fieldName: 'text', required: false, default: 'movie clip' }
+    ]
+  },
+  consistencyLighting: {
+    id: 'consistencyLighting',
+    name: '自动溶图打光一致性',
+    description: '上传人物图片，AI自动溶图打光，保持角色一致性',
+    category: 'image',
+    cover: './工作流/2055185911817752578/F.2klein9b自动溶图打光一致性_主图.jpg',
+    workflowId: '2055185911817752578',
+    inputs: [
+      { key: 'image', label: '人物图片', type: 'image', nodeId: '76', fieldName: 'image', required: true }
+    ]
+  },
+  fashionModelPhoto: {
+    id: 'fashionModelPhoto',
+    name: '服装模特生图',
+    description: '输入描述，AI生成服装模特展示图',
+    category: 'image',
+    cover: './工作流/2055187733060046849/Zimage-turbo保暖内衣_主图.jpg',
+    workflowId: '2055187733060046849',
+    inputs: [
+      { key: 'prompt', label: '模特描述', type: 'text', nodeId: '27', fieldName: 'string', required: true, default: '一位年轻优雅的女性模特，身着高弹力修身保暖内衣套装' }
+    ]
   }
 };
 
@@ -519,7 +565,6 @@ async function submitWorkflow(task, template, nodeInfoList) {
   updateTask(task.id, { status: 'running', progress: 0 });
 
   try {
-    // 调用 V1 create 接口
     const createBody = { apiKey: key, workflowId: template.workflowId, nodeInfoList };
     const result = await rhRequest('/task/openapi/create', 'POST', createBody);
 
@@ -529,7 +574,7 @@ async function submitWorkflow(task, template, nodeInfoList) {
     }
 
     const rhTaskId = result.data?.taskId || result.data;
-    updateTask(task.id, { rhTaskId, progress: 5 });
+    updateTask(task.id, { rhTaskId, progress: 5, error: null });
 
     // 开始轮询
     pollTaskStatus(task.id, rhTaskId);
@@ -565,23 +610,31 @@ function pollTaskStatus(taskId, rhTaskId) {
       if (!result) return;
 
       if (result.code === 0 && result.data) {
-        const outputs = result.data;
-        // 有输出结果
-        if (Array.isArray(outputs) && outputs.length > 0) {
-          const outputUrls = outputs.map(o => o.url || o).filter(Boolean);
-          if (outputUrls.length > 0) {
-            updateTask(taskId, { status: 'success', progress: 100, result: outputUrls });
-            clearInterval(timer);
-            return;
-          }
-        }
-        // data 可能是单个对象
-        if (outputs.url) {
-          updateTask(taskId, { status: 'success', progress: 100, result: [outputs.url] });
+        // 递归提取所有 URL（兼容各种返回格式）
+        const urls = [];
+        (function walk(x) {
+          if (!x) return;
+          if (typeof x === 'string' && /^https?:\/\//i.test(x)) { urls.push(x); return; }
+          if (Array.isArray(x)) x.forEach(walk);
+          else if (typeof x === 'object') Object.values(x).forEach(walk);
+        })(result.data);
+
+        if (urls.length > 0) {
+          updateTask(taskId, { status: 'success', progress: 100, result: urls });
           clearInterval(timer);
           return;
         }
       }
+
+      // 任务失败（code 805 是真正的失败）
+      if (result.code === 805) {
+        updateTask(taskId, { status: 'failed', error: result.msg || '任务执行失败', progress: 0 });
+        clearInterval(timer);
+        return;
+      }
+
+      // code 804 (APIKEY_TASK_IS_RUNNING) 表示任务还在跑，继续轮询
+      // code 0 但 data 为空也表示还在跑
 
       // 更新进度（RunningHub 不返回精确进度，模拟递增）
       const progress = Math.min(5 + attempts * 0.5, 95);
@@ -596,13 +649,14 @@ function pollTaskStatus(taskId, rhTaskId) {
 // ── 封装 RunningHub HTTP 请求 ──
 function rhRequest(targetPath, method, body) {
   return new Promise((resolve, reject) => {
+    const key = getKey();
     const options = {
       hostname: 'www.runninghub.cn',
       port: 443,
       path: targetPath,
       method: method,
       headers: {
-        'Authorization': `Bearer ${getKey()}`,
+        'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
       }
     };
@@ -932,6 +986,42 @@ const server = http.createServer(async (req, res) => {
   // ── 文件上传（仍保留直通代理，前端需要先上传拿到 fileUrl 再创建任务）──
   if (pathname === '/api/upload' && req.method === 'POST') {
     proxyUpload(req, res);
+    return;
+  }
+
+  // ── 文件下载代理（解决跨域下载问题）──
+  if (pathname === '/api/download' && req.method === 'GET') {
+    const query = new URL(req.url, `http://localhost:${PORT}`).searchParams;
+    const fileUrl = query.get('url');
+    if (!fileUrl || !/^https?:\/\//i.test(fileUrl)) {
+      jsonResponse(res, 400, { error: '缺少 url 参数' });
+      return;
+    }
+
+    const parsedUrl = new URL(fileUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+
+    protocol.get(fileUrl, { headers: { 'User-Agent': 'AIHub/1.0' } }, (proxyRes) => {
+      if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
+        // 跟随重定向
+        res.writeHead(302, { 'Location': `/api/download?url=${encodeURIComponent(proxyRes.headers.location)}` });
+        res.end();
+        return;
+      }
+
+      const contentType = proxyRes.headers['content-type'] || 'application/octet-stream';
+      // 从 URL 提取文件名
+      const urlPath = parsedUrl.pathname || '';
+      const fileName = urlPath.split('/').pop() || 'download';
+      res.writeHead(proxyRes.statusCode, {
+        'Content-Type': contentType,
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Access-Control-Allow-Origin': '*',
+      });
+      proxyRes.pipe(res);
+    }).on('error', (err) => {
+      jsonResponse(res, 502, { error: '下载失败: ' + err.message });
+    });
     return;
   }
 

@@ -125,10 +125,15 @@
     .result-area h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
     .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
     .result-item { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.8); }
-    .result-item img, .result-item video { width: 100%; display: block; }
+    .result-item img, .result-item video { width: 100%; display: block; cursor: zoom-in; }
     .result-item audio { width: 100%; padding: 12px; }
     .result-item .download { display: block; padding: 10px 14px; font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none; border-top: 1px solid var(--line); }
     .result-item .download:hover { background: var(--primary-light); }
+
+    /* 大图预览弹窗 */
+    .preview-overlay { position: fixed; inset: 0; background: rgba(6,8,14,.72); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 14px; cursor: zoom-out; }
+    .preview-overlay.open { display: flex; }
+    .preview-overlay img { max-width: min(96vw, 1400px); max-height: 92vh; border-radius: 12px; cursor: default; }
 
     .error-msg { margin-top: 12px; padding: 12px 16px; border-radius: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--error); font-size: 14px; }
 
@@ -160,6 +165,10 @@
     <div class="empty-state" id="empty-state">
       <div class="icon">&#9734;</div>
       <p>选择一个工作流开始创作</p>
+    </div>
+
+    <div class="preview-overlay" id="preview-overlay" onclick="closePreview()">
+      <img id="preview-img" src="" alt="预览" onclick="event.stopPropagation()" />
     </div>
   </div>
 
@@ -334,7 +343,7 @@
         const data = await res.json();
 
         if (data.code === 0 && data.data && (data.data.fileUrl || data.data.fileName)) {
-          uploadedFiles[key] = data.data.fileUrl || data.data.fileName;
+          uploadedFiles[key] = data.data.fileName || data.data.fileUrl;
           zone.className = 'upload-zone uploaded';
           if (textEl) textEl.textContent = '已上传 ✓';
 
@@ -401,6 +410,11 @@
         });
         const data = await res.json();
 
+        if (res.status === 429) {
+          // 有任务正在运行，切换到轮询该任务
+          throw new Error(data.error || '已有任务在运行');
+        }
+
         if (data.taskId) {
           currentTaskId = data.taskId;
           renderTaskStatus({ status: 'running', progress: 0 });
@@ -413,10 +427,10 @@
         btn.disabled = false;
         btn.textContent = '开始生成';
         const area = document.getElementById('task-status-area');
+        while (area.firstChild) area.removeChild(area.firstChild);
         const errMsg = document.createElement('div');
         errMsg.className = 'error-msg';
         errMsg.textContent = err.message;
-        area.innerHTML = '';
         area.appendChild(errMsg);
       }
       return false;
@@ -425,7 +439,7 @@
     // ── 渲染任务状态 ──
     function renderTaskStatus(task) {
       const area = document.getElementById('task-status-area');
-      area.innerHTML = '';
+      while (area.firstChild) area.removeChild(area.firstChild);
 
       const statusMap = { pending: '排队中', running: '生成中', success: '已完成', failed: '失败' };
 
@@ -480,7 +494,7 @@
     // ── 渲染结果 ──
     function renderResults(urls) {
       const area = document.getElementById('result-area');
-      area.innerHTML = '';
+      while (area.firstChild) area.removeChild(area.firstChild);
 
       const header = document.createElement('div');
       header.className = 'result-area';
@@ -512,14 +526,14 @@
           const img = document.createElement('img');
           img.src = url;
           img.alt = '生成结果';
+          img.onclick = () => openPreview(url);
           item.appendChild(img);
         }
 
         const dl = document.createElement('a');
         dl.className = 'download';
-        dl.href = url;
+        dl.href = `${API_BASE}/api/download?url=${encodeURIComponent(url)}`;
         dl.target = '_blank';
-        dl.download = '';
         dl.textContent = isVideo ? '下载视频' : isAudio ? '下载音频' : '下载图片';
         item.appendChild(dl);
 
@@ -529,6 +543,16 @@
       header.appendChild(grid);
       area.appendChild(header);
     }
+
+    // ── 大图预览 ──
+    function openPreview(url) {
+      document.getElementById('preview-img').src = url;
+      document.getElementById('preview-overlay').classList.add('open');
+    }
+    function closePreview() {
+      document.getElementById('preview-overlay').classList.remove('open');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
 
     // ── 轮询 ──
     function startPolling(taskId) {
@@ -554,6 +578,9 @@
       const type = params.get('type');
       if (type && templates.find(t => t.id === type)) {
         selectTemplate(type);
+        // 有 type 参数时，直接显示表单，隐藏模板网格
+        document.getElementById('template-grid').classList.add('hidden');
+        document.getElementById('empty-state').classList.add('hidden');
       }
     });
   </script>
