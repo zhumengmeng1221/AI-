@@ -829,7 +829,9 @@
             { key: 'emoji3d', name: '9宫格Q版表情包', desc: '3D萌系表情贴纸', uses: 1680, cover: './工作流/2055119814208827394/9宫格3D软萌Q版表情包_主图.jpg', cat: 'image' },
             { key: 'retouchPro', name: '极致写实精修', desc: '写实级精修大图', uses: 1350, cover: './工作流/2055127486521987073/Z-Image+EngineerV4提示词优化+fdpo光影优化+Kook极致写实+Seedvr放大_主图.jpg', cat: 'image' },
             { key: 'consistencyLighting', name: '溶图打光一致性', desc: '自动溶图保持一致性', uses: 1100, cover: './工作流/2055185911817752578/F.2klein9b自动溶图打光一致性_主图.jpg', cat: 'image' },
-            { key: 'fashionModelPhoto', name: '服装模特生图', desc: 'AI生成服装模特图', uses: 920, cover: './工作流/2055187733060046849/Zimage-turbo保暖内衣_主图.jpg', cat: 'image' }
+            { key: 'fashionModelPhoto', name: '服装模特生图', desc: 'AI生成服装模特图', uses: 920, cover: './工作流/2055187733060046849/Zimage-turbo保暖内衣_主图.jpg', cat: 'image' },
+            { key: 'faceSwap', name: 'AI换脸', desc: '精准换脸融合', uses: 3500, cover: './工作流/2056552526455070721/ab38d61a-d615-45c9-aa42-9931d3ee93ef.png', cat: 'image' },
+            { key: 'styleTransferFace', name: '风格迁移换装换脸', desc: '一键换装换脸人像摄影', uses: 2800, cover: './工作流/2056553281291374594/768a8b141b183df6fe07db0f65dc5f09.jpg', cat: 'image' }
           ],
 
           // 模型资产
@@ -860,7 +862,9 @@
             { key: 'emoji3d', name: '9宫格3D软萌Q版表情包', desc: '上传人物图片，AI生成9宫格3D萌系Q版表情贴纸', cover: './工作流/2055119814208827394/9宫格3D软萌Q版表情包_主图.jpg' },
             { key: 'retouchPro', name: '极致写实精修', desc: '输入详细描述，AI生成极致写实级精修大图', cover: './工作流/2055127486521987073/Z-Image+EngineerV4提示词优化+fdpo光影优化+Kook极致写实+Seedvr放大_主图.jpg' },
             { key: 'consistencyLighting', name: '自动溶图打光一致性', desc: '上传人物图片，AI自动溶图打光，保持角色一致性', cover: './工作流/2055185911817752578/F.2klein9b自动溶图打光一致性_主图.jpg' },
-            { key: 'fashionModelPhoto', name: '服装模特生图', desc: '输入描述，AI生成服装模特展示图', cover: './工作流/2055187733060046849/Zimage-turbo保暖内衣_主图.jpg' }
+            { key: 'fashionModelPhoto', name: '服装模特生图', desc: '输入描述，AI生成服装模特展示图', cover: './工作流/2055187733060046849/Zimage-turbo保暖内衣_主图.jpg' },
+            { key: 'faceSwap', name: 'AI换脸', desc: '上传源脸和目标人物，AI精准换脸融合', cover: './工作流/2056552526455070721/ab38d61a-d615-45c9-aa42-9931d3ee93ef.png' },
+            { key: 'styleTransferFace', name: '风格迁移换装换脸', desc: '上传人像和风格参考，AI一键换装换脸人像摄影', cover: './工作流/2056553281291374594/768a8b141b183df6fe07db0f65dc5f09.jpg' }
           ]
         };
       },
@@ -935,7 +939,9 @@
             emoji3d: './workflow.html?type=emoji3d',
             retouchPro: './workflow.html?type=retouchPro',
             consistencyLighting: './workflow.html?type=consistencyLighting',
-            fashionModelPhoto: './workflow.html?type=fashionModelPhoto'
+            fashionModelPhoto: './workflow.html?type=fashionModelPhoto',
+            faceSwap: './workflow.html?type=faceSwap',
+            styleTransferFace: './workflow.html?type=styleTransferFace'
           };
           window.location.href = pageMap[key] || './workflow.html?type=' + key;
         },
@@ -968,7 +974,8 @@
             productBgConsistent: '产品一致性换背景', ecommerceRetouch: '电商万能精修',
             fashionModelVideo: '服装模特视频',
             emoji3d: 'Q版表情包', retouchPro: '极致写实精修',
-            consistencyLighting: '溶图打光一致性', fashionModelPhoto: '服装模特生图'
+            consistencyLighting: '溶图打光一致性', fashionModelPhoto: '服装模特生图',
+            faceSwap: 'AI换脸', styleTransferFace: '风格迁移换装换脸'
           };
           return names[type] || type;
         },

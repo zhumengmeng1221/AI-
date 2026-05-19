@@ -348,6 +348,32 @@ const WORKFLOW_TEMPLATES = {
     inputs: [
       { key: 'prompt', label: '模特描述', type: 'text', nodeId: '27', fieldName: 'string', required: true, default: '一位年轻优雅的女性模特，身着高弹力修身保暖内衣套装' }
     ]
+  },
+  faceSwap: {
+    id: 'faceSwap',
+    name: 'AI换脸',
+    description: '上传源脸和目标人物，AI精准换脸融合',
+    category: 'image',
+    cover: './工作流/2056552526455070721/ab38d61a-d615-45c9-aa42-9931d3ee93ef.png',
+    workflowId: '2056552526455070721',
+    inputs: [
+      { key: 'sourceFaceImage', label: '源脸图片', type: 'image', nodeId: '85', fieldName: 'image', required: true },
+      { key: 'targetImage', label: '目标人物图', type: 'image', nodeId: '86', fieldName: 'image', required: true },
+      { key: 'prompt', label: '换脸提示', type: 'text', nodeId: '26', fieldName: 'text', required: false, default: 'Switch the right side of your face to the left' }
+    ]
+  },
+  styleTransferFace: {
+    id: 'styleTransferFace',
+    name: '风格迁移换装换脸',
+    description: '上传人像和风格参考，AI一键换装换脸人像摄影',
+    category: 'image',
+    cover: './工作流/2056553281291374594/768a8b141b183df6fe07db0f65dc5f09.jpg',
+    workflowId: '2056553281291374594',
+    inputs: [
+      { key: 'styleImage', label: '风格参考图', type: 'image', nodeId: '18', fieldName: 'image', required: true },
+      { key: 'personImage', label: '人像原图', type: 'image', nodeId: '19', fieldName: 'image', required: true },
+      { key: 'refFaceImage', label: '参考人脸图', type: 'image', nodeId: '534', fieldName: 'image', required: false }
+    ]
   }
 };
 
