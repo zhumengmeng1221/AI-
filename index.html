@@ -243,15 +243,11 @@
       padding: 32px; text-align: center; }
     .login-modal h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
     .login-modal .login-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
-    .wechat-qr-area { width: 200px; height: 200px; margin: 0 auto 20px; border: 1px solid var(--line);
-      border-radius: var(--radius-lg); background: #fff; display: flex; align-items: center;
-      justify-content: center; overflow: hidden; }
-    .wechat-qr-area iframe { border: none; width: 100%; height: 100%; }
-    .wechat-qr-area .qr-placeholder { color: #07c160; font-size: 48px; }
+    /* 微信扫码相关样式已移除 */
     .login-btn { width: 100%; height: 48px; border: none; border-radius: 12px; font-size: 16px;
       font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: .15s; }
     .login-btn:hover { transform: translateY(-1px); }
-    .login-btn.wechat { background: #07c160; color: #fff; }
+    /* .login-btn.wechat 已移除 */
     .login-btn.dev { background: rgba(0,0,0,0.04); color: var(--muted); border: 1px solid var(--line); font-weight: 600; font-size: 14px; }
     .login-close { position: absolute; top: 12px; right: 16px; font-size: 20px; color: var(--muted);
       cursor: pointer; border: none; background: none; }
@@ -261,6 +257,32 @@
       border-radius: 10px; background: rgba(255, 255, 255, 0.82); padding: 0 12px;
       font-size: 14px; color: var(--text); outline: none; margin-bottom: 10px; }
     .login-dev-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    /* 邮箱登录/注册 */
+    .email-form { text-align: left; }
+    .email-form .form-group { margin-bottom: 14px; }
+    .email-form .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .email-form .form-group input { width: 100%; height: 42px; border: 1px solid rgba(124,138,164,0.28);
+      border-radius: 10px; background: rgba(255,255,255,0.82); padding: 0 12px;
+      font-size: 14px; color: var(--text); outline: none; box-sizing: border-box; }
+    .email-form .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .login-btn.email { background: var(--primary); color: #fff; }
+    /* .login-tabs 已移除 */
+    .email-error { color: #ef4444; font-size: 12px; margin: -6px 0 10px; }
+    .code-btn { white-space: nowrap; padding: 0 14px; height: 42px; border: 1px solid var(--primary);
+      border-radius: 10px; background: transparent; color: var(--primary); font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: .15s; }
+    .code-btn:hover:not(:disabled) { background: var(--primary); color: #fff; }
+    .code-btn:disabled { opacity: .5; cursor: not-allowed; }
+    /* 用户头像 */
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-light);
+      display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--primary); overflow: hidden; cursor: pointer; }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-menu { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 8px 0; min-width: 160px; z-index: 100; }
+    .user-menu-item { padding: 10px 16px; font-size: 14px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .user-menu-item:hover { background: var(--primary-light); color: var(--primary); }
+    .user-menu-item.danger { color: #ef4444; }
+    .user-menu-item.danger:hover { background: #fef2f2; }
 
     /* 顶栏用户状态 */
     .user-chip { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px;
@@ -307,9 +329,13 @@
       <div class="top-right">
         <div class="pill" @click="nav='工作流'">开始创作</div>
         <template v-if="loggedInUser">
-          <div class="user-chip" @click="nav='个人中心'">
+          <div class="user-chip" style="position:relative;" @click="showUserMenu=!showUserMenu">
             <div class="avatar"><img v-if="loggedInUser.avatar" :src="loggedInUser.avatar" /><span v-else>{{ loggedInUser.nickname.charAt(0) }}</span></div>
             <span>{{ loggedInUser.nickname }}</span>
+            <div class="user-menu" v-if="showUserMenu" @click.stop>
+              <div class="user-menu-item" @click="nav='个人中心';showUserMenu=false">&#128100; 个人中心</div>
+              <div class="user-menu-item danger" @click="logout">&#128682; 退出登录</div>
+            </div>
           </div>
         </template>
         <template v-else>
@@ -687,10 +713,11 @@
               <div>
                 <div class="profile-name">{{ loggedInUser.nickname }}</div>
                 <div class="profile-email">ID: {{ loggedInUser.id.slice(0, 8) }}...</div>
+                <div class="profile-email" style="margin-top:2px;">登录方式：{{ loggedInUser.openid && loggedInUser.openid.startsWith('dev_') ? '开发模式' : '邮箱' }}</div>
               </div>
             </div>
             <div class="form-row"><label>昵称</label><input v-model="userName" /></div>
-            <div class="form-row"><label>邮箱</label><input v-model="userEmail" type="email" /></div>
+            <div class="form-row"><label>邮箱</label><input v-model="userEmail" type="email" placeholder="选填，用于接收通知" /></div>
             <div class="form-row"><label>默认输出格式</label>
               <select v-model="defaultFormat"><option value="auto">自动</option><option value="png">PNG</option><option value="jpg">JPG</option><option value="mp4">MP4</option></select>
             </div>
@@ -705,30 +732,55 @@
     </div>
 
     <!-- 登录弹窗 -->
-    <div class="login-overlay" v-if="showLogin" @click.self="showLogin=false">
+    <div class="login-overlay" v-if="showLogin" @click.self="closeLogin">
       <div class="login-modal" style="position:relative;">
-        <button class="login-close" @click="showLogin=false">&times;</button>
+        <button class="login-close" @click="closeLogin">&times;</button>
         <h2>登录 AIHub</h2>
-        <p class="login-sub">微信扫码登录，即刻开始创作</p>
+        <p class="login-sub">邮箱注册/登录，即刻开始创作</p>
 
-        <!-- 微信扫码区域 -->
-        <div class="wechat-qr-area" id="wechat-qr-area">
-          <div class="qr-placeholder" v-if="!wechatQrUrl" @click="loadWechatQr">&#128247;</div>
-          <iframe v-else :src="wechatQrUrl" sandbox="allow-scripts allow-same-origin allow-top-navigation"></iframe>
+        <!-- 邮箱登录/注册 -->
+        <div class="email-form">
+            <div class="form-group">
+              <label>邮箱</label>
+              <input type="email" v-model="emailForm.email" placeholder="your@email.com" @keyup.enter="emailSubmit" />
+            </div>
+            <div class="form-group" v-if="emailMode==='register'">
+              <label>验证码</label>
+              <div style="display:flex;gap:8px;">
+                <input v-model="emailForm.code" placeholder="6位验证码" maxlength="6" style="flex:1;" @keyup.enter="emailSubmit" />
+                <button class="code-btn" @click="sendCode" :disabled="codeCooldown>0||codeSending">
+                  {{ codeSending ? '发送中' : codeCooldown>0 ? codeCooldown+'s' : '获取验证码' }}
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>密码</label>
+              <input type="password" v-model="emailForm.password" placeholder="至少6位" @keyup.enter="emailSubmit" />
+            </div>
+            <div class="form-group" v-if="emailMode==='register'">
+              <label>昵称</label>
+              <input v-model="emailForm.nickname" placeholder="你希望被怎么称呼" @keyup.enter="emailSubmit" />
+            </div>
+            <div class="email-error" v-if="emailError">{{ emailError }}</div>
+            <button class="login-btn email" @click="emailSubmit" :disabled="emailLoading">
+              {{ emailLoading ? '处理中...' : (emailMode === 'login' ? '登录' : '注册') }}
+            </button>
+            <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:8px;">
+              <span v-if="emailMode==='login'">没有账号？<a href="#" @click.prevent="emailMode='register';emailError=''" style="color:var(--primary);font-weight:600;">去注册</a></span>
+              <span v-else>已有账号？<a href="#" @click.prevent="emailMode='login';emailError=''" style="color:var(--primary);font-weight:600;">去登录</a></span>
+            </p>
         </div>
-
-        <button class="login-btn wechat" @click="loadWechatQr">微信扫码登录</button>
-
-        <div class="login-divider">或</div>
-
         <!-- 本地开发快速登录 -->
-        <input class="login-dev-input" v-model="devNickname" placeholder="输入昵称（开发模式）" />
-        <button class="login-btn dev" @click="devLogin">开发模式快速登录</button>
+        <div v-if="isDevMode">
+          <div class="login-divider">或</div>
+          <input class="login-dev-input" v-model="devNickname" placeholder="输入昵称（开发模式）" @keyup.enter="devLogin" />
+          <button class="login-btn dev" @click="devLogin">开发模式快速登录</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js?v=20260520"></script>
   <script>
     const { createApp } = Vue;
     const API = window.location.origin;
@@ -742,9 +794,22 @@
           selectedFeature: null,
           showApiKey: false,
           showLogin: false,
-          wechatQrUrl: '',
+          wxaQrImg: '',
+          wechatState: '',
+          qrState: 'idle', // idle / loading / ready / scanning / expired
+          qrPollTimer: null,
+          isDevMode: false,
           devNickname: '',
+          loginTab: 'email',  // email only
+          emailMode: 'login',  // login / register
+          emailForm: { email: '', password: '', nickname: '', code: '' },
+          emailError: '',
+          emailLoading: false,
+          codeCooldown: 0,
+          codeSending: false,
+          codeTimer: null,
           loggedInUser: null,
+          showUserMenu: false,
           hotTag: 'all',
           modelTag: 'all',
 
@@ -996,10 +1061,25 @@
         },
 
         // 个人中心
-        saveProfile() {
+        async saveProfile() {
           localStorage.setItem('aihub_username', this.userName);
           localStorage.setItem('aihub_email', this.userEmail);
           localStorage.setItem('aihub_format', this.defaultFormat);
+          // 同步到后端
+          if (this.loggedInUser) {
+            try {
+              const res = await fetch(`${API}/api/auth/profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nickname: this.userName, email: this.userEmail })
+              });
+              const data = await res.json();
+              if (data.ok && data.user) {
+                this.loggedInUser = data.user;
+                this.userName = data.user.nickname;
+              }
+            } catch (_) {}
+          }
           alert('保存成功');
         },
 
@@ -1027,20 +1107,81 @@
             if (this.loggedInUser) {
               this.userName = this.loggedInUser.nickname;
             }
+            // 检测是否开发模式
+            this.isDevMode = !this.loggedInUser && window.location.hostname === 'localhost';
           } catch (_) {
             this.loggedInUser = null;
           }
         },
 
-        async loadWechatQr() {
+        closeLogin() {
+          this.showLogin = false;
+          this.stopQrPoll();
+          this.stopCodeCooldown();
+          this.emailError = '';
+          this.emailLoading = false;
+        },
+
+        async loadWxaQr() {
+          this.qrState = 'loading';
           try {
-            const res = await fetch(`${API}/api/auth/wechat/url`);
-            const data = await res.json();
-            if (data.url) {
-              this.wechatQrUrl = data.url;
+            const res = await fetch(`${API}/api/auth/wxa/qrcode`);
+            const contentType = res.headers.get('content-type') || '';
+
+            if (contentType.includes('image/')) {
+              // 收到小程序码图片
+              const state = res.headers.get('X-Login-State');
+              if (state) this.wechatState = state;
+              const blob = await res.blob();
+              this.wxaQrImg = URL.createObjectURL(blob);
+              this.qrState = 'ready';
+              this.isDevMode = false;
+            } else {
+              // 开发模式（无 AppSecret）
+              const data = await res.json();
+              if (data.state) this.wechatState = data.state;
+              this.isDevMode = true;
+              // 开发模式下显示一个占位二维码
+              this.wxaQrImg = '';
+              this.qrState = 'idle';
             }
+
+            // 启动轮询
+            this.startQrPoll();
           } catch (err) {
-            alert('获取微信登录链接失败，请使用开发模式登录');
+            this.qrState = 'idle';
+            this.isDevMode = true;
+          }
+        },
+
+        startQrPoll() {
+          this.stopQrPoll();
+          this.qrPollTimer = setInterval(async () => {
+            if (!this.wechatState) return;
+            try {
+              const res = await fetch(`${API}/api/auth/wxa/check?state=${encodeURIComponent(this.wechatState)}`);
+              const data = await res.json();
+              if (data.status === 'scanning') {
+                this.qrState = 'scanning';
+              } else if (data.status === 'confirmed' && data.user) {
+                this.loggedInUser = data.user;
+                this.userName = data.user.nickname;
+                localStorage.setItem('aihub_username', data.user.nickname);
+                this.stopQrPoll();
+                this.showLogin = false;
+                this.qrState = 'idle';
+              } else if (data.status === 'expired') {
+                this.qrState = 'expired';
+                this.stopQrPoll();
+              }
+            } catch (_) {}
+          }, 2000);
+        },
+
+        stopQrPoll() {
+          if (this.qrPollTimer) {
+            clearInterval(this.qrPollTimer);
+            this.qrPollTimer = null;
           }
         },
 
@@ -1058,10 +1199,119 @@
               this.userName = data.user.nickname;
               localStorage.setItem('aihub_username', data.user.nickname);
               this.showLogin = false;
+            } else if (data.error) {
+              alert(data.error);
             }
           } catch (err) {
             alert('登录失败: ' + err.message);
           }
+        },
+
+        async emailSubmit() {
+          const { email, password, nickname, code } = this.emailForm;
+          this.emailError = '';
+
+          if (!email || !password) {
+            this.emailError = '请输入邮箱和密码';
+            return;
+          }
+          if (this.emailMode === 'register') {
+            if (!code) {
+              this.emailError = '请输入验证码';
+              return;
+            }
+            if (password.length < 6) {
+              this.emailError = '密码至少6位';
+              return;
+            }
+          }
+
+          this.emailLoading = true;
+          try {
+            const endpoint = this.emailMode === 'login' ? '/api/auth/email/login' : '/api/auth/email/register';
+            const body = this.emailMode === 'login'
+              ? { email, password }
+              : { email, password, code, nickname: nickname || email.split('@')[0] };
+
+            const res = await fetch(`${API}${endpoint}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+              this.loggedInUser = data.user;
+              this.userName = data.user.nickname;
+              if (data.user.email) this.userEmail = data.user.email;
+              localStorage.setItem('aihub_username', data.user.nickname);
+              localStorage.setItem('aihub_email', data.user.email || '');
+              this.showLogin = false;
+              // 重置表单
+              this.emailForm = { email: '', password: '', nickname: '', code: '' };
+              this.emailError = '';
+            } else {
+              this.emailError = data.error || '操作失败';
+            }
+          } catch (err) {
+            this.emailError = '网络错误，请重试';
+          } finally {
+            this.emailLoading = false;
+          }
+        },
+
+        async sendCode() {
+          const email = this.emailForm.email;
+          if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            this.emailError = '请先输入正确的邮箱';
+            return;
+          }
+          this.emailError = '';
+          this.codeSending = true;
+
+          try {
+            const res = await fetch(`${API}/api/auth/email/send-code`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email }),
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+              // 开发模式下自动填入验证码
+              if (data.devCode) {
+                this.emailForm.code = data.devCode;
+                this.emailError = '开发模式：验证码已自动填入';
+              } else {
+                this.emailError = '';
+              }
+              // 启动倒计时
+              this.startCodeCooldown();
+            } else {
+              this.emailError = data.error || '发送失败';
+            }
+          } catch (err) {
+            this.emailError = '网络错误，请重试';
+          } finally {
+            this.codeSending = false;
+          }
+        },
+
+        startCodeCooldown() {
+          this.stopCodeCooldown();
+          this.codeCooldown = 60;
+          this.codeTimer = setInterval(() => {
+            this.codeCooldown--;
+            if (this.codeCooldown <= 0) this.stopCodeCooldown();
+          }, 1000);
+        },
+
+        stopCodeCooldown() {
+          if (this.codeTimer) {
+            clearInterval(this.codeTimer);
+            this.codeTimer = null;
+          }
+          this.codeCooldown = 0;
         },
 
         async logout() {
@@ -1070,8 +1320,10 @@
           } catch (_) {}
           this.loggedInUser = null;
           this.userName = '创作者';
+          this.showUserMenu = false;
           this.nav = '首页';
-        }
+        },
+
       },
 
       mounted() {
@@ -1079,7 +1331,10 @@
         this.selectedFeature = list.length ? list[0] : null;
         this.fetchTasks();
         this.checkLogin();
-      }
+      },
+      beforeUnmount() {
+        this.stopQrPoll();
+      },
     }).mount('#app');
   </script>
 </body>

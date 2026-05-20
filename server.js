@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const PORT = process.env.PORT || 8080;
 const RH_BASE = 'https://www.runninghub.cn';
@@ -57,10 +58,181 @@ const WECHAT_CONFIG = {
   userinfoUrl: 'https://api.weixin.qq.com/sns/userinfo',
 };
 
+// ── 微信小程序配置（扫码登录主力方案）──
+const WXA_CONFIG = {
+  appId: process.env.WXA_APPID || 'wx9bc36dfa64eb2b8d',
+  appSecret: process.env.WXA_APPSECRET || '',
+  apiUrl: 'https://api.weixin.qq.com',
+};
+
+// ── 邮件 SMTP 配置 ──
+const SMTP_CONFIG = {
+  host: process.env.SMTP_HOST || 'smtp.qq.com',
+  port: parseInt(process.env.SMTP_PORT || '465'),
+  secure: true,
+  user: process.env.SMTP_USER || '',       // QQ邮箱地址
+  pass: process.env.SMTP_PASS || '',       // QQ邮箱授权码
+  fromName: process.env.SMTP_FROM || 'AIHub',
+};
+
+// 创建邮件传输器
+let mailTransporter = null;
+function getMailer() {
+  if (mailTransporter) return mailTransporter;
+  if (!SMTP_CONFIG.user || !SMTP_CONFIG.pass) return null;
+  mailTransporter = nodemailer.createTransport({
+    host: SMTP_CONFIG.host,
+    port: SMTP_CONFIG.port,
+    secure: SMTP_CONFIG.secure,
+    auth: { user: SMTP_CONFIG.user, pass: SMTP_CONFIG.pass },
+  });
+  return mailTransporter;
+}
+
+// ── 验证码系统 ──
+const verifyCodes = new Map(); // email -> { code, expiresAt, attempts }
+const CODE_TTL = 5 * 60 * 1000;       // 验证码5分钟有效
+const CODE_COOLDOWN = 60 * 1000;       // 60秒内不能重复发送
+const CODE_MAX_ATTEMPTS = 5;           // 最多验证5次
+
+function generateCode() {
+  return String(Math.floor(100000 + Math.random() * 900000)); // 6位数字
+}
+
+// 清理过期验证码
+function cleanupVerifyCodes() {
+  const now = Date.now();
+  for (const [email, item] of verifyCodes) {
+    if (now > item.expiresAt) verifyCodes.delete(email);
+  }
+}
+setInterval(cleanupVerifyCodes, 10 * 60 * 1000);
+
+// 发送验证码邮件
+async function sendVerifyEmail(toEmail, code) {
+  const mailer = getMailer();
+  if (!mailer) throw new Error('邮件服务未配置');
+
+  const html = `
+    <div style="max-width:480px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f8fafc;border-radius:16px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#07c160,#06ae56);padding:32px 24px;text-align:center;">
+        <h1 style="margin:0;color:#fff;font-size:24px;">AIHub</h1>
+        <p style="margin:8px 0 0;color:rgba(255,255,255,.85);font-size:14px;">邮箱验证码</p>
+      </div>
+      <div style="padding:32px 24px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:15px;color:#334155;">你正在注册 AIHub 账号，验证码为：</p>
+        <div style="font-size:36px;font-weight:800;letter-spacing:8px;color:#07c160;margin:16px 0;">${code}</div>
+        <p style="margin:0;font-size:13px;color:#94a3b8;">验证码 5 分钟内有效，请勿泄露给他人</p>
+      </div>
+      <div style="padding:16px 24px;background:#f1f5f9;font-size:12px;color:#94a3b8;text-align:center;">
+        如非本人操作，请忽略此邮件
+      </div>
+    </div>`;
+
+  await mailer.sendMail({
+    from: `"${SMTP_CONFIG.fromName}" <${SMTP_CONFIG.user}>`,
+    to: toEmail,
+    subject: '【AIHub】邮箱验证码',
+    html,
+  });
+}
+
+// 小程序 access_token 缓存
+let wxaAccessToken = null;
+let wxaTokenExpires = 0;
+
+async function getWxaAccessToken() {
+  if (wxaAccessToken && Date.now() < wxaTokenExpires) return wxaAccessToken;
+  if (!WXA_CONFIG.appSecret) return null;
+  const url = `${WXA_CONFIG.apiUrl}/cgi-bin/token?grant_type=client_credential&appid=${WXA_CONFIG.appId}&secret=${WXA_CONFIG.appSecret}`;
+  const data = await wechatRequest(url);
+  if (!data || !data.access_token) {
+    console.error('获取小程序 access_token 失败:', data);
+    return null;
+  }
+  wxaAccessToken = data.access_token;
+  wxaTokenExpires = Date.now() + (data.expires_in - 300) * 1000; // 提前5分钟过期
+  console.log('小程序 access_token 已更新，有效期:', data.expires_in, '秒');
+  return wxaAccessToken;
+}
+
+// 生成小程序码（用于扫码登录）
+async function generateWxaQrCode(scene) {
+  const token = await getWxaAccessToken();
+  if (!token) return null;
+  const url = `${WXA_CONFIG.apiUrl}/wxa/getwxacodeunlimit?access_token=${token}`;
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const postData = JSON.stringify({
+      scene,
+      page: 'pages/index/index',
+      width: 280,
+      auto_color: false,
+      line_color: { r: 7, g: 193, b: 96 }, // 微信绿
+    });
+    const options = {
+      hostname: urlObj.hostname,
+      port: 443,
+      path: urlObj.pathname + urlObj.search,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) },
+    };
+    const req = https.request(options, (res) => {
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        // 如果返回的是 JSON（错误），content-type 是 application/json
+        const ct = res.headers['content-type'] || '';
+        if (ct.includes('application/json')) {
+          try {
+            const errData = JSON.parse(buffer.toString());
+            console.error('生成小程序码失败:', errData);
+            resolve(null);
+          } catch (_) { resolve(null); }
+        } else {
+          resolve(buffer); // 返回图片 buffer
+        }
+      });
+    });
+    req.on('error', (e) => { console.error('生成小程序码请求失败:', e); resolve(null); });
+    req.write(postData);
+    req.end();
+  });
+}
+
+// 用小程序 code 换取 openid 和 session_key
+async function jsCode2Session(code) {
+  const url = `${WXA_CONFIG.apiUrl}/sns/jscode2session?appid=${WXA_CONFIG.appId}&secret=${WXA_CONFIG.appSecret}&js_code=${code}&grant_type=authorization_code`;
+  return wechatRequest(url);
+}
+
 // ── 用户系统（内存存储，后续可换数据库）──
 const users = new Map();       // openid -> user 对象
+const emailIndex = new Map();  // email -> openid（邮箱快速查找）
 const sessions = new Map();    // sessionId -> { openid, createdAt }
+const pendingLogins = new Map(); // state -> { status, sessionId?, createdAt }
 const SESSION_TTL = 7 * 24 * 3600 * 1000; // 7 天
+const PENDING_LOGIN_TTL = 5 * 60 * 1000; // 5 分钟
+
+// 密码加密配置
+const PW_SALT_LEN = 16;
+const PW_KEY_LEN = 64;
+
+// 密码加密
+function hashPassword(password) {
+  const salt = crypto.randomBytes(PW_SALT_LEN).toString('hex');
+  const key = crypto.scryptSync(password, salt, PW_KEY_LEN).toString('hex');
+  return `${salt}:${key}`;
+}
+
+// 密码验证
+function verifyPassword(password, stored) {
+  const [salt, key] = stored.split(':');
+  if (!salt || !key) return false;
+  const derived = crypto.scryptSync(password, salt, PW_KEY_LEN).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(derived), Buffer.from(key));
+}
 
 function findOrCreateUser(openid, userInfo) {
   if (users.has(openid)) {
@@ -109,6 +281,32 @@ function getUserFromRequest(req) {
   return users.get(session.openid) || null;
 }
 
+// 清理过期 pendingLogins 和 sessions
+function cleanupExpired() {
+  const now = Date.now();
+  for (const [key, val] of pendingLogins) {
+    if (now - val.createdAt > PENDING_LOGIN_TTL) pendingLogins.delete(key);
+  }
+  for (const [key, val] of sessions) {
+    if (now - val.createdAt > SESSION_TTL) sessions.delete(key);
+  }
+}
+setInterval(cleanupExpired, 10 * 60 * 1000); // 每 10 分钟清理一次
+
+// 生成 Cookie 字符串
+function sessionCookie(sessionId, maxAge) {
+  const isProduction = WECHAT_CONFIG.appId && !WECHAT_CONFIG.appId.startsWith('wx_test');
+  const parts = [
+    `aihub_session=${sessionId}`,
+    `Path=/`,
+    `Max-Age=${maxAge}`,
+    'HttpOnly',
+    'SameSite=Lax',
+  ];
+  if (isProduction) parts.push('Secure');
+  return parts.join('; ');
+}
+
 // 微信 API 请求封装
 function wechatRequest(targetUrl) {
   return new Promise((resolve, reject) => {
@@ -140,7 +338,11 @@ function loadUserData() {
   try {
     if (fs.existsSync(USER_FILE)) {
       const data = JSON.parse(fs.readFileSync(USER_FILE, 'utf8'));
-      if (data.users) data.users.forEach(u => users.set(u.openid, u));
+      if (data.users) data.users.forEach(u => {
+        users.set(u.openid, u);
+        // 重建邮箱索引
+        if (u.email) emailIndex.set(u.email.toLowerCase(), u.openid);
+      });
     }
     if (fs.existsSync(SESSION_FILE)) {
       const data = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf8'));
@@ -460,7 +662,9 @@ function serveStatic(req, res) {
       res.end('Not Found');
       return;
     }
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    const headers = { 'Content-Type': MIME[ext] || 'application/octet-stream' };
+    if (ext === '.html') headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    res.writeHead(200, headers);
     res.end(data);
   });
 }
@@ -744,14 +948,148 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-  // ── 微信登录 API ──
+  // ── 小程序码扫码登录 API（主力方案）──
 
-  // GET /api/auth/wechat/url — 获取微信扫码登录链接
+  // GET /api/auth/wxa/qrcode — 生成小程序码图片
+  if (pathname === '/api/auth/wxa/qrcode' && req.method === 'GET') {
+    const state = crypto.randomBytes(16).toString('hex');
+    // 记录 pending 状态
+    pendingLogins.set(state, { status: 'pending', createdAt: Date.now() });
+
+    if (!WXA_CONFIG.appSecret) {
+      // 没有 AppSecret 时返回模拟二维码（开发模式）
+      jsonResponse(res, 200, { state, mode: 'dev', message: '未配置 WXA_APPSECRET，使用开发模式' });
+      return;
+    }
+
+    const imgBuffer = await generateWxaQrCode(state);
+    if (!imgBuffer) {
+      jsonResponse(res, 500, { error: '生成小程序码失败' });
+      return;
+    }
+    // 返回图片 + state
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'X-Login-State': state,
+      'Cache-Control': 'no-cache',
+    });
+    res.end(imgBuffer);
+    return;
+  }
+
+  // POST /api/auth/wxa/login — 小程序上报登录结果
+  if (pathname === '/api/auth/wxa/login' && req.method === 'POST') {
+    const body = await readJsonBody(req);
+    const { code, state } = body;
+
+    if (!code || !state) {
+      jsonResponse(res, 400, { error: '缺少 code 或 state' });
+      return;
+    }
+
+    // 检查 state 是否有效
+    if (!pendingLogins.has(state)) {
+      jsonResponse(res, 400, { error: '登录已过期，请重新扫码' });
+      return;
+    }
+
+    try {
+      // 用 code 换 openid
+      const sessionData = await jsCode2Session(code);
+      if (!sessionData || sessionData.errcode) {
+        jsonResponse(res, 400, { error: '微信授权失败', detail: sessionData });
+        return;
+      }
+
+      const { openid, unionid } = sessionData;
+      const userId = unionid || openid;
+
+      // 创建/查找用户
+      const user = findOrCreateUser(userId, { nickname: '微信用户', headimgurl: '' });
+      const sessionId = createSession(userId);
+      saveUserData();
+
+      // 更新 pendingLogin 为 confirmed
+      pendingLogins.set(state, {
+        status: 'confirmed',
+        sessionId,
+        openid: userId,
+        createdAt: pendingLogins.get(state).createdAt,
+      });
+
+      jsonResponse(res, 200, { ok: true, nickname: user.nickname });
+    } catch (err) {
+      jsonResponse(res, 500, { error: '登录失败: ' + err.message });
+    }
+    return;
+  }
+
+  // GET /api/auth/wxa/check — 前端轮询小程序扫码结果（复用 wechat/check 逻辑）
+  if (pathname === '/api/auth/wxa/check' && req.method === 'GET') {
+    const query = new URL(req.url, `http://localhost:${PORT}`).searchParams;
+    const state = query.get('state');
+    if (!state || !pendingLogins.has(state)) {
+      jsonResponse(res, 200, { status: 'expired' });
+      return;
+    }
+    const pending = pendingLogins.get(state);
+    if (pending.status === 'confirmed' && pending.sessionId) {
+      const user = users.get(pending.openid);
+      pendingLogins.delete(state);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Set-Cookie': sessionCookie(pending.sessionId, SESSION_TTL / 1000),
+      });
+      res.end(JSON.stringify({
+        status: 'confirmed',
+        user: user ? { id: user.id, nickname: user.nickname, avatar: user.avatar, email: user.email || '' } : null,
+      }));
+      return;
+    }
+    jsonResponse(res, 200, { status: pending.status });
+    return;
+  }
+
+  // ── 微信登录 API（旧方案保留）──
+
+  // GET /api/auth/wechat/url — 获取微信扫码登录参数（供 WxLogin SDK 使用）
   if (pathname === '/api/auth/wechat/url' && req.method === 'GET') {
     const state = crypto.randomBytes(16).toString('hex');
-    const redirectUri = encodeURIComponent(WECHAT_CONFIG.redirectUri);
-    const authUrl = `${WECHAT_CONFIG.authUrl}?appid=${WECHAT_CONFIG.appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_login&state=${state}#wechat_redirect`;
-    jsonResponse(res, 200, { url: authUrl, state });
+    // 记录 pending 状态
+    pendingLogins.set(state, { status: 'pending', createdAt: Date.now() });
+    jsonResponse(res, 200, {
+      appId: WECHAT_CONFIG.appId,
+      redirectUri: WECHAT_CONFIG.redirectUri,
+      state,
+      scope: 'snsapi_login',
+    });
+    return;
+  }
+
+  // GET /api/auth/wechat/check — 前端轮询扫码结果
+  if (pathname === '/api/auth/wechat/check' && req.method === 'GET') {
+    const query = new URL(req.url, `http://localhost:${PORT}`).searchParams;
+    const state = query.get('state');
+    if (!state || !pendingLogins.has(state)) {
+      jsonResponse(res, 200, { status: 'expired' });
+      return;
+    }
+    const pending = pendingLogins.get(state);
+    if (pending.status === 'confirmed' && pending.sessionId) {
+      // 登录成功，返回 session cookie
+      const user = users.get(pending.openid);
+      pendingLogins.delete(state);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Set-Cookie': sessionCookie(pending.sessionId, SESSION_TTL / 1000),
+      });
+      res.end(JSON.stringify({
+        status: 'confirmed',
+        user: user ? { id: user.id, nickname: user.nickname, avatar: user.avatar } : null,
+      }));
+      return;
+    }
+    jsonResponse(res, 200, { status: pending.status });
     return;
   }
 
@@ -762,11 +1100,17 @@ const server = http.createServer(async (req, res) => {
     const state = query.get('state');
 
     if (!code) {
-      jsonResponse(res, 400, { error: '缺少 code 参数' });
+      // 渲染错误页面
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<!DOCTYPE html><html><body><script>
+        alert('授权失败：缺少 code'); window.close();
+      </script></body></html>`);
       return;
     }
 
     try {
+      let openid, userInfo = {};
+
       // 用 code 换 access_token
       const tokenUrl = `${WECHAT_CONFIG.tokenUrl}?appid=${WECHAT_CONFIG.appId}&secret=${WECHAT_CONFIG.appSecret}&code=${code}&grant_type=authorization_code`;
       const tokenData = await wechatRequest(tokenUrl);
@@ -774,52 +1118,248 @@ const server = http.createServer(async (req, res) => {
       if (!tokenData || tokenData.errcode) {
         // 微信接口失败时，本地开发模式使用模拟用户
         if (WECHAT_CONFIG.appId.startsWith('wx_test')) {
-          const mockOpenid = 'mock_' + crypto.randomBytes(8).toString('hex');
-          const user = findOrCreateUser(mockOpenid, { nickname: '测试用户', headimgurl: '' });
-          const sessionId = createSession(mockOpenid);
-          saveUserData();
-          // 设置 cookie 并重定向到首页
-          res.writeHead(302, {
-            'Set-Cookie': `aihub_session=${sessionId}; Path=/; Max-Age=${SESSION_TTL / 1000}; HttpOnly`,
-            'Location': '/'
-          });
-          res.end();
+          openid = 'mock_' + crypto.randomBytes(8).toString('hex');
+          userInfo = { nickname: '测试用户', headimgurl: '' };
+        } else {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html><html><body><script>
+            alert('微信授权失败'); window.close();
+          </script></body></html>`);
           return;
         }
-        jsonResponse(res, 400, { error: '微信授权失败', detail: tokenData });
-        return;
-      }
-
-      const { openid, access_token } = tokenData;
-
-      // 获取用户信息
-      let userInfo = {};
-      if (access_token && openid) {
-        try {
-          const infoUrl = `${WECHAT_CONFIG.userinfoUrl}?access_token=${access_token}&openid=${openid}`;
-          userInfo = await wechatRequest(infoUrl) || {};
-        } catch (_) {}
+      } else {
+        openid = tokenData.openid;
+        // 获取用户信息
+        if (tokenData.access_token && openid) {
+          try {
+            const infoUrl = `${WECHAT_CONFIG.userinfoUrl}?access_token=${tokenData.access_token}&openid=${openid}`;
+            userInfo = await wechatRequest(infoUrl) || {};
+          } catch (_) {}
+        }
       }
 
       const user = findOrCreateUser(openid, userInfo);
       const sessionId = createSession(openid);
       saveUserData();
 
-      // 设置 cookie 并重定向到首页
-      res.writeHead(302, {
-        'Set-Cookie': `aihub_session=${sessionId}; Path=/; Max-Age=${SESSION_TTL / 1000}; HttpOnly`,
-        'Location': '/'
-      });
-      res.end();
+      // 更新 pendingLogin 状态
+      if (state && pendingLogins.has(state)) {
+        pendingLogins.set(state, {
+          status: 'confirmed',
+          sessionId,
+          openid,
+          createdAt: pendingLogins.get(state).createdAt,
+        });
+      }
+
+      // 渲染成功页面，通过 postMessage 通知父窗口
+      const callbackOrigin = new URL(WECHAT_CONFIG.redirectUri).origin;
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>登录成功</title>
+<style>
+  body{display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f5}
+  .card{text-align:center;padding:40px;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+  .icon{font-size:48px;margin-bottom:16px}
+  h2{color:#333;margin:0 0 8px}
+  p{color:#666;margin:0}
+</style></head><body>
+<div class="card">
+  <div class="icon">&#9989;</div>
+  <h2>登录成功</h2>
+  <p>欢迎回来，${user.nickname}！</p>
+  <p style="margin-top:12px;font-size:13px;color:#999">可关闭此窗口</p>
+</div>
+<script>
+  // 通知父窗口登录成功
+  if (window.opener) {
+    window.opener.postMessage({ type:'wechat_login_success', state:'${state || ''}' }, '${callbackOrigin}');
+  }
+  // 3秒后自动关闭
+  setTimeout(function(){ window.close(); }, 3000);
+</script>
+</body></html>`);
 
     } catch (err) {
-      jsonResponse(res, 500, { error: '登录失败: ' + err.message });
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<!DOCTYPE html><html><body><script>
+        alert('登录失败: ${err.message.replace(/'/g, "\\'")}'); window.close();
+      </script></body></html>`);
     }
+    return;
+  }
+
+  // ── 邮箱注册/登录 API ──
+
+  // POST /api/auth/email/send-code — 发送验证码
+  if (pathname === '/api/auth/email/send-code' && req.method === 'POST') {
+    const body = await readJsonBody(req);
+    const { email } = body;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      jsonResponse(res, 400, { error: '邮箱格式不正确' });
+      return;
+    }
+
+    const emailLower = email.toLowerCase();
+
+    // 检查冷却时间
+    const existing = verifyCodes.get(emailLower);
+    if (existing && Date.now() < existing.expiresAt - CODE_TTL + CODE_COOLDOWN) {
+      const waitSec = Math.ceil((existing.expiresAt - CODE_TTL + CODE_COOLDOWN - Date.now()) / 1000);
+      jsonResponse(res, 429, { error: `请${waitSec}秒后再试` });
+      return;
+    }
+
+    // 检查邮件服务
+    if (!getMailer()) {
+      // 无SMTP配置时，开发模式直接返回验证码
+      const code = generateCode();
+      verifyCodes.set(emailLower, { code, expiresAt: Date.now() + CODE_TTL, attempts: 0 });
+      console.log(`[DEV] 邮箱验证码: ${emailLower} -> ${code}`);
+      jsonResponse(res, 200, { ok: true, devCode: code, message: '开发模式：验证码已打印到控制台' });
+      return;
+    }
+
+    // 生产模式发送邮件
+    const code = generateCode();
+    try {
+      await sendVerifyEmail(emailLower, code);
+      verifyCodes.set(emailLower, { code, expiresAt: Date.now() + CODE_TTL, attempts: 0 });
+      jsonResponse(res, 200, { ok: true, message: '验证码已发送' });
+    } catch (err) {
+      console.error('发送验证码邮件失败:', err.message);
+      jsonResponse(res, 500, { error: '发送失败，请稍后重试' });
+    }
+    return;
+  }
+
+  // POST /api/auth/email/register — 邮箱注册（需验证码）
+  if (pathname === '/api/auth/email/register' && req.method === 'POST') {
+    const body = await readJsonBody(req);
+    const { email, password, nickname, code } = body;
+
+    if (!email || !password) {
+      jsonResponse(res, 400, { error: '邮箱和密码不能为空' });
+      return;
+    }
+    if (!code) {
+      jsonResponse(res, 400, { error: '请输入验证码' });
+      return;
+    }
+    // 邮箱格式校验
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      jsonResponse(res, 400, { error: '邮箱格式不正确' });
+      return;
+    }
+    // 密码长度校验
+    if (password.length < 6) {
+      jsonResponse(res, 400, { error: '密码至少6位' });
+      return;
+    }
+
+    const emailLower = email.toLowerCase();
+
+    // 校验验证码
+    const stored = verifyCodes.get(emailLower);
+    if (!stored) {
+      jsonResponse(res, 400, { error: '请先获取验证码' });
+      return;
+    }
+    if (Date.now() > stored.expiresAt) {
+      verifyCodes.delete(emailLower);
+      jsonResponse(res, 400, { error: '验证码已过期，请重新获取' });
+      return;
+    }
+    if (stored.attempts >= CODE_MAX_ATTEMPTS) {
+      verifyCodes.delete(emailLower);
+      jsonResponse(res, 400, { error: '验证码错误次数过多，请重新获取' });
+      return;
+    }
+    if (stored.code !== code) {
+      stored.attempts++;
+      jsonResponse(res, 400, { error: `验证码错误，还剩${CODE_MAX_ATTEMPTS - stored.attempts}次机会` });
+      return;
+    }
+    // 验证码正确，清除
+    verifyCodes.delete(emailLower);
+
+    // 检查邮箱是否已注册
+    if (emailIndex.has(emailLower)) {
+      jsonResponse(res, 409, { error: '该邮箱已注册，请直接登录' });
+      return;
+    }
+
+    // 创建用户
+    const openid = 'email_' + crypto.randomBytes(12).toString('hex');
+    const user = findOrCreateUser(openid, {
+      nickname: nickname || email.split('@')[0],
+      headimgurl: '',
+    });
+    user.email = emailLower;
+    user.passwordHash = hashPassword(password);
+    emailIndex.set(emailLower, openid);
+    saveUserData();
+
+    const sessionId = createSession(openid);
+    saveUserData();
+
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Set-Cookie': sessionCookie(sessionId, SESSION_TTL / 1000),
+    });
+    res.end(JSON.stringify({
+      ok: true,
+      user: { id: user.id, nickname: user.nickname, avatar: user.avatar, email: user.email },
+    }));
+    return;
+  }
+
+  // POST /api/auth/email/login — 邮箱登录
+  if (pathname === '/api/auth/email/login' && req.method === 'POST') {
+    const body = await readJsonBody(req);
+    const { email, password } = body;
+
+    if (!email || !password) {
+      jsonResponse(res, 400, { error: '邮箱和密码不能为空' });
+      return;
+    }
+
+    const emailLower = email.toLowerCase();
+    const openid = emailIndex.get(emailLower);
+    if (!openid || !users.has(openid)) {
+      jsonResponse(res, 401, { error: '邮箱未注册' });
+      return;
+    }
+
+    const user = users.get(openid);
+    if (!user.passwordHash || !verifyPassword(password, user.passwordHash)) {
+      jsonResponse(res, 401, { error: '密码错误' });
+      return;
+    }
+
+    user.lastLoginAt = new Date().toISOString();
+    const sessionId = createSession(openid);
+    saveUserData();
+
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Set-Cookie': sessionCookie(sessionId, SESSION_TTL / 1000),
+    });
+    res.end(JSON.stringify({
+      ok: true,
+      user: { id: user.id, nickname: user.nickname, avatar: user.avatar, email: user.email },
+    }));
     return;
   }
 
   // POST /api/auth/dev-login — 本地开发模式快速登录（不走微信）
   if (pathname === '/api/auth/dev-login' && req.method === 'POST') {
+    // 生产环境禁用开发模式登录
+    if (!WECHAT_CONFIG.appId.startsWith('wx_test')) {
+      jsonResponse(res, 403, { error: '生产环境不允许开发模式登录' });
+      return;
+    }
     const body = await readJsonBody(req);
     const nickname = body.nickname || '开发测试用户';
     const mockOpenid = 'dev_' + crypto.randomBytes(8).toString('hex');
@@ -829,7 +1369,7 @@ const server = http.createServer(async (req, res) => {
 
     res.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8',
-      'Set-Cookie': `aihub_session=${sessionId}; Path=/; Max-Age=${SESSION_TTL / 1000}; HttpOnly`
+      'Set-Cookie': sessionCookie(sessionId, SESSION_TTL / 1000),
     });
     res.end(JSON.stringify({ ok: true, user: { id: user.id, nickname: user.nickname, avatar: user.avatar } }));
     return;
@@ -842,7 +1382,7 @@ const server = http.createServer(async (req, res) => {
       jsonResponse(res, 200, { loggedIn: false });
       return;
     }
-    jsonResponse(res, 200, { loggedIn: true, user: { id: user.id, nickname: user.nickname, avatar: user.avatar, openid: user.openid } });
+    jsonResponse(res, 200, { loggedIn: true, user: { id: user.id, nickname: user.nickname, avatar: user.avatar, openid: user.openid, email: user.email || '' } });
     return;
   }
 
@@ -853,7 +1393,7 @@ const server = http.createServer(async (req, res) => {
     if (match) sessions.delete(match[1]);
     res.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8',
-      'Set-Cookie': 'aihub_session=; Path=/; Max-Age=0; HttpOnly'
+      'Set-Cookie': sessionCookie('', 0),
     });
     res.end(JSON.stringify({ ok: true }));
     return;
@@ -866,8 +1406,9 @@ const server = http.createServer(async (req, res) => {
     const body = await readJsonBody(req);
     if (body.nickname) user.nickname = body.nickname;
     if (body.avatar) user.avatar = body.avatar;
+    if (body.email) user.email = body.email;
     saveUserData();
-    jsonResponse(res, 200, { ok: true, user: { id: user.id, nickname: user.nickname, avatar: user.avatar } });
+    jsonResponse(res, 200, { ok: true, user: { id: user.id, nickname: user.nickname, avatar: user.avatar, email: user.email || '' } });
     return;
   }
 
@@ -1097,7 +1638,7 @@ server.listen(PORT, () => {
   │  地址: http://localhost:${PORT}         │
   │  Key 状态: ${getKey() ? '✅ 已配置' : '❌ 未配置'}  │
   │  工作流模板: ${Object.keys(WORKFLOW_TEMPLATES).length} 个               │
-  │  微信登录: ${WECHAT_CONFIG.appId.startsWith('wx_test') ? '🔧 测试模式' : '✅ 已配置'}              │
+  │  微信登录: ${WXA_CONFIG.appSecret ? '✅ 小程序码模式' : '🔧 测试模式'}              │
   │                                      │
   │  统一 API:                            │
   │  GET  /api/templates   获取模板列表   │
@@ -1107,11 +1648,18 @@ server.listen(PORT, () => {
   │  POST /api/upload      上传文件       │
   │                                      │
   │  登录 API:                            │
-  │  GET  /api/auth/wechat/url  扫码链接  │
-  │  GET  /api/auth/callback    微信回调  │
-  │  POST /api/auth/dev-login   开发登录  │
-  │  GET  /api/auth/me          当前用户  │
-  │  POST /api/auth/logout      退出登录  │
+  │  GET  /api/auth/wxa/qrcode   小程序码  │
+  │  POST /api/auth/wxa/login    小程序回调│
+  │  GET  /api/auth/wxa/check    轮询状态  │
+  │  GET  /api/auth/wechat/url   SDK参数  │
+  │  GET  /api/auth/wechat/check 轮询状态 │
+  │  GET  /api/auth/wechat/callback 回调  │
+  │  POST /api/auth/email/register 邮箱注册│
+  │  POST /api/auth/email/login    邮箱登录│
+  │  POST /api/auth/email/send-code 发送验证│
+  │  POST /api/auth/dev-login    开发登录  │
+  │  GET  /api/auth/me           当前用户  │
+  │  POST /api/auth/logout       退出登录  │
   └──────────────────────────────────────┘
   `);
 });
